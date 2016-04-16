@@ -1,0 +1,173 @@
+/*
+ * RTKLIB WEB CONSOLE code is placed under the GPL license.
+ * Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+ * Copyright (c) 2016, DROTEK SAS
+ * All rights reserved.
+
+ * If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+ * closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+ * This file is part of RTKLIB WEB CONSOLE.
+
+ * RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * RTKLIB WEB CONSOLE is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+.configuration-panel{
+    text-align:center;
+}
+
+.configuration-properties-list{
+    width:100%;
+    top: 51px;
+    bottom: 100px;
+    width: 100%;
+    overflow-y: auto;
+}
+
+.configuration-parameter-list{
+    margin-top:10px;
+    width: 100%;
+    position: fixed;
+    bottom: 101px;
+    top: 51px;
+    overflow-y: auto;
+    
+}
+
+.configuration-properties-group{
+    margin:20px;
+}
+
+.configuration-actions-bar{
+    display: inline;
+	bottom: 51px;
+    left: 0;
+    right: 0;
+    height: 50px;
+    position: fixed;
+    padding-top: 2px;
+}
+
+.label-size{
+    width:35%;
+}
+
+.parameter-label{
+    float:left; 
+    text-align:right;
+    margin-right:10px;
+}
+
+.parameter-restriction{
+    text-align:left;
+    margin-left:10px;
+    font-size:small;
+}
+
+.red-circle-button {
+	font-size: 1em;
+	line-height: 1.1em;
+	color: #ffffff;
+	//border-radius: 100%;
+	height: 48px;
+	//width: 58px !important;
+	position: relative;
+    padding-left: 8px;
+}
+
+.navSys{
+    display: block;
+    
+    input{
+        width: 20px;
+    }
+}
+
+.navSys-parameterName{
+    height: 90px;
+    margin-top: 65px;
+}
+
+//Switch
+
+.confSwitch {
+    position: relative; 
+    width: 100px;
+    margin: auto;
+    -webkit-user-select:none; 
+    -moz-user-select:none; 
+    -ms-user-select: none;
+}
+
+.confSwitch-checkbox {
+    display: none;
+}
+
+.confSwitch-label {
+    display: block; 
+    overflow: hidden; 
+    cursor: pointer;
+    border: 2px solid #999999; 
+    border-radius: 20px;
+}
+.confSwitch-inner {
+    display: block; 
+    width: 200%; 
+    margin-left: -100%;
+    transition: margin 0.3s ease-in 0s;
+}
+.confSwitch-inner:before, .confSwitch-inner:after {
+    display: block; 
+    float: left; 
+    width: 50%; 
+    height: 30px; 
+    padding: 0; 
+    line-height: 30px;
+    color: white;
+    box-sizing: border-box;
+}
+.confSwitch-inner:before {
+    content: "ROVER";
+    padding-left: 10px;
+    background-color: #34A7C1; 
+    color: #FFFFFF;
+    text-align: left;
+}
+.confSwitch-inner:after {
+    content: "BASE";
+    padding-right: 10px;
+    background-color: #18BA59; 
+    color: #FAF7F7;
+    text-align: right;
+}
+
+.confSwitch-switch {
+    display: block; 
+    width: 20px; 
+    margin: 7px;
+    background: #FFFFFF;
+    position: absolute; 
+    top: 0; 
+    bottom: 0;
+    right: 66px;
+    border: 2px solid #999999; 
+    border-radius: 20px;
+    transition: all 0.3s ease-in 0s; 
+}
+.confSwitch-checkbox:checked + .confSwitch-label .confSwitch-inner {
+    margin-left: 0;
+}
+.confSwitch-checkbox:checked + .confSwitch-label .confSwitch-switch {
+    right: 0px; 
+}

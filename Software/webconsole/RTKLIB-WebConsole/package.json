@@ -1,0 +1,66 @@
+{
+  "name": "rtk-lib-webconsole",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "GPS",
+    "RTKLIB",
+    "RTK",
+    "WEBCONSOLE",
+    "DROTEK"
+  ],
+  "author": "Frédéric BECQUIER",
+  "license": "GPL",
+  "devDependencies": {
+    "browserify": "^13.0.0",
+    "browserify-ngannotate": "^2.0.0",
+    "browserify-shim": "^3.8.12",
+    "del": "^2.2.0",
+    "envify": "^3.4.0",
+    "gulp": "^3.9.0",
+    "gulp-autoprefixer": "^3.1.0",
+    "gulp-concat": "^2.6.0",
+    "gulp-connect": "^2.3.1",
+    "gulp-cssnano": "^2.1.0",
+    "gulp-filter": "^3.0.1",
+    "gulp-if": "^2.0.0",
+    "gulp-less": "^3.0.5",
+    "gulp-plumber": "^1.0.1",
+    "gulp-svgmin": "^1.2.1",
+    "gulp-util": "^3.0.7",
+    "gulp-watch": "^4.3.5",
+    "less-plugin-glob": "^1.1.1",
+    "lodash": "^4.0.0",
+    "minifyify": "^7.1.0",
+    "stringify": "^3.2.0",
+    "vinyl-buffer": "^1.0.0",
+    "vinyl-source-stream": "^1.1.0",
+    "watchify": "^3.7.0",
+    "yargs": "^3.32.0"
+  },
+  "dependencies": {
+    "angular": "^1.4.8",
+    "angular-animate": "^1.4.8",
+    "angular-bootstrap": "^0.12.2",
+    "angular-chartjs": "0.0.5",
+    "angular-sanitize": "^1.4.8",
+    "angular-touch": "^1.4.8",
+    "angular-ui-router": "^1.0.0-alpha0",
+    "bootstrap": "^3.3.6"
+  },
+  "browserify": {
+    "transform": [
+      "browserify-shim"
+    ]
+  },
+  "browser": {
+    "ui.bootstrap": "./node_modules/angular-bootstrap/dist/ui-bootstrap-tpls.js"
+  },
+  "browserify-shim": {
+    "ui.bootstrap": "angular-bootstrap"
+  }
+}

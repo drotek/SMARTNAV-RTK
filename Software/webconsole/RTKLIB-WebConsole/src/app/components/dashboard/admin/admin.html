@@ -1,0 +1,80 @@
+<!--
+# RTKLIB WEB CONSOLE code is placed under the GPL license.
+# Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+# Copyright (c) 2016, DROTEK SAS
+# All rights reserved.
+
+# If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+# closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+# This file is part of RTKLIB WEB CONSOLE.
+
+# RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# RTKLIB WEB CONSOLE is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="admin-panel">
+
+    <div class="admin-list">
+        
+        <accordion close-others="oneAtATime">
+            <accordion-group heading="Service" is-open="status.isServiceOpen">
+                <div>
+                    <div class="label-50 parameter-label" title="{{item.comment}}" ng-if="isRover">
+                        Rover Status:
+                    </div>
+                    <div class="label-50 parameter-label" title="{{item.comment}}" ng-if="!isRover">
+                        Base Status:
+                    </div>
+                    <div ng-if="isServiceActive">
+                        <div class="led-green"></div>
+                        <div class="rtklib-status">ACTIVE</div>
+                    </div>
+                    <div ng-if="!isServiceActive">
+                        <div class="led-red"></div>
+                        <div class="rtklib-status">INACTIVE</div>
+                    </div>
+                </div>
+                
+                <div class="admin-service-actions-bar">
+                    <button type="button" class="btn btn-success btn-sm action-button" ng-click="start($event)">START</button>
+                    <button type="button" class="btn btn-danger btn-sm action-button" ng-click="stop($event)">STOP</button>
+                </div>
+                
+            </accordion-group>
+
+            <accordion-group heading="Logs" is-open="status.isLogsOpen">
+                <div>
+                    <button type="button" class="btn btn-info btn-sm action-button" ng-if="!isOnIOS" ng-click="exportLog($event)">EXPORT LOG</button>
+                    <button type="button" class="btn btn-info btn-sm action-button" ng-if="!isOnIOS" ng-click="exportUbx($event)">EXPORT UBX</button>
+                    <button type="button" class="btn btn-info btn-sm action-button" ng-click="share($event)">SHARE LOG</button>
+                </div>
+            </accordion-group>
+            
+            <accordion-group heading="System Time" is-open="status.isLogsOpen">
+                <div>
+                    <button type="button" class="btn btn-success btn-sm action-button" ng-click="syncTime($event)">SYNC</button>
+                </div>
+            </accordion-group>
+
+            <accordion-group heading="Platform" is-open="status.isUpdateOpen">
+                <div>
+                    
+                    <button type="button" class="btn btn-warning btn-sm action-button" ng-click="updatePlatform($event)">UPDATE</button>
+                </div>
+            </accordion-group>
+
+      </accordion>
+    </div>
+    
+</div>

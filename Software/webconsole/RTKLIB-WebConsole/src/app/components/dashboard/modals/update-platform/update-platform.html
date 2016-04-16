@@ -1,0 +1,45 @@
+<!--
+# RTKLIB WEB CONSOLE code is placed under the GPL license.
+# Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+# Copyright (c) 2016, DROTEK SAS
+# All rights reserved.
+
+# If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+# closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+# This file is part of RTKLIB WEB CONSOLE.
+
+# RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# RTKLIB WEB CONSOLE is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="modal-delete">
+    <div class="modal-header">
+        <h3 class="modal-title">
+            Update Platform
+        </h3>
+    </div>
+    <div class="modal-body" style="text-align:center">
+        
+        This update will reboot the system.<br/>
+        Are you sure you want to update?<br/><br/>
+        
+        <div style="color:red">Please make sure that your board is connected to the Internet</div>
+        
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-default" type="button" ng-click="cancel()">Cancel</button>
+        <button class="btn btn-warning" type="button" ng-click="ok()">Update</button>
+    </div>
+
+</div>

@@ -1,0 +1,55 @@
+<!--
+# RTKLIB WEB CONSOLE code is placed under the GPL license.
+# Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+# Copyright (c) 2016, DROTEK SAS
+# All rights reserved.
+
+# If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+# closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+# This file is part of RTKLIB WEB CONSOLE.
+
+# RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# RTKLIB WEB CONSOLE is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="modal-delete">
+    <div class="modal-header">
+        <h3 class="modal-title">
+            Share log file
+        </h3>
+    </div>
+    <div class="modal-body" style="text-align:center">
+        
+        Choose log file to share.
+        
+        <form name="shareFile" class="modal-body" stop-event="touchend">
+            <div style="text-align: left;width: 100%;margin-bottom: 5px;">
+                <div style="width:45%; text-align:right; float:left; margin-right:5px">To:</div>
+                <input type="email" ng-model="mailAdress" style="border:0; border-bottom:black solid 1px"></input>
+            </div>
+            
+            <div style="text-align: left;width: 100%;margin-bottom: 5px;">
+                <div style="width:45%; text-align:right; float:left; margin-right:5px">File:</div>
+                <select ng-model="downloadFile" ng-options="value for value in logFiles" style="width:auto; min-width:150px; max-width:100%">
+                </select>
+            </div>
+        </form>
+
+    </div>
+    <div class="modal-footer">
+        <button class="btn btn-default" type="button" ng-click="cancel()">Cancel</button>
+        <button class="btn btn-warning" type="button" ng-click="ok()">Send Mail</button>
+    </div>
+
+</div>

@@ -1,0 +1,60 @@
+/*
+ * RTKLIB WEB CONSOLE code is placed under the GPL license.
+ * Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+ * Copyright (c) 2016, DROTEK SAS
+ * All rights reserved.
+
+ * If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+ * closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+ * This file is part of RTKLIB WEB CONSOLE.
+
+ * RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * RTKLIB WEB CONSOLE is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+/*Permet de créer des colonnes pour chaque cible de résolution*/
+.make-columns(@lg-columns,
+  @md-columns: @lg-columns,
+  @sm-columns: @md-columns,
+  @xs-columns: @sm-columns,
+  @lg-offset: 0,
+  @md-offset: 0,
+  @sm-offset: 0,
+  @xs-offset: 0) {
+  .make-xs-column(@xs-columns);
+  .make-sm-column(@sm-columns);
+  .make-md-column(@md-columns);
+  .make-lg-column(@lg-columns);
+  .make-xs-column-offset(@xs-offset);
+  .make-sm-column-offset(@sm-offset);
+  .make-md-column-offset(@md-offset);
+  .make-lg-column-offset(@lg-offset);
+}
+
+/*Permet de créer des colonnes centrées pour chaque cible de résolution /!\ Ne fonctionne qu'avec des nombres pairs (dans le cas d'un colonnage par 12 en standard Bootstrap) */
+.make-centered-columns(
+  @centered-lg-columns,
+  @centered-md-columns: @centered-lg-columns,
+  @centered-sm-columns: @centered-md-columns,
+  @centered-xs-columns: @centered-sm-columns) {
+  .make-columns(
+  @centered-lg-columns,
+  @centered-md-columns,
+  @centered-sm-columns,
+  @centered-xs-columns,
+  (@grid-columns - @centered-lg-columns)/2,
+  (@grid-columns - @centered-md-columns)/2,
+  (@grid-columns - @centered-sm-columns)/2,
+  (@grid-columns - @centered-xs-columns)/2);
+}

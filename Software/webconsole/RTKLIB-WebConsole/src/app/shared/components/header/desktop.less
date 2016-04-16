@@ -1,0 +1,186 @@
+/*
+ * RTKLIB WEB CONSOLE code is placed under the GPL license.
+ * Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+ * Copyright (c) 2016, DROTEK SAS
+ * All rights reserved.
+
+ * If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+ * closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+ * This file is part of RTKLIB WEB CONSOLE.
+
+ * RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * RTKLIB WEB CONSOLE is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+.desktop-show {
+  display: none;
+}
+
+
+body.platform-desktop, body.platform-mobile {
+
+  .desktop-show {
+    display: block;
+    display: initial;
+  }
+
+  .desktop-header {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 126px;
+    background-color: #ffffff;
+    z-index: 1;
+
+    .logo {
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+
+    h1 {
+      display: none;
+      font-family: 'Gill Sans', sans-serif;
+      font-weight: lighter;
+      font-size: 34px;
+      position: absolute;
+      top: 24px;
+      left: 82px;
+
+    }
+
+    ul {
+      position:  absolute;
+      top: 82px;
+      width: 100%;
+      list-style-type: none;
+      margin: 0;
+      padding: 0;
+      height: 44px;
+      background-color: #555555;
+    }
+
+    li {
+      display: block;
+      float: left;
+      > a.icons-menu {
+        position: relative;
+        color: #ffffff;
+        display: block;
+        height: 44px;
+        width: 44px;
+        overflow: hidden;
+        span.menu-label-long,
+        > span.menu-label {
+          display: none;
+        }
+        > span.menu-icon-svg {
+          position: absolute;
+          top: 1px;
+          left: 0;
+          display: block;
+          width: 44px;
+          height: 44px;
+          overflow: hidden;
+
+          svg {
+            width: 100%;
+            height: 100%;
+          }
+        }
+      }
+    }
+
+    li.menu-item-cypberplus {
+      display: none;
+    }
+
+  }
+
+  .logo {
+    //background-image: url('assets/images/png/logo.png');
+    //background-size: 120px 30px;
+    //width: 120px;
+    //height: 30px;
+    background-image: url('@{images-path}/png/logo@2x.png');
+    background-size:  35px 35px;
+    width: 35px;
+    height: 35px;
+    
+    margin-top: -7px;
+    margin-right: 8px;
+  }
+    
+  .brand {
+      background-color: beige;
+      border-radius: 15px;
+      margin: 10px;
+  }
+  
+  .header {
+    top: 126px;
+  }
+
+}
+
+/* Small devices (tablets, 768px and up) */
+@media (min-width: @screen-sm-min) {
+  body.platform-desktop, body.platform-mobile {
+
+    .desktop-header {
+      h1 {
+        display: block;
+      }
+    }
+
+  }
+}
+
+@media (min-width: @screen-sm-min) {
+  body.platform-desktop {
+    .custom-menu {
+        margin-top: 0;
+    }
+      
+    .label-size{
+        width:50%;
+    }
+  }
+}
+
+
+
+//  retina
+
+@media only screen and (-Webkit-min-device-pixel-ratio: 1.5),
+only screen and (-moz-min-device-pixel-ratio: 1.5),
+only screen and (-o-min-device-pixel-ratio: 3/2),
+only screen and (min-device-pixel-ratio: 1.5) {
+  body.platform-desktop, body.platform-mobile  {
+    .logo {
+      //background-image: url('@{images-path}/png/logo@2x.png');
+      background-size:  35px 35px;
+      background-repeat: no-repeat;
+      width: 35px;
+      height: 35px;  
+      margin-top: -7px;
+      margin-right: 8px;
+    }
+      
+    custom-menu{
+        margin-top: 50px;
+    }  
+  }
+}

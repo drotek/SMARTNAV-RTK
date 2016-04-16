@@ -1,0 +1,162 @@
+<!--
+# RTKLIB WEB CONSOLE code is placed under the GPL license.
+# Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+# Copyright (c) 2016, DROTEK SAS
+# All rights reserved.
+
+# If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+# closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+# This file is part of RTKLIB WEB CONSOLE.
+
+# RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+
+# RTKLIB WEB CONSOLE is distributed in the hope that it will be
+# useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+# of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+
+# You should have received a copy of the GNU General Public License
+# along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+-->
+
+<div class="configuration-panel">
+    
+    <div class="configuration-parameter-list">
+        
+        <div class="confSwitch">
+            <input type="checkbox" name="confSwitch" class="confSwitch-checkbox" id="myConfSwitch" ng-model="isRover" ng-click="switchConf()">
+            <label class="confSwitch-label" for="myConfSwitch">
+                <span class="confSwitch-inner"></span>
+                <span class="confSwitch-switch"></span>
+            </label>
+        </div>
+        
+        <accordion close-others="oneAtATime" ng-if="isRover">
+            <accordion-group heading="Required Parameters" is-open="status.isRequieredOpen">
+                <div ng-if="requiredParams.length">
+                    <div ng-repeat="item in requiredParams | orderBy:'key'" style="margin:5px">
+                        <div class="label-size parameter-label" title="{{item.comment}}">
+                            {{item.key}}
+                        </div>
+                        <div class="parameter-restriction" ng-if="hasRestriction(item.restriction)">
+                            <select ng-model="item.value" ng-options="value for value in item.restriction">
+                            </select>
+                            {{item.unit}}
+                        </div>
+                        <div class="parameter-restriction" ng-if="!hasRestriction(item.restriction)">
+                            <input type="text" name="input" ng-model="item.value"/>
+                            {{item.unit}}
+                        </div>
+                    </div>
+                </div>
+            </accordion-group>
+
+            <accordion-group heading="Advanced Parameters">
+                <div ng-if="advancedParams.length">
+                    <div ng-repeat="item in advancedParams | orderBy:'key'" style="margin:5px">
+                        <div class="label-size parameter-label" title="{{item.comment}}" ng-class="{'navSys-parameterName': item.key === 'pos1-navsys'}">
+                            {{item.key}}
+                        </div>
+                        <div class="parameter-restriction" ng-if="hasRestriction(item.restriction)">
+                            <select ng-model="item.value" ng-options="value for value in item.restriction">
+                            </select>
+                            {{item.unit}}
+                        </div>
+                        <div class="parameter-restriction" ng-if="!hasRestriction(item.restriction)">
+                            <div ng-if="item.key !== 'pos1-navsys'">
+                                <input type="text" name="input" ng-model="item.value"/>
+                                {{item.unit}}
+                            </div>
+                            <div ng-if="item.key === 'pos1-navsys'" ng-init="decodeNavSysValue(item)">
+                                <label ng-repeat="navSys in listNavSys" class="navSys">
+                                  <input type="checkbox" ng-model="navSys.selected" ng-value="navSys.id"> {{navSys.name}}
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </accordion-group>
+
+            <accordion-group heading="Other Parameters">
+                <div ng-if="otherParams.length">
+                    <div ng-repeat="item in otherParams | orderBy:'key'" style="margin:5px">
+                        <div class="label-size parameter-label" title="{{item.comment}}">
+                            {{item.key}}
+                        </div>
+                        <div class="parameter-restriction" ng-if="hasRestriction(item.restriction)">
+                            <select ng-model="item.value" ng-options="value for value in item.restriction">
+                            </select>
+                            {{item.unit}}
+                        </div>
+                        <div class="parameter-restriction" ng-if="!hasRestriction(item.restriction)">
+                            <input type="text" name="input" ng-model="item.value"/>
+                            {{item.unit}}
+                        </div>
+                    </div>
+                </div>
+            </accordion-group>
+            
+            <accordion-group heading="CMD File">
+                <div ng-if="cmdParams.length">
+                    <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
+                        <div class="label-size parameter-label" title="{{item.key}}">
+                            {{item.comment}}
+                        </div>
+                        <div class="parameter-restriction">
+                            <input type="text" name="input" ng-model="item.value"/>
+                            {{item.unit}}
+                        </div>
+                    </div>
+                </div>
+            </accordion-group>
+
+      </accordion>
+        
+      <accordion close-others="false" ng-if="!isRover">
+            <accordion-group heading="Parameters" is-open="status.isRunBaseOpen">
+                <div style="margin:5px">
+                    <div class="label-size parameter-label">
+                        Output type
+                    </div>
+                    <div class="parameter-restriction">
+                        <select ng-model="selectedOutputType" ng-options="value for value in outputTypes" ng-change="getDefaultPath(selectedOutputType)">
+                        </select>
+                    </div>
+                </div>
+                <div style="margin:5px">
+                    <div class="label-size parameter-label">
+                        Output path
+                    </div>
+                    <div class="parameter-restriction">
+                        <input type="text" name="input" ng-model="outputPath"/>
+                    </div>
+                </div>
+            </accordion-group>
+          
+            <accordion-group heading="CMD File" is-open="status.isBaseCmdOpen">
+                <div ng-if="cmdParams.length">
+                    <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
+                        <div class="label-size parameter-label" title="{{item.key}}">
+                            {{item.comment}}
+                        </div>
+                        <div class="parameter-restriction">
+                            <input type="text" name="input" ng-model="item.value"/>
+                            {{item.unit}}
+                        </div>
+                    </div>
+                </div>
+            </accordion-group>
+      </accordion>
+    </div>
+        
+    <div class="configuration-actions-bar">
+        <button type="button" class="btn btn-default btn-sm action-button" ng-click="open($event)" ng-disabled="!isRover">OPEN</button>
+        <button type="button" class="btn btn-danger btn-sm action-button red-circle-button" ng-click="push($event)">PUSH</button>
+        <button type="button" class="btn btn-default btn-sm action-button" ng-click="save($event)" ng-disabled="!isRover">SAVE</button>
+    </div>
+    
+</div>

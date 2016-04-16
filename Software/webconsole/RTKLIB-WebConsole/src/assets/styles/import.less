@@ -1,0 +1,93 @@
+/*
+ * RTKLIB WEB CONSOLE code is placed under the GPL license.
+ * Written by Frederic BECQUIER (frederic.becquier@openiteam.fr)
+ * Copyright (c) 2016, DROTEK SAS
+ * All rights reserved.
+
+ * If you are interested in using RTKLIB WEB CONSOLE code as a part of a
+ * closed source project, please contact DROTEK SAS (contact@drotek.com).
+
+ * This file is part of RTKLIB WEB CONSOLE.
+
+ * RTKLIB WEB CONSOLE is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+
+ * RTKLIB WEB CONSOLE is distributed in the hope that it will be
+ * useful, but WITHOUT ANY WARRANTY; without even the implied warranty
+ * of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+
+ * You should have received a copy of the GNU General Public License
+ * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+@bootstrap-path: '../../../node_modules/bootstrap/less';
+
+/* Mixin à utiliser pour importer tout le code*/
+
+.import-code() {
+  .import-bootstrap-code();
+  .import-common-code();
+}
+
+
+/*Import du code commun*/
+
+.import-common-code() {
+  @import 'mixins/**';
+  @import '../../app/**/*';
+}
+
+
+/*Import du code de style de Bootstrap*/
+
+.import-bootstrap-code() {
+  @import '@{bootstrap-path}/mixins.less';
+  @import '@{bootstrap-path}/normalize.less';
+  @import '@{bootstrap-path}/print.less';
+  @import '@{bootstrap-path}/glyphicons.less';
+  @import '@{bootstrap-path}/scaffolding.less';
+  @import '@{bootstrap-path}/type.less';
+     //@import '@{bootstrap-path}/code.less';
+     //@import '@{bootstrap-path}/grid.less';
+     //@import '@{bootstrap-path}/tables.less';
+  @import '@{bootstrap-path}/forms.less';
+  @import '@{bootstrap-path}/buttons.less';
+  @import '@{bootstrap-path}/component-animations.less';
+     @import '@{bootstrap-path}/dropdowns.less';
+  @import '@{bootstrap-path}/button-groups.less';
+     @import '@{bootstrap-path}/input-groups.less';
+     @import '@{bootstrap-path}/navs.less';
+     @import '@{bootstrap-path}/navbar.less';
+     //@import '@{bootstrap-path}/breadcrumbs.less';
+     //@import '@{bootstrap-path}/pagination.less';
+     //@import '@{bootstrap-path}/pager.less';
+     //@import '@{bootstrap-path}/labels.less';
+  @import '@{bootstrap-path}/badges.less';
+     //@import '@{bootstrap-path}/jumbotron.less';
+     //@import '@{bootstrap-path}/thumbnails.less';
+     //@import '@{bootstrap-path}/alerts.less';
+  @import '@{bootstrap-path}/progress-bars.less';
+     //@import '@{bootstrap-path}/media.less';
+  @import '@{bootstrap-path}/list-group.less';
+  @import '@{bootstrap-path}/panels.less';
+     //@import '@{bootstrap-path}/responsive-embed.less';
+     //@import '@{bootstrap-path}/wells.less';
+  @import '@{bootstrap-path}/close.less';
+  @import '@{bootstrap-path}/modals.less';
+  @import '@{bootstrap-path}/tooltip.less';
+  @import '@{bootstrap-path}/popovers.less';
+     //@import '@{bootstrap-path}/carousel.less';
+     @import '@{bootstrap-path}/utilities.less';
+     //@import '@{bootstrap-path}/responsive-utilities.less';
+}
+
+
+/*Import des variables de Bootstrap*/
+
+.import-bootstrap-variables() {
+  @import '@{bootstrap-path}/variables.less';
+}
+
