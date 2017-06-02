@@ -44,13 +44,20 @@
 #include "rtklib.h"
 
 /* Edison GPIO operation */
+
+#ifdef __ARDUINO_X86__
 #include "mraa.h"
+#endif
 
 #include <stdio.h>
+
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
+#ifdef __ARDUINO_X86__
 extern mraa_gpio_context mux_control;
-
+#endif
 /* Edison GPIO operation */
 
 
@@ -1372,12 +1379,16 @@ extern int outubx(unsigned char *buff, const sol_t *sol, int *week, const ssat_t
     if(sol->stat==SOLQ_FIX || sol->stat==SOLQ_FLOAT)  /* fix status flags */
     {
         *(chk_buff+17)=0x0F;
+#ifdef __ARDUINO_X86__
 		mraa_gpio_write(mux_control, 1);
+#endif
     }
     else
     {
         *(chk_buff+17)=0x0D;        /* DGPS sol not used */
+#ifdef __ARDUINO_X86__
 		mraa_gpio_write(mux_control, 0);
+#endif
     }
     
     ecef_x=(signed long int)(sol->rr[0]*100);

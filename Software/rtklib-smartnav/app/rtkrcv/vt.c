@@ -15,6 +15,7 @@
 #include <ctype.h>
 #ifdef WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <unistd.h>
 #include <fcntl.h>
@@ -50,37 +51,74 @@ static const char rcsid[]="$Id:$";
 #define C_DONT      (char)254           /* telnet option negotiation */
 #define C_IAC       (char)255           /* telnet interpret as command */
 
+
+static size_t write_socket(int fd, const void *buf, size_t count) {
+#ifdef WIN32
+	return send(fd, buf, count, 0);
+#else
+	return write(fd, buf, count);
+#endif
+}
+
+static size_t read_socket(int fd, void *buf, size_t count) {
+#ifdef WIN32
+	return recv(fd, buf, count, 0);
+#else
+	return read(fd, buf, count);
+#endif
+}
+
+int close_socket(int sock)
+{
+
+	int status = 0;
+
+#ifdef _WIN32
+	status = shutdown(sock, SD_BOTH);
+	if (status == 0) { status = closesocket(sock); }
+#else
+	status = shutdown(sock, SHUT_RDWR);
+	if (status == 0) { status = close(sock); }
+#endif
+
+	return status;
+
+}
+
+
 /* accept client socket ------------------------------------------------------*/
 static int acc_sock(int port)
 {
-    struct sockaddr_in saddr,addr;
-    socklen_t len=sizeof(addr);
-    int ssock,sock,on=1;
-    
-    if ((ssock=socket(AF_INET,SOCK_STREAM,0))<0) {
-        fprintf(stderr,"socket error (%d)\n",errno);
-        return -1;
-    }
-    setsockopt(ssock,SOL_SOCKET,SO_REUSEADDR,(const char *)&on,sizeof(on));
-    
-    memset(&saddr,0,sizeof(saddr));
-    saddr.sin_family=AF_INET;
-    saddr.sin_port=htons(port);
-    
-    if (bind(ssock,(struct sockaddr *)&saddr,sizeof(saddr))<0) {
-        fprintf(stderr,"bind error (%d)\n",errno);
-        close(ssock);
-        return -1;
-    }       
-    listen(ssock,5);
-    while ((sock=accept(ssock,(struct sockaddr *)&addr,&len))<0) {
-        if (errno!=EINTR) fprintf(stderr,"accept error (%d)\n",errno);
-        close(ssock);
-        return -1;
-    }
-    close(ssock);
-    return sock;
+	struct sockaddr_in saddr, addr;
+	socklen_t len = sizeof(addr);
+	int ssock, sock, on = 1;
+
+	if ((ssock = socket(AF_INET, SOCK_STREAM, 0))<0) {
+		fprintf(stderr, "socket error (%d)\n", errno);
+		return -1;
+	}
+	setsockopt(ssock, SOL_SOCKET, SO_REUSEADDR, (const char *)&on, sizeof(on));
+
+	memset(&saddr, 0, sizeof(saddr));
+	saddr.sin_family = AF_INET;
+	saddr.sin_port = htons(port);
+
+	if (bind(ssock, (struct sockaddr *)&saddr, sizeof(saddr))<0) {
+		fprintf(stderr, "bind error (%d)\n", errno);
+		close_socket(ssock);
+		return -1;
+	}
+	listen(ssock, 5);
+	while ((sock = accept(ssock, (struct sockaddr *)&addr, &len))<0) {
+		if (errno != EINTR) fprintf(stderr, "accept error (%d)\n", errno);
+		close_socket(ssock);
+		return -1;
+	}
+	close_socket(ssock);
+	return sock;
 }
+
+
 /* open console ----------------------------------------------------------------
 * open virtual console
 * args   : vt_t   *vt       I   virtual console
@@ -93,7 +131,9 @@ static int acc_sock(int port)
 extern int vt_open(vt_t *vt, int port, const char *dev)
 {
     const char mode[]={C_IAC,C_WILL,C_SUPPGA,C_IAC,C_WILL,C_ECHO};
+#ifndef WIN32
     struct termios tio={0};
+#endif
     int i,sock,fd;
     
     if (vt->state) return 0;
@@ -103,15 +143,16 @@ extern int vt_open(vt_t *vt, int port, const char *dev)
     
     if (port) { /* telnet */
         if ((sock=acc_sock(port))<0) return 0;
-        if (write(sock,mode,6)!=6) {
+        if (write_socket(sock,mode,6)!=6) {
             fprintf(stderr,"telnet write error: port=%d\n",port);
-            close(sock);
+			close_socket(sock);
             return 0;
         }
         vt->type=1;
         vt->in=vt->out=sock;
     }
     else {
+#ifndef WIN32
         if (!*dev) dev=DEF_DEV;
         if ((fd=open(dev,O_RDWR))<0||tcgetattr(fd,&tio)<0) {
             fprintf(stderr,"console device open error: %s\n",dev);
@@ -123,6 +164,12 @@ extern int vt_open(vt_t *vt, int port, const char *dev)
         vt->tio=tio;
         tio.c_iflag=tio.c_lflag=0;
         tcsetattr(vt->in,TCSANOW,&tio);
+#else
+		//vt->in = vt->out = GetStdHandle(STD_OUTPUT_HANDLE);
+
+		//fprintf(stderr, "console device open error\n");
+		//return 0;
+#endif
     }
     vt->state=1;
     return 1;
@@ -137,10 +184,13 @@ extern void vt_close(vt_t *vt)
     int i;
     
     /* restore terminal mode */
+#ifndef WIN32
     if (!vt->type) {
         tcsetattr(vt->in,TCSANOW,&vt->tio);
     }
-    close(vt->in);
+#endif
+	close_socket(vt->in);
+
     if (vt->logfp) fclose(vt->logfp);
     for (i=0;i<MAXHIST;i++) free(vt->hist[i]);
     vt->state=0;
@@ -154,7 +204,7 @@ static int clear_buff(vt_t *vt)
     for (i=0;i<len;i++) *p++=' ';
     for (i=0;i<len;i++) *p++='\b';
     vt->n=vt->nesc=vt->cur=0;
-    return write(vt->out,buff,p-buff)==p-buff;
+    return write_socket(vt->out,buff,p-buff)==p-buff;
 }
 /* refresh line buffer -------------------------------------------------------*/
 static int ref_buff(vt_t *vt)
@@ -164,13 +214,13 @@ static int ref_buff(vt_t *vt)
     for (i=vt->cur;i<vt->n;i++) *p++=vt->buff[i];
     *p++=' ';
     for (;i>=vt->cur;i--) *p++='\b';
-    return write(vt->out,buff,p-buff)==p-buff;
+    return write_socket(vt->out,buff,p-buff)==p-buff;
 }
 /* move cursor right ---------------------------------------------------------*/
 static int right_cur(vt_t *vt)
 {
     if (vt->cur>=vt->n) return 1;
-    if (write(vt->out,vt->buff+vt->cur,1)<1) return 0;
+    if (write_socket(vt->out,vt->buff+vt->cur,1)<1) return 0;
     vt->cur++;
     return 1;
 }
@@ -179,7 +229,7 @@ static int left_cur(vt_t *vt)
 {
     if (vt->cur<=0) return 1;
     vt->cur--;
-    return write(vt->out,"\b",1)==1;
+    return write_socket(vt->out,"\b",1)==1;
 }
 /* delete character before cursor --------------------------------------------*/
 static int del_cur(vt_t *vt)
@@ -197,7 +247,7 @@ static int ins_cur(vt_t *vt, char c)
     if (vt->n>=MAXBUFF) return 1;
     for (i=vt->n++;i>vt->cur;i--) vt->buff[i]=vt->buff[i-1];
     vt->buff[vt->cur++]=c;
-    if (write(vt->out,&c,1)<1) return 0;
+    if (write_socket(vt->out,&c,1)<1) return 0;
     return ref_buff(vt);
 }
 /* add history ---------------------------------------------------------------*/
@@ -238,19 +288,19 @@ static int seq_telnet(vt_t *vt)
         if (vt->nesc<3) return 1;
         msg[1]=vt->esc[2]==C_ECHO||vt->esc[2]==C_SUPPGA?C_DO:C_DONT;
         msg[2]=vt->esc[2];
-        if (write(vt->out,msg,3)<3) return 0;
+        if (write_socket(vt->out,msg,3)<3) return 0;
     }
     else if (vt->esc[1]==C_DO) { /* option negotiation */
         if (vt->nesc<3) return 1;
         msg[1]=vt->esc[2]==C_ECHO||vt->esc[2]==C_SUPPGA?C_WILL:C_WONT;
         msg[2]=vt->esc[2];
-        if (write(vt->out,msg,3)<3) return 0;
+        if (write_socket(vt->out,msg,3)<3) return 0;
     }
     else if (vt->esc[1]==C_WONT||vt->esc[1]==C_DONT) { /* option negotiation */
         if (vt->nesc<3) return 1;
         msg[1]=vt->esc[1]==C_WONT?C_DONT:C_WONT;
         msg[2]=vt->esc[2];
-        if (write(vt->out,msg,3)<3) return 0;
+        if (write_socket(vt->out,msg,3)<3) return 0;
     }
     else if (vt->esc[1]==C_BRK||vt->esc[1]==C_IP) { /* break or interrupt */
         vt->brk=1;
@@ -294,7 +344,7 @@ extern int vt_getc(vt_t *vt, char *c)
     FD_ZERO(&rs);
     FD_SET(vt->in,&rs);
     if (!(stat=select(vt->in+1,&rs,NULL,NULL,&tv))) return 1; /* no data */
-    if (stat<0||read(vt->in,c,1)!=1) return 0; /* error */
+    if (stat<0|| read_socket(vt->in,c,1)!=1) return 0; /* error */
     
     if ((vt->type&&*c==C_IAC)||*c==C_ESC) { /* escape or telnet */
         vt->esc[0]=*c; *c='\0';
@@ -355,7 +405,7 @@ static int vt_putchar(vt_t *vt, const char *buff, int n)
 {
     if (!vt->state) return 0;
     if (vt->logfp) fwrite(buff,1,n,vt->logfp);
-    return write(vt->out,buff,n)==n;
+    return write_socket(vt->out,buff,n)==n;
 }
 /* put character to console ----------------------------------------------------
 * put a character to virtual console

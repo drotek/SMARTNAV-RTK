@@ -28,13 +28,18 @@
 #include "rtklib.h"
 #include "vt.h"
 /* Edison GPIO operation */
+#ifdef __ARDUINO_X86__
 #include "mraa.h"
+#endif
 
 #include <stdio.h>
+#ifndef WIN32
 #include <unistd.h>
+#endif
 
+#ifdef __ARDUINO_X86__
 mraa_gpio_context mux_control = NULL;
-
+#endif
 /* Edison GPIO operation */
 
 static const char rcsid[]="$Id:$";
@@ -59,8 +64,12 @@ static const char rcsid[]="$Id:$";
 #define SQRT(x)     ((x)<=0.0?0.0:sqrt(x))
 
 /* function prototypes -------------------------------------------------------*/
-extern FILE *popen(const char *, const char *);
-extern int pclose(FILE *);
+//extern FILE *popen(const char *, const char *);
+//extern int pclose(FILE *);
+#ifdef WIN32
+#define popen _popen
+#define pclose _pclose
+#endif
 
 /* global variables ----------------------------------------------------------*/
 static rtksvr_t svr;                    /* rtk server struct */
@@ -210,7 +219,11 @@ static void chop(char *str)
     for (p=str+strlen(str)-1;p>=str&&!isgraph((int)*p);p--) *p='\0';
 }
 /* thread to send keep alive for monitor port --------------------------------*/
+#ifdef WIN32
+static DWORD WINAPI sendkeepalive(void *arg)
+#else
 static void *sendkeepalive(void *arg)
+#endif
 {
     trace(3,"sendkeepalive: start\n");
     
@@ -224,7 +237,7 @@ static void *sendkeepalive(void *arg)
 /* open monitor port ---------------------------------------------------------*/
 static int openmoni(int port)
 {
-    pthread_t thread;
+    thread_t thread;
     char path[64];
     
     trace(3,"openmomi: port=%d\n",port);
@@ -233,7 +246,12 @@ static int openmoni(int port)
     if (!stropen(&moni,STR_TCPSVR,STR_MODE_RW,path)) return 0;
     strsettimeout(&moni,timeout,reconnect);
     keepalive=1;
-    pthread_create(&thread,NULL,sendkeepalive,NULL);
+
+#ifdef WIN32
+	thread = CreateThread(NULL, 0, sendkeepalive, NULL, 0, NULL);
+#else
+	pthread_create(&thread, NULL, sendkeepalive, NULL);
+#endif
     return 1;
 }
 /* close monitor port --------------------------------------------------------*/
@@ -1378,6 +1396,7 @@ int main(int argc, char **argv)
     int i,start=0,port=0,outstat=0,trace=0;
     char *dev="",file[MAXSTR]="";
     /* Edison GPIO operation */
+#ifdef __ARDUINO_X86__
     mraa_platform_t platform = mraa_get_platform_type();
 
     switch (platform) {
@@ -1401,7 +1420,40 @@ int main(int argc, char **argv)
     /* Edison GPIO operation */
 
 	mraa_gpio_write(mux_control, 0);
-    
+#endif
+
+#ifdef WIN32
+	WORD wVersionRequested;
+	WSADATA wsaData;
+	int err;
+
+	/* Use the MAKEWORD(lowbyte, highbyte) macro declared in Windef.h */
+	wVersionRequested = MAKEWORD(2, 2);
+
+	err = WSAStartup(wVersionRequested, &wsaData);
+	if (err != 0) {
+		/* Tell the user that we could not find a usable */
+		/* Winsock DLL.                                  */
+		printf("WSAStartup failed with error: %d\n", err);
+		return 1;
+	}
+
+	/* Confirm that the WinSock DLL supports 2.2.*/
+	/* Note that if the DLL supports versions greater    */
+	/* than 2.2 in addition to 2.2, it will still return */
+	/* 2.2 in wVersion since that is the version we      */
+	/* requested.                                        */
+
+	if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 2) {
+		/* Tell the user that we could not find a usable */
+		/* WinSock DLL.                                  */
+		printf("Could not find a usable version of Winsock.dll\n");
+		WSACleanup();
+		return 1;
+	}
+#endif
+
+
     for (i=1;i<argc;i++) {
         if      (!strcmp(argv[i],"-s")) start=1;
         else if (!strcmp(argv[i],"-p")&&i+1<argc) port=atoi(argv[++i]);
@@ -1448,9 +1500,11 @@ int main(int argc, char **argv)
     
     signal(SIGINT, sigshut);    /* keyboard interrupt */
     signal(SIGTERM,sigshut);    /* external shutdown signal */
+#ifndef WIN32
     signal(SIGUSR2,sigshut);
     signal(SIGHUP ,SIG_IGN);
     signal(SIGPIPE,SIG_IGN);
+#endif
     
     while (!intflg) {
         
@@ -1467,7 +1521,9 @@ int main(int argc, char **argv)
         vt_close(&vt);
     }
     /* stop rtk server */
+#ifdef __ARDUINO_X86__
 	mraa_gpio_write(mux_control, 0);
+#endif
     stopsvr(&vt);
     
     if (moniport>0) closemoni();
@@ -1480,5 +1536,10 @@ int main(int argc, char **argv)
     if (!savenav(NAVIFILE,&svr.nav)) {
         fprintf(stderr,"navigation data save error: %s\n",NAVIFILE);
     }
+
+#ifdef WIN32
+	WSACleanup();
+#endif
+
     return 0;
 }
