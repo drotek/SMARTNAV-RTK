@@ -27,7 +27,7 @@ import express = require("express");
 import * as config from "../config";
 import path = require("path");
 
-import * as logger from "../logger";
+import * as logger from "../utilities/logger";
 const log = logger.getLogger("config_files");
 
 interface IParams {

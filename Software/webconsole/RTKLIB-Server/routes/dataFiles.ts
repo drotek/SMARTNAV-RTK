@@ -28,7 +28,7 @@ import express = require("express");
 import * as config from "../config";
 import path = require("path");
 
-import * as logger from "../logger";
+import * as logger from "../utilities/logger";
 const log = logger.getLogger("data_files");
 export default function dataFilesReader(app: express.Express) {
 

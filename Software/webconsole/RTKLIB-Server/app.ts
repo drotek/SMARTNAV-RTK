@@ -27,6 +27,9 @@ import express = require("express");
 import bodyParser = require("body-parser");
 const app = express();
 
+import * as logger from "./utilities/logger";
+const log = logger.getLogger("config_files");
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -57,5 +60,5 @@ import log_route from "./routes/logFiles";
 log_route(app);
 
 const server = app.listen(3000, () => {
-	console.log("Listening on port %s...", server.address().port);
+	log.info("Listening on port %s...", server.address().port);
 });

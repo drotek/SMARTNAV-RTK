@@ -29,7 +29,7 @@ import child_process = require("child_process");
 const exec = child_process.exec;
 import * as config from "../config";
 
-import * as logger from "../logger";
+import * as logger from "../utilities/logger";
 const log = logger.getLogger("admin");
 
 interface IServiceCommands {
