@@ -23,33 +23,39 @@
  * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
  */
 
-var express = require("express");
-var bodyParser = require("body-parser");
-var app = express();
- 
+import express = require("express");
+import bodyParser = require("body-parser");
+const app = express();
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-var allowCrossDomain = function(req, res, next) {
-    res.header('Access-Control-Allow-Origin', '*');
-    res.header('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE');
-    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-      
-    // intercept OPTIONS method
-    if ('OPTIONS' == req.method) {
-      res.sendStatus(200);
-    }
-    else {
-      next();
-    }
+const allowCrossDomain = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+	res.header("Access-Control-Allow-Origin", "*");
+	res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+	res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+	// intercept OPTIONS method
+	if ("OPTIONS" === req.method) {
+		res.sendStatus(200);
+	} else {
+		next();
+	}
 };
 app.use(allowCrossDomain);
- 
-var config = require("./routes/configFiles.js")(app);
-var data = require("./routes/dataFiles.js")(app);
-var admin = require("./routes/admin.js")(app);
-var log = require("./routes/logFiles.js")(app);
- 
-var server = app.listen(3000, function () {
-    console.log("Listening on port %s...", server.address().port);
+
+import config_route from "./routes/configFiles";
+config_route(app);
+
+import data_route from "./routes/dataFiles" ;
+data_route(app);
+
+import admin_route from "./routes/admin";
+admin_route(app);
+
+import log_route from "./routes/logFiles";
+log_route(app);
+
+const server = app.listen(3000, () => {
+	console.log("Listening on port %s...", server.address().port);
 });

@@ -1,0 +1,17 @@
+{
+    "rules": {
+        "no-console": [false],
+        "variable-name": false,
+        "radix": false,
+        "object-literal-sort-keys": false,
+        "trailing-comma":[false],
+        "indent": [true,"tabs"],
+        "max-line-length": [false],
+        "no-string-literal": false,
+        "class-name": false,
+        "no-namespace": [false],
+        "no-bitwise": false,
+        "interface-name": [false,"always-prefix"]
+    },
+    "extends": "tslint:recommended"
+}
