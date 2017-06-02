@@ -164,14 +164,22 @@
 			 ],
 
 			'sources':[
+				'src/convgpx.c',
+				'src/convkml.c',
+				'src/convrnx.c',
+				'src/datum.c',
+				'src/download.c',
 				'src/ephemeris.c',
 				'src/geoid.c',
+				'src/gis.c',
 				'src/ionex.c',
 				'src/lambda.c',
 				'src/options.c',
 				'src/pntpos.c',
+				'src/postpos.c',
 				'src/ppp.c',
 				'src/ppp_ar.c',
+				'src/ppp_corr.c',
 				'src/preceph.c',
 				'src/qzslex.c',
 				'src/rcvraw.c',
@@ -186,10 +194,13 @@
 				'src/rtksvr.c',
 				'src/sbas.c',
 				'src/solution.c',
+				'src/src.pro',
 				'src/stream.c',
 				'src/streamsvr.c',
+				'src/tides.c',
 				'src/tle.c',
 				'src/rcv/binex.c',
+				'src/rcv/cmr.c',
 				'src/rcv/crescent.c',
 				'src/rcv/gw10.c',
 				'src/rcv/javad.c',
@@ -197,6 +208,7 @@
 				'src/rcv/nvs.c',
 				'src/rcv/rcvlex.c',
 				'src/rcv/rt17.c',
+				'src/rcv/septentrio.c',
 				'src/rcv/skytraq.c',
 				'src/rcv/ss2.c',
 				'src/rcv/ublox.c'
@@ -216,6 +228,19 @@
 				'app/rtkrcv/rtkrcv.c',
 				'app/rtkrcv/vt.c',
 				'app/rtkrcv/vt.h'
+			]
+		},
+		{
+			'target_name': 'str2str',
+			'type':'executable',
+			'dependencies':[
+				'rtklib'
+			],
+			'include_dirs':[
+				'app/str2str'
+			],
+			'sources':[
+				'app/str2str/str2str.c'
 			]
 		},
 	]
