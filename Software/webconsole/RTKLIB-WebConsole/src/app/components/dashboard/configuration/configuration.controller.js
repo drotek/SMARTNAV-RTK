@@ -25,6 +25,37 @@
 
 'use strict';
 
+var rtkOutputTypes = {
+
+    "serial": {
+        default: 'ttyUSB0:57600:8:n:1:off',
+        example: "port[:bit_rate[:byte[:parity(n|o|e)[:stopb[:fctr(off|on)]]]]]",
+    },
+    "file": {
+        default: "$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx",
+        example: ":path[::T[::+offset][::xspeed]]"
+    },
+    "tcpsvr": { 
+        default: "2424",
+        example: "port" 
+    },
+    "tcpcli": { 
+        example: "addr:port" 
+    },
+    "ntripsvr": { 
+        example: "user:passwd@addr:port/mntpnt[:str]" 
+    },
+    "ntripcli": { 
+        example: "user:passwd@addr:port/mntpnt" 
+    },
+    "ftp": { 
+        example: "user:passwd@addr/path[::T=poff,tint,off,rint]" 
+    },
+    "http": {
+        example: "addr/path[::T=poff,tint,off,rint]"
+    },
+};
+
 module.exports = /*@ngInject*/ function ($scope, configuration, $modal, $rootScope, admin) {
 
     /* Déclaration du logger */
@@ -46,7 +77,7 @@ module.exports = /*@ngInject*/ function ($scope, configuration, $modal, $rootSco
         isRover: true,
         
         selectedOutputType: '',
-        outputTypes: ['file','tcpsvr','serial'],
+        outputTypes: ["serial","file","tcpsvr","tcpcli","udp","ntrips","ntripc","ftp","http"],//['file','tcpsvr','serial'],
         outputPath: '',
         currentMode: '',
         listNavSys: [
@@ -147,13 +178,31 @@ module.exports = /*@ngInject*/ function ($scope, configuration, $modal, $rootSco
     
     $scope.getDefaultPath = function(selectedItem){
         $scope.selectedOutputType = selectedItem;
-        if(selectedItem === 'file'){
-            $scope.outputPath = '$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx';
-        }else if(selectedItem === 'tcpsvr'){
-            $scope.outputPath = '2424';
-        }else if(selectedItem === 'serial'){
-            $scope.outputPath = 'ttyUSB0:57600:8:n:1:off';
+
+        if (rtkOutputTypes[selectedItem]){
+            $scope.outputPath = rtkOutputTypes[selectedItem].default;
+            $scope.outputExample = rtkOutputTypes[selectedItem].example;
         }
+
+        //$scope.outputExample
+        switch (selectedItem){
+            case "file":
+            $scope.outputPath = '$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx';
+            break;
+            case "tcpsvr":
+            $scope.outputPath = '2424';
+            break;
+            case "serial":
+            $scope.outputPath = 'ttyUSB0:57600:8:n:1:off';
+            break;
+        }
+        // if(selectedItem === 'file'){
+        //     $scope.outputPath = '$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx';
+        // }else if(selectedItem === 'tcpsvr'){
+        //     $scope.outputPath = '2424';
+        // }else if(selectedItem === 'serial'){
+        //     $scope.outputPath = 'ttyUSB0:57600:8:n:1:off';
+        // }
     }
   
     /* Screen Functionnalities */
