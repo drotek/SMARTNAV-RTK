@@ -35,35 +35,36 @@
 /**
  * Imports.
  */
-var appPackage = require('./package.json');
+var appPackage  = require( './package.json');
 
-var gulp = require('gulp');
-var yargs = require('yargs');
-var connect = require('gulp-connect');
+var gulp  = require('gulp');
+var yargs  = require('yargs');
+var connect  = require('gulp-connect');
 
 //gulp.connect = connect;
 
-var watchify = require('watchify');
-var del = require('del');
-var browserify = require('browserify');
-var assign = require('lodash').assign;
-var stringify = require('stringify');
-var envify = require('envify/custom');
-var ngannotate = require('browserify-ngannotate');
-var minifyify = require('minifyify');
-var gutil = require('gulp-util');
-var source = require('vinyl-source-stream');
-var buffer = require('vinyl-buffer');
-var plumber = require('gulp-plumber');
-var less = require('gulp-less');
-var lessglobplugin = require('less-plugin-glob');
-var concat = require('gulp-concat');
-var gulpif = require('gulp-if');
-var autoprefixer = require('gulp-autoprefixer');
-var gulpFilter = require('gulp-filter');
-var svgmin = require('gulp-svgmin');
-var watch = require('gulp-watch');
-var minifyCSS = require('gulp-cssnano');
+var watchify  = require('watchify');
+var del  = require('del');
+var browserify  = require('browserify');
+var assign  = require('lodash').assign;
+var stringify  = require('stringify');
+var envify  = require('envify/custom');
+var ngannotate  = require('browserify-ngannotate');
+var minifyify  = require('minifyify');
+var gutil  = require('gulp-util');
+var source  = require('vinyl-source-stream');
+var buffer  = require('vinyl-buffer');
+var plumber  = require('gulp-plumber');
+var less  = require('gulp-less');
+var lessglobplugin  = require('less-plugin-glob');
+var concat  = require('gulp-concat');
+var gulpif  = require('gulp-if');
+var autoprefixer  = require('gulp-autoprefixer');
+var gulpFilter  = require('gulp-filter');
+var svgmin  = require('gulp-svgmin');
+var watch  = require('gulp-watch');
+var minifyCSS  = require('gulp-cssnano');
+var typescript  = require('gulp-typescript');
 
 /**
  * Gulp Tasks config parameters.
@@ -80,7 +81,7 @@ gulp.paths = {
 
 //Files
 gulp.files = {
-  app: gulp.paths.src + '/index.js',
+  app: gulp.paths.dist + '/app/index.js',
   less: gulp.paths.src + '/assets/styles/themes/**/main.less',
   index: gulp.paths.src + '/index.html'
 };
@@ -135,7 +136,7 @@ function bundle() {
  * Tasks
  */
 
-gulp.task('browserify:watch', function() {
+gulp.task('browserify:watch',['typescript','copy:index','copy:html'], function() {
     x = watchify(browserify(opts));
     initTransforms();
     x.on('update', bundle);
@@ -143,24 +144,33 @@ gulp.task('browserify:watch', function() {
     return bundle();
 });
 
+gulp.task('typescript', function () {
+    return gulp.src('src/app/**/*.ts')
+        .pipe(typescript({
+            target:'es5'
+        }))
+        .js
+        .pipe(gulp.dest('dist/app'));
+    });
+
 gulp.task('clean:js', function (done) {
-    del([gulp.paths.dist + '/*.js'], done);
+    return del([gulp.paths.dist + '/*.js'], done);
 });
 
 gulp.task('clean:css', function (done) {
-    del([gulp.paths.dist + '/*.css'], done);
+    return del([gulp.paths.dist + '/*.css'], done);
 });
 
 gulp.task('clean:images', function (done) {
-    del([gulp.paths.dist + '/assets/images'], done);
+    return del([gulp.paths.dist + '/assets/images'], done);
 });
 
 gulp.task('clean:fonts', function (done) {
-    del([gulp.paths.dist + '/assets/fonts'], done);
+    return del([gulp.paths.dist + '/assets/fonts'], done);
 });
 
 gulp.task('clean', function (done) {
-    del([gulp.paths.dist + '/**/*'], { force: true }, function (err, paths) {
+    return del([gulp.paths.dist + '/**/*'], { force: true }, function (err, paths) {
         console.log('Erreur lors du clean', err, paths);
         done();
     });
@@ -186,7 +196,7 @@ gulp.task('copy:images', function () {
 
     var svgFilter = gulpFilter('**/*.svg', {restore: true});
 
-    gulp.src([gulp.paths.assets + '/images/**/*'], {base: gulp.paths.src + '/'})
+    return gulp.src([gulp.paths.assets + '/images/**/*'], {base: gulp.paths.src + '/'})
         .pipe(svgFilter)
         .pipe(svgmin({
             js2svg: {
@@ -267,26 +277,43 @@ gulp.task('copy:images', function () {
 });
 
 gulp.task('copy:fonts', function () {
-    gulp.src([gulp.paths.assets + '/fonts/**/*'], {base: gulp.paths.src + '/'})
+    return gulp.src([gulp.paths.assets + '/fonts/**/*'], {base: gulp.paths.src + '/'})
         .pipe(gulp.dest(gulp.paths.dist));
 });
 
+gulp.task("copy:html", function(){
+      return gulp.src([gulp.paths.src + '/**/*.html'],{base: gulp.paths.src + '/'})
+         .pipe(gulp.dest(gulp.paths.dist));
+});
+
 gulp.task('copy:index', function () {
-    gulp.src([gulp.paths.src + '/index.html'])
+    return gulp.src([gulp.paths.src + '/index.html'])
         .pipe(gulp.dest(gulp.paths.dist));
 });
 
 gulp.task('copy:chartjs', function () {
-    gulp.src([gulp.paths.externalLib + '/Chart.min.js'])
+    return gulp.src([gulp.paths.externalLib + '/Chart.min.js'])
+        .pipe(gulp.dest(gulp.paths.dist));
+});
+
+gulp.task('copy:toastr', function () {
+    return gulp.src([
+        gulp.paths.node_modules + '/angular-toastr/dist/angular-toastr.min.js',
+        gulp.paths.node_modules + '/angular-toastr/dist/angular-toastr.tpls.min.js',
+        gulp.paths.node_modules + '/angular-toastr/dist/angular-toastr.min.css',
+        ])
         .pipe(gulp.dest(gulp.paths.dist));
 });
 
 
-gulp.task('copy', ['copy:images', 'copy:fonts', 'copy:index', 'copy:chartjs']);
+gulp.task('copy', ['copy:images', 'copy:fonts','copy:html', 'copy:index', 'copy:chartjs','copy:toastr']);
 
 gulp.task('watch', function () {
     watch([gulp.paths.assets + '/**/*.less', gulp.paths.src + '/app/**/*.less'], function() {
         gulp.start('style');
+    });
+    watch([gulp.paths.src + '/app/**/*.ts'], function() {
+        gulp.start('typescript');
     });
     watch([gulp.paths.assets + '/images/*'], function() {
         gulp.start('copy:images');
@@ -301,7 +328,7 @@ gulp.task('watch', function () {
 
 gulp.task('default', ['build']);
 
-gulp.task('build', ['clean','browserify:watch', 'style', 'copy']);
+gulp.task('build', ['clean','typescript','browserify:watch', 'style', 'copy']);
 
 gulp.task('connect', function() {
   connect.server({
@@ -313,4 +340,4 @@ gulp.task('connect', function() {
 });
 
 
-gulp.task('serve', ['connect', 'browserify:watch', 'style', 'copy', 'watch']);
+gulp.task('serve', ['connect','typescript', 'browserify:watch', 'style', 'copy', 'watch']);
