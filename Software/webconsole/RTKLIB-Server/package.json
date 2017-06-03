@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "REST Server",
   "main": "app.js",
+  "contributors": [
+    "Dror Gluska"
+  ],
   "scripts": {
     "build": "tsc",
     "start": "ts-node app.ts",

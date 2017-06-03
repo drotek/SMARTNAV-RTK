@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "contributors": [
+    "Dror Gluska"
+  ],
   "scripts": {
     "start": "gulp serve"
   },
