@@ -25,24 +25,25 @@
 
 <div class="navbar navbar-inverse navbar-fixed-top">
   <div class="navbar-header">
-    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse" ng-click="switchMenu()" ng-class="{active: isMenuOpen}">
+    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse" ng-click="switchMenu()"
+      ng-class="{active: isMenuOpen}">
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
       <span class="icon-bar"></span>
     </button>
     <a class="navbar-brand" href="#">
-          <div class="logo" style="float:left"></div>RTKLIB WEB CONSOLE
+      <div class="logo" style="float:left"></div>RTKLIB WEB CONSOLE
     </a>
   </div>
-    
+
   <div class="navbar-collapse collapse custom-menu" ng-class="{in: isMenuOpen}">
     <ul class="nav navbar-nav">
-       <li><a ui-sref="global.dashboard.admin" ui-sref-active="active" ng-click="switchMenu()">Admin</a></li>
-	   <li ng-if="showMenu"><a ui-sref="global.dashboard.status" ui-sref-active="active" ng-click="switchMenu()">Status</a></li>
-       <li><a ui-sref="global.dashboard.configuration" ui-sref-active="active" ng-click="switchMenu()">Config</a></li>
-       <li ng-if="showMenu"><a ui-sref="global.dashboard.map" ui-sref-active="active" ng-click="switchMenu()">Map</a></li>
-       <li ng-if="showMenu"><a ui-sref="global.dashboard.log" ui-sref-active="active"  ng-click="switchMenu()">Log</a></li>
-	</ul>
+      <li><a ui-sref="global.dashboard.admin" ui-sref-active="active" ng-click="switchMenu()">Admin</a></li>
+      <li ng-if="showMenu"><a ui-sref="global.dashboard.status" ui-sref-active="active" ng-click="switchMenu()">Status</a></li>
+      <li><a ui-sref="global.dashboard.configuration" ui-sref-active="active" ng-click="switchMenu()">Config</a></li>
+      <li ng-if="showMenu"><a ui-sref="global.dashboard.map" ui-sref-active="active" ng-click="switchMenu()">Map</a></li>
+      <li ng-if="showMenu"><a ui-sref="global.dashboard.log" ui-sref-active="active" ng-click="switchMenu()">Log</a></li>
+    </ul>
   </div>
 </div>
 

@@ -29,6 +29,8 @@ import child_process = require("child_process");
 const exec = child_process.exec;
 import * as config from "../config";
 
+import * as serial from "../utilities/serial";
+
 import * as logger from "../utilities/logger";
 const log = logger.getLogger("admin");
 
@@ -54,7 +56,7 @@ export default function adminModule(app: express.Express) {
 		disable: config.serviceController + " disable "
 	};
 
-	app.post("/service",  (req, res) => {
+	app.post("/service", (req, res) => {
 		log.info("POST /service", req.body);
 		res.setHeader("Access-Control-Allow-Origin", "*");
 
@@ -140,6 +142,11 @@ export default function adminModule(app: express.Express) {
 		res.setHeader("Access-Control-Allow-Origin", "*");
 		execComandLine(res, config.timeSyncCommandLine);
 
+	});
+
+	app.get("/listPorts", async (req, res) => {
+		const ports = await serial.list();
+		res.send(ports);
 	});
 
 	function execComandLine(res: express.Response, commandLine: string) {

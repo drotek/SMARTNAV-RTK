@@ -34,6 +34,34 @@
                 <span class="confSwitch-switch"></span>
             </label>
         </div>
+
+         <accordion close-others="false">
+            <accordion-group heading="GPS Parameters" is-open="status.isGPSParametersOpen">
+                <div style="margin:5px">
+                    <div class="label-size parameter-label">
+                        Input Port
+                    </div>
+                    <div class="parameter-restriction">
+                        <select ng-model="selectedInputPort" ng-options="port.comName as port.comName  for port in inputPorts" ng-change="getDefaultPath(selectedInputPort)">
+                        </select>
+                    </div>
+                </div>
+            </accordion-group>
+          
+            <accordion-group heading="CMD File" is-open="status.isBaseCmdOpen">
+                <div ng-if="cmdParams.length">
+                    <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
+                        <div class="label-size parameter-label" title="{{item.key}}">
+                            {{item.comment}}
+                        </div>
+                        <div class="parameter-restriction">
+                            <input type="text" name="input" ng-model="item.value"/>
+                            {{item.unit}}
+                        </div>
+                    </div>
+                </div>
+            </accordion-group>
+      </accordion>
         
         <accordion close-others="oneAtATime" ng-if="isRover">
             <accordion-group heading="Required Parameters" is-open="status.isRequieredOpen">

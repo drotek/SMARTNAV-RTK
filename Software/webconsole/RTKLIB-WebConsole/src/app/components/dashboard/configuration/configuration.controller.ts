@@ -175,6 +175,12 @@ export default/*@ngInject*/ function ($scope: angular.IScope, configuration: ICo
         }
     });
 
+    $scope.inputPorts = [];
+    admin.listPorts().then((ports)=>{
+        $scope.inputPorts = ports;
+    })
+    
+
     /* Utility functions */
     $scope.hasRestriction = (obj) => {
         let result = false;

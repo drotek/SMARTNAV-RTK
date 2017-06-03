@@ -27,7 +27,7 @@ import angular = require("angular");
 import angular_toastr = require("angular-toastr");
 import { IAdminService } from "../../shared/services/admin.service";
 
-export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminService,$rootScope : angular.IRootScopeService, toastr : any) {
+export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminService, $rootScope: angular.IRootScopeService, toastr: any) {
 
     /* Déclaration du logger */
     console.log('dashboard');
@@ -58,8 +58,8 @@ export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminServ
     /* Loading Process */
     admin.getConfigType();
 
-    $rootScope.$on("unhandledException",(e,err : string,cause)=>{
-         toastr.error(err.substr(0,err.indexOf(":")),'Error');    
+    $rootScope.$on("unhandledException", (e, err: string, cause) => {
+        toastr.error(err.substr(0, err.indexOf(":")), 'Error');
     });
 
 };

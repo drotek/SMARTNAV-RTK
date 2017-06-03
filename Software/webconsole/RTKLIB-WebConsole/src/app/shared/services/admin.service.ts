@@ -26,123 +26,149 @@
 import angular = require("angular");
 
 export interface IModuleResponse {
-	error?: Error;
-	stdout?: string;
-	stderr?: string;
-	isActive?: boolean;
-	isEnabled?: boolean;
+    error?: Error;
+    stdout?: string;
+    stderr?: string;
+    isActive?: boolean;
+    isEnabled?: boolean;
 }
 
-export interface IAdminService{
-    adminService(command : string, config? : string):angular.IPromise<IModuleResponse>;
+export interface portConfig {
+    comName: string;
+    manufacturer: string;
+    serialNumber: string;
+    pnpId: string;
+    locationId: string;
+    vendorId: string;
+    productId: string;
+}
+
+export interface IAdminService {
+    adminService(command: string, config?: string): angular.IPromise<IModuleResponse>;
     getConfigType(): angular.IPromise<IModuleResponse>;
-    getActiveMode (): string;
+    getActiveMode(): string;
 
-    updatePlatform () : angular.IPromise<IModuleResponse>;
-    syncTime () : angular.IPromise<IModuleResponse>;
+    updatePlatform(): angular.IPromise<IModuleResponse>;
+    syncTime(): angular.IPromise<IModuleResponse>;
+
+    listPorts() : angular.IPromise<portConfig[]>
 }
+
+
 
 export default function () {
-  return {
-    $get: /*@ngInject*/ function ($http : angular.IHttpService, $rootScope : angular.IRootScopeService) {
+    return {
+        $get: /*@ngInject*/ function ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
 
-		/* Déclaration des variables utilisées dans le service */
-        var activeMode = '';
-        
-		/**
-		* Opérations disponibles pour le service configuration.
-		*/
-		var service : IAdminService = {
-		  adminService: adminService,
-          getConfigType: getConfigType,
-          getActiveMode: getActiveMode,
-          updatePlatform: updatePlatform,
-          syncTime: syncTime
-		};
+            /* Déclaration des variables utilisées dans le service */
+            var activeMode = '';
 
-		return service;
+            /**
+            * Opérations disponibles pour le service configuration.
+            */
+            var service: IAdminService = {
+                adminService: adminService,
+                getConfigType: getConfigType,
+                getActiveMode: getActiveMode,
+                updatePlatform: updatePlatform,
+                listPorts : listPorts,
+                syncTime: syncTime
+            };
 
-		/* Définition des fonctions du service de configuration */
-    
+            return service;
 
-		function adminService(command : string, config? : string){
+            /* Définition des fonctions du service de configuration */
 
-            var url = $rootScope.host+':3000/service'
-            
-            var configType = $rootScope.confType;
-            if(config){
-                configType = config;
-            }
-            
-            var params = {
-                commandType : command,
-                configType: configType
-            }
-            
-		    return $http({
-				method: 'POST',
-				url: url,
-                data: params
-			}).then((response) =>{
-                //console.log(response.data);
-				return <IModuleResponse>response.data;
-			});
-		  
-		}
-        
-        function getActiveMode () {
-          return activeMode;
-        }
-        
-        function getConfigType() {
-            return adminService('status', 'ROVER').then((response)=>{
-                console.log('status ROVER ', response);
-                if(response.isEnabled === true){
-                    console.log('ROVER enable');
-                    activeMode = 'ROVER';
-                    return response;
-                }else{
-                    return adminService('status', 'BASE').then(function(response2){
-                        console.log('status BASE ', response2);
-                        if(response2.isEnabled === true){
-                            console.log('BASE enable');
-                            activeMode = 'BASE';
-                        }
-                        return response2;
-                    });
+
+            function adminService(command: string, config?: string) {
+
+                var url = $rootScope.host + ':3000/service'
+
+                var configType = $rootScope.confType;
+                if (config) {
+                    configType = config;
                 }
-                
-                
-            });
-        }
-        
-        function updatePlatform () {
-            var url = $rootScope.host+':3000/updatePlatform'
-            
-		    return $http({
-				method: 'GET',
-				url: url
-			}).then(function (response) {
-                //console.log(response.data);
-				return response.data as IModuleResponse;
-			});
-        }
-        
-        function syncTime () {
-            var url = $rootScope.host+':3000/syncTime'
-            
-		    return $http({
-				method: 'GET',
-				url: url
-			}).then(function (response) {
-                //console.log(response.data);
-				return response.data;
-			});
-        }
 
-      // fin - Définition des fonctions du service
+                var params = {
+                    commandType: command,
+                    configType: configType
+                }
+
+                return $http({
+                    method: 'POST',
+                    url: url,
+                    data: params
+                }).then((response) => {
+                    //console.log(response.data);
+                    return <IModuleResponse>response.data;
+                });
+
+            }
+
+            function getActiveMode() {
+                return activeMode;
+            }
+
+            function getConfigType() {
+                return adminService('status', 'ROVER').then((response) => {
+                    console.log('status ROVER ', response);
+                    if (response.isEnabled === true) {
+                        console.log('ROVER enable');
+                        activeMode = 'ROVER';
+                        return response;
+                    } else {
+                        return adminService('status', 'BASE').then(function (response2) {
+                            console.log('status BASE ', response2);
+                            if (response2.isEnabled === true) {
+                                console.log('BASE enable');
+                                activeMode = 'BASE';
+                            }
+                            return response2;
+                        });
+                    }
 
 
-    }
-  };
+                });
+            }
+
+            function updatePlatform() {
+                var url = $rootScope.host + ':3000/updatePlatform'
+
+                return $http({
+                    method: 'GET',
+                    url: url
+                }).then(function (response) {
+                    //console.log(response.data);
+                    return response.data as IModuleResponse;
+                });
+            }
+
+            function syncTime() {
+                var url = $rootScope.host + ':3000/syncTime'
+
+                return $http({
+                    method: 'GET',
+                    url: url
+                }).then(function (response) {
+                    //console.log(response.data);
+                    return response.data;
+                });
+            }
+
+            function listPorts() : angular.IPromise<portConfig[]>{
+                var url = $rootScope.host + ':3000/listPorts'
+
+                return $http({
+                    method: 'GET',
+                    url: url
+                }).then(function (response) {
+                    return response.data;
+                });
+            }
+
+            // fin - Définition des fonctions du service
+
+
+        }
+    };
 };
