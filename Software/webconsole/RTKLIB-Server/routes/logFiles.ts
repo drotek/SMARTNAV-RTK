@@ -23,7 +23,8 @@
  * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fs = require("fs");
+// import fs = require("fs");
+import * as fs from "../utilities/fs_wrapper";
 import express = require("express");
 import * as config from "../config";
 import path = require("path");
@@ -37,12 +38,12 @@ export default function logFilesReader(app: express.Express) {
 		return str.indexOf(suffix, str.length - suffix.length) !== -1;
 	}
 
-	function getListFile(directory: string, listExtensions: string[]) {
+	async function getListFile(directory: string, listExtensions: string[]) {
 		const toReturn = {
 			listFiles: [] as string[]
 		};
 
-		const files = fs.readdirSync(directory);
+		const files = await fs.readdir(directory);
 		const nbFile = files.length;
 
 		const nbExtension = listExtensions.length;
@@ -65,10 +66,10 @@ export default function logFilesReader(app: express.Express) {
 		return toReturn;
 	}
 
-	app.get("/listLogFiles", (req, res) => {
+	app.get("/listLogFiles", async (req, res) => {
 		log.info("GET /listLogFiles");
 		res.setHeader("Access-Control-Allow-Origin", "*");
-		const listeLogs = getListFile(config.logFilesPath, [".stat", ".trace"]);
+		const listeLogs = await getListFile(config.logFilesPath, [".stat", ".trace"]);
 		res.send(listeLogs);
 	});
 
@@ -78,134 +79,133 @@ export default function logFilesReader(app: express.Express) {
 		res.send(getListFile(config.logFilesPath, [".ubx"]));
 	});
 
-	app.post("/logFile", (req, res) => {
+	app.post("/logFile", async (req, res) => {
 		log.info("POST /logFile", req.body);
 		res.setHeader("Access-Control-Allow-Origin", "*");
 
 		if (req.body.name) {
 			const fileName = req.body.name;
 
-			fs.access(path.join(config.logFilesPath , fileName), fs.constants.F_OK, (err) => {
-				if (!err) {
-					res.setHeader("content-type", "plain/text");
-					fs.createReadStream(path.join(config.logFilesPath , fileName)).pipe(res);
-				}
-			});
+			try {
+				await fs.access(path.join(config.logFilesPath, fileName), fs.constants.F_OK);
+
+				res.setHeader("content-type", "plain/text");
+				fs.createReadStream(path.join(config.logFilesPath, fileName)).pipe(res);
+			} catch (e) {
+				res.status(500).send("unable to save log");
+			}
 		}
 	});
 
-	app.post("/ubxFile", (req, res) => {
+	app.post("/ubxFile", async (req, res) => {
 		log.info("POST /ubxFile", req.body);
 		res.setHeader("Access-Control-Allow-Origin", "*");
 
 		if (req.body.name) {
 			const fileName: string = req.body.name;
 
-			fs.access(path.join(config.logFilesPath , fileName), fs.constants.F_OK, (err) => {
-				if (!err) {
-					res.setHeader("content-type", "application/octet-stream");
-					res.sendFile(fileName, { root: config.logFilesPath });
-				}
-			});
+			try {
+				await fs.access(path.join(config.logFilesPath, fileName), fs.constants.F_OK);
+				res.setHeader("content-type", "application/octet-stream");
+				res.sendFile(fileName, { root: config.logFilesPath });
+			} catch (e) {
+				res.status(500).send("unable to save ubx file");
+			}
 		}
 	});
 
-	app.get("/baseSatellites", (req, res) => {
+	app.get("/baseSatellites", async (req, res) => {
 		log.info("GET /baseSatellites");
 		res.setHeader("Access-Control-Allow-Origin", "*");
 
-		const ubxFiles = getListFile(config.dataFilesPath, [".ubx"]);
+		const ubxFiles = await getListFile(config.dataFilesPath, [".ubx"]);
 		const nbFile = ubxFiles.listFiles.length;
 
 		if (nbFile > 0) {
 			const fileName = ubxFiles.listFiles[0];
-			fs.readFile(path.join( config.dataFilesPath , fileName), (err, data) => {
-				if (err) {
-					throw err;
-				}
+			const data = await fs.readFile(path.join(config.dataFilesPath, fileName));
 
-				const buffer = data;
-				const bufferSize = data.length;
+			const buffer = data;
+			const bufferSize = data.length;
 
-				const listSatData = [];
+			const listSatData = [];
 
-				// 0xB5 0x62 0x02 0x15
-				// 181  98   2    21
-				/*for(var i=0; i<bufferSize-5; i++){
-					if(buffer[i] === 181){
-						if(buffer[i+1] === 98){
-							if(buffer[i+2] === 2){
-								if(buffer[i+3] === 21){
-									var lenght = buffer[i+5].toString(16) + '' + buffer[i+4].toString(16);
-									lenght = parseInt(lenght,16);
-									var numMeas = (lenght -16)/32;
-									console.log('numMeas --> ' + numMeas);
+			// 0xB5 0x62 0x02 0x15
+			// 181  98   2    21
+			/*for(var i=0; i<bufferSize-5; i++){
+				if(buffer[i] === 181){
+					if(buffer[i+1] === 98){
+						if(buffer[i+2] === 2){
+							if(buffer[i+3] === 21){
+								var lenght = buffer[i+5].toString(16) + '' + buffer[i+4].toString(16);
+								lenght = parseInt(lenght,16);
+								var numMeas = (lenght -16)/32;
+								console.log('numMeas --> ' + numMeas);
 
-									i = i+6;
+								i = i+6;
 
-									console.log('numMeas --> ' + buffer[i+11]);
+								console.log('numMeas --> ' + buffer[i+11]);
 
-									var currentLoopSats = [];
-									for(var j=0; j<numMeas; j++){
-										var offset = 42 + 32*j;
-										var cno = buffer[i+offset];
-										offset = 36 + 32*j;
-										var gnssId = buffer[i+offset];
-										offset = 37 + 32*j;
-										var svId = buffer[i+offset];
+								var currentLoopSats = [];
+								for(var j=0; j<numMeas; j++){
+									var offset = 42 + 32*j;
+									var cno = buffer[i+offset];
+									offset = 36 + 32*j;
+									var gnssId = buffer[i+offset];
+									offset = 37 + 32*j;
+									var svId = buffer[i+offset];
 
-										currentLoopSats.push(buildSatData(gnssId,svId,cno));
-									}
-
-									listSatData.push(currentLoopSats);
-
+									currentLoopSats.push(buildSatData(gnssId,svId,cno));
 								}
+
+								listSatData.push(currentLoopSats);
+
 							}
 						}
 					}
-				}*/
+				}
+			}*/
 
-				let firstOccurSkipped = false;
+			let firstOccurSkipped = false;
 
-				// 0xB5 0x62 0x02 0x15
-				// 181  98   2    21
-				for (let i = bufferSize - 5; 0 <= i && listSatData.length === 0; i--) {
-					if (buffer[i] === 21) {
-						if (buffer[i - 1] === 2) {
-							if (buffer[i - 2] === 98) {
-								if (buffer[i - 3] === 181) {
-									if (firstOccurSkipped) {
-										const bufferlength = buffer[i + 2].toString(16) + "" + buffer[i + 1].toString(16);
-										const length = parseInt(bufferlength, 16);
-										const numMeas = (length - 16) / 32;
+			// 0xB5 0x62 0x02 0x15
+			// 181  98   2    21
+			for (let i = bufferSize - 5; 0 <= i && listSatData.length === 0; i--) {
+				if (buffer[i] === 21) {
+					if (buffer[i - 1] === 2) {
+						if (buffer[i - 2] === 98) {
+							if (buffer[i - 3] === 181) {
+								if (firstOccurSkipped) {
+									const bufferlength = buffer[i + 2].toString(16) + "" + buffer[i + 1].toString(16);
+									const length = parseInt(bufferlength, 16);
+									const numMeas = (length - 16) / 32;
 
-										i = i + 3;
+									i = i + 3;
 
-										for (let j = 0; j < numMeas; j++) {
-											let offset = 42 + 32 * j;
-											const cno = buffer[i + offset];
-											offset = 36 + 32 * j;
-											const gnssId = buffer[i + offset];
-											offset = 37 + 32 * j;
-											const svId = buffer[i + offset];
+									for (let j = 0; j < numMeas; j++) {
+										let offset = 42 + 32 * j;
+										const cno = buffer[i + offset];
+										offset = 36 + 32 * j;
+										const gnssId = buffer[i + offset];
+										offset = 37 + 32 * j;
+										const svId = buffer[i + offset];
 
-											listSatData.push(buildSatData(gnssId, svId, cno));
-										}
-									} else {
-										firstOccurSkipped = true;
+										listSatData.push(buildSatData(gnssId, svId, cno));
 									}
+								} else {
+									firstOccurSkipped = true;
 								}
 							}
 						}
 					}
 				}
+			}
 
-				res.send({
-					name: fileName,
-					listSatData
-				});
-				return;
+			res.send({
+				name: fileName,
+				listSatData
 			});
+			return;
 		}
 
 		res.send(null);

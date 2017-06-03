@@ -22,7 +22,8 @@
  * You should have received a copy of the GNU General Public License
  * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
  */
-import fs = require("fs");
+// import fs = require("fs");
+import * as fs from "../utilities/fs_wrapper";
 import express = require("express");
 import * as config from "../config";
 import path = require("path");
@@ -271,44 +272,46 @@ export default function configFileEditor(app: express.Express) {
 		return str.indexOf(suffix, str.length - suffix.length) !== -1;
 	}
 
-	app.get("/listConfigFile", (req, res) => {
+	app.get("/listConfigFile", async (req, res) => {
 		log.info("GET /listConfigFile");
-		res.setHeader("Access-Control-Allow-Origin", "*");
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
 
-		const toReturn = {
-			listConfigFiles: [] as string[]
-		};
+			const toReturn = {
+				listConfigFiles: [] as string[]
+			};
 
-		const files = fs.readdirSync(config.configFilesPath);
-		const nbFile = files.length;
+			const files = await fs.readdir(config.configFilesPath);
+			const nbFile = files.length;
 
-		for (let i = 0; i < nbFile; i++) {
-			const currentConfigFile = files[i];
+			for (let i = 0; i < nbFile; i++) {
+				const currentConfigFile = files[i];
 
-			if (currentConfigFile.indexOf(config.configFiles["current_conf"]) > -1 ||
-				endsWith(currentConfigFile, config.configFiles.user_extension) ||
-				endsWith(currentConfigFile, config.configFiles.drotek_extension)) {
-				toReturn.listConfigFiles.push(currentConfigFile);
+				if (currentConfigFile.indexOf(config.configFiles["current_conf"]) > -1 ||
+					endsWith(currentConfigFile, config.configFiles.user_extension) ||
+					endsWith(currentConfigFile, config.configFiles.drotek_extension)) {
+					toReturn.listConfigFiles.push(currentConfigFile);
+				}
 			}
+
+			res.send(toReturn);
+		} catch (e) {
+			log.error("error executing GET /listConfigFile", e);
+			res.status(500).send( "error executing GET /listConfigFile");
 		}
-
-		res.send(toReturn);
-
 	});
 
-	app.get("/configFile", (req, res) => {
+	app.get("/configFile", async (req, res) => {
 		log.info("GET /configFile");
-		res.setHeader("Access-Control-Allow-Origin", "*");
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
 
-		let fileName = config.configFiles["current_conf"];
-		if (req.query.name) {
-			fileName = req.query.name;
-		}
-
-		fs.readFile(path.join(config.configFilesPath , fileName), "utf-8", function read(err, data) {
-			if (err) {
-				throw err;
+			let fileName = config.configFiles["current_conf"];
+			if (req.query.name) {
+				fileName = req.query.name;
 			}
+
+			const data = await fs.readFile(path.join(config.configFilesPath, fileName), "utf-8");
 
 			const lines = data.split("\n");
 			const nbLines = lines.length;
@@ -363,56 +366,52 @@ export default function configFileEditor(app: express.Express) {
 			}
 
 			if (pathCmd) {
-				fs.readFile(pathCmd, "utf-8", function read(errCmd, dataCmd) {
-					if (errCmd) {
-						throw errCmd;
-					}
+				const dataCmd = await fs.readFile(pathCmd, "utf-8");
 
-					const linesCmd = dataCmd.split("\n");
-					const nbLinesCmd = linesCmd.length;
+				const linesCmd = dataCmd.split("\n");
+				const nbLinesCmd = linesCmd.length;
 
-					for (let j = 0; j < nbLinesCmd; j++) {
-						const currentCmdLine = linesCmd[j];
+				for (let j = 0; j < nbLinesCmd; j++) {
+					const currentCmdLine = linesCmd[j];
 
-						if (currentCmdLine.substring(0, 1) !== "#") {
-							const cmdLineComponents = currentCmdLine.split(" ");
+					if (currentCmdLine.substring(0, 1) !== "#") {
+						const cmdLineComponents = currentCmdLine.split(" ");
 
-							if (cmdLineComponents.length > 0) {
-								const currentCmdType = cmdLineComponents[1];
+						if (cmdLineComponents.length > 0) {
+							const currentCmdType = cmdLineComponents[1];
 
-								const currentParam: IParameter = {
-									key: currentCmdType,
-									value: pathCmdValue,
-									unit: paramUnit[pathCmdKey],
-									comment: paramComment[pathCmdKey]
-								};
+							const currentParam: IParameter = {
+								key: currentCmdType,
+								value: pathCmdValue,
+								unit: paramUnit[pathCmdKey],
+								comment: paramComment[pathCmdKey]
+							};
 
-								if (currentCmdType === "CFG-RATE") {
-									currentParam.value = 1000 / parseInt(cmdLineComponents[2]);
-									currentParam.unit = "Hz";
-									currentParam.comment = "Frequency";
-									cmdParameters.push(currentParam);
-								} else if (currentCmdType === "CFG-PRT") {
-									currentParam.value = cmdLineComponents[6];
-									currentParam.unit = "";
-									currentParam.comment = "Baud Rate";
-									cmdParameters.push(currentParam);
-								}
+							if (currentCmdType === "CFG-RATE") {
+								currentParam.value = 1000 / parseInt(cmdLineComponents[2]);
+								currentParam.unit = "Hz";
+								currentParam.comment = "Frequency";
+								cmdParameters.push(currentParam);
+							} else if (currentCmdType === "CFG-PRT") {
+								currentParam.value = cmdLineComponents[6];
+								currentParam.unit = "";
+								currentParam.comment = "Baud Rate";
+								cmdParameters.push(currentParam);
 							}
 						}
 					}
+				}
 
-					const response: IParamResponse = {
-						name: fileName,
-						requiredParameters,
-						advancedParameters,
-						otherParameters,
-						cmdParameters
-					};
+				const response: IParamResponse = {
+					name: fileName,
+					requiredParameters,
+					advancedParameters,
+					otherParameters,
+					cmdParameters
+				};
 
-					res.send(response);
+				res.send(response);
 
-				});
 			} else {
 				res.send({
 					name: fileName,
@@ -422,17 +421,17 @@ export default function configFileEditor(app: express.Express) {
 					cmdParameters
 				});
 			}
-
-		});
+		} catch (e) {
+			log.error("error executing GET /configFile", e);
+			res.status(500).send( "error executing GET /configFile");
+		}
 
 	});
 
-	app.get("/baseCMD", (req, res) => {
+	app.get("/baseCMD", async (req, res) => {
 		log.info("GET /baseCMD");
-		fs.readFile(path.join(config.configFilesPath , config.configFiles.base_cmd), "utf-8", function read(errCmd, dataCmd) {
-			if (errCmd) {
-				throw errCmd;
-			}
+		try {
+			const dataCmd = await fs.readFile(path.join(config.configFilesPath, config.configFiles.base_cmd), "utf-8");
 
 			const linesCmd = dataCmd.split("\n");
 			const nbLinesCmd = linesCmd.length;
@@ -474,18 +473,18 @@ export default function configFileEditor(app: express.Express) {
 				otherParameters: [],
 				cmdParameters
 			});
-
-		});
+		} catch (e) {
+			log.error("error executing GET /baseCMD", e);
+			res.status(500).send( "error executing GET /baseCMD");
+		}
 	});
 
-	app.get("/basePosition", (req, res) => {
+	app.get("/basePosition", async (req, res) => {
 		log.info("GET /basePosition");
-		res.setHeader("Access-Control-Allow-Origin", "*");
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
 
-		fs.readFile(path.join(config.configFilesPath , config.configFiles["current_conf"]), "utf-8", function read(err, data) {
-			if (err) {
-				throw err;
-			}
+			const data = await fs.readFile(path.join(config.configFilesPath, config.configFiles["current_conf"]), "utf-8");
 
 			let pos1;
 			let pos2;
@@ -533,7 +532,11 @@ export default function configFileEditor(app: express.Express) {
 				pos3,
 				postype
 			});
-		});
+
+		} catch (e) {
+			log.error("error executing GET /basePosition", e);
+			res.status(500).send( "error executing GET /basePosition");
+		}
 
 	});
 
@@ -555,189 +558,189 @@ export default function configFileEditor(app: express.Express) {
 		return number;
 	}
 
-	function copyFileSync(srcFile: string, destFile: string) {
+	async function copyFile(srcFile: string, destFile: string) {
 		const BUF_LENGTH = 64 * 1024;
 		const buff = new Buffer(BUF_LENGTH);
-		const fdr = fs.openSync(srcFile, "r");
-		const fdw = fs.openSync(destFile, "w");
+		const fdr = await fs.open(srcFile, "r");
+		const fdw = await fs.open(destFile, "w");
 		let bytesRead = 1;
 		let pos = 0;
 
 		while (bytesRead > 0) {
-			bytesRead = fs.readSync(fdr, buff, 0, BUF_LENGTH, pos);
-			fs.writeSync(fdw, buff, 0, bytesRead);
+			bytesRead = await fs.read(fdr, buff, 0, BUF_LENGTH, pos);
+			await fs.write(fdw, buff, 0, bytesRead);
 			pos += bytesRead;
 		}
 
-		fs.closeSync(fdr);
-		fs.closeSync(fdw);
+		await fs.close(fdr);
+		await fs.close(fdw);
 	}
 
-	app.post("/configFile", (req, res) => {
+	app.post("/configFile", async (req, res) => {
 		log.info("POST /configFile", req.body);
-		res.setHeader("Access-Control-Allow-Origin", "*");
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
 
-		const requiredParameters = req.body.requiredParameters;
-		const advancedParameters = req.body.advancedParameters;
-		const otherParameters = req.body.otherParameters;
-		const cmdParameters = req.body.cmdParameters;
+			const requiredParameters = req.body.requiredParameters;
+			const advancedParameters = req.body.advancedParameters;
+			const otherParameters = req.body.otherParameters;
+			const cmdParameters = req.body.cmdParameters;
 
-		let pathCmd: string;
+			let pathCmd: string;
 
-		let configFileAsString = "# SMARTNAV-RTK options (2013/03/01 10:41:04, v.2.4.2)\n\n";
-		configFileAsString = configFileAsString + "#Logs location /usr/drotek/logs/\n\n";
+			let configFileAsString = "# SMARTNAV-RTK options (2013/03/01 10:41:04, v.2.4.2)\n\n";
+			configFileAsString = configFileAsString + "#Logs location /usr/drotek/logs/\n\n";
 
-		configFileAsString = configFileAsString + "#Required parameters\n";
-		let nbLines = requiredParameters.length;
-		let currentParam;
+			configFileAsString = configFileAsString + "#Required parameters\n";
+			let nbLines = requiredParameters.length;
+			let currentParam;
 
-		for (let i = 0; i < nbLines; i++) {
-			currentParam = requiredParameters[i];
-			configFileAsString = configFileAsString + currentParam.key + " =" + currentParam.value;
+			for (let i = 0; i < nbLines; i++) {
+				currentParam = requiredParameters[i];
+				configFileAsString = configFileAsString + currentParam.key + " =" + currentParam.value;
 
-			if (currentParam.unit) {
-				configFileAsString = configFileAsString + " # (" + currentParam.unit + ")";
+				if (currentParam.unit) {
+					configFileAsString = configFileAsString + " # (" + currentParam.unit + ")";
+				}
+
+				if (currentParam.comment) {
+					configFileAsString = configFileAsString + " # " + currentParam.comment;
+				}
+
+				configFileAsString = configFileAsString + "\n";
 			}
-
-			if (currentParam.comment) {
-				configFileAsString = configFileAsString + " # " + currentParam.comment;
-			}
-
-			configFileAsString = configFileAsString + "\n";
-		}
-		configFileAsString = configFileAsString + "\n";
-
-		configFileAsString = configFileAsString + "#Advanced parameters\n";
-		nbLines = advancedParameters.length;
-		for (let i = 0; i < nbLines; i++) {
-			currentParam = advancedParameters[i];
-			configFileAsString = configFileAsString + currentParam.key + " =" + currentParam.value;
-
-			if (currentParam.unit) {
-				configFileAsString = configFileAsString + " # (" + currentParam.unit + ")";
-			}
-
-			if (currentParam.comment) {
-				configFileAsString = configFileAsString + " # " + currentParam.comment;
-			}
-
-			configFileAsString = configFileAsString + "\n";
-		}
-		configFileAsString = configFileAsString + "\n";
-
-		configFileAsString = configFileAsString + "#Other parameters\n";
-		nbLines = otherParameters.length;
-		for (let i = 0; i < nbLines; i++) {
-			currentParam = otherParameters[i];
-
-			const currentParamKey = currentParam.key;
-
-			configFileAsString = configFileAsString + currentParamKey + " =" + currentParam.value;
-
-			if (currentParam.unit) {
-				configFileAsString = configFileAsString + " # (" + currentParam.unit + ")";
-			}
-
-			if (currentParam.comment) {
-				configFileAsString = configFileAsString + " # " + currentParam.comment;
-			}
-
 			configFileAsString = configFileAsString + "\n";
 
-			if (currentParamKey === "file-cmdfile1") {
-				pathCmd = currentParam.value;
+			configFileAsString = configFileAsString + "#Advanced parameters\n";
+			nbLines = advancedParameters.length;
+			for (let i = 0; i < nbLines; i++) {
+				currentParam = advancedParameters[i];
+				configFileAsString = configFileAsString + currentParam.key + " =" + currentParam.value;
+
+				if (currentParam.unit) {
+					configFileAsString = configFileAsString + " # (" + currentParam.unit + ")";
+				}
+
+				if (currentParam.comment) {
+					configFileAsString = configFileAsString + " # " + currentParam.comment;
+				}
+
+				configFileAsString = configFileAsString + "\n";
+			}
+			configFileAsString = configFileAsString + "\n";
+
+			configFileAsString = configFileAsString + "#Other parameters\n";
+			nbLines = otherParameters.length;
+			for (let i = 0; i < nbLines; i++) {
+				currentParam = otherParameters[i];
+
+				const currentParamKey = currentParam.key;
+
+				configFileAsString = configFileAsString + currentParamKey + " =" + currentParam.value;
+
+				if (currentParam.unit) {
+					configFileAsString = configFileAsString + " # (" + currentParam.unit + ")";
+				}
+
+				if (currentParam.comment) {
+					configFileAsString = configFileAsString + " # " + currentParam.comment;
+				}
+
+				configFileAsString = configFileAsString + "\n";
+
+				if (currentParamKey === "file-cmdfile1") {
+					pathCmd = currentParam.value;
+				}
+
 			}
 
-		}
-
-		let fileName;
-		if (req.body.name) {
-			fileName = "Saved_Conf_" + req.body.name;
-		} else {
-			fileName = config.configFiles["current_conf"];
-		}
-
-		fs.writeFile(path.join(config.configFilesPath , fileName), configFileAsString, (err) => {
-			if (err) {
-				throw err;
+			let fileName;
+			if (req.body.name) {
+				fileName = "Saved_Conf_" + req.body.name;
+			} else {
+				fileName = config.configFiles["current_conf"];
 			}
+
+			await fs.writeFile(path.join(config.configFilesPath, fileName), configFileAsString);
+
 			console.log("Config file saved!");
 
 			const nbCmdParam = cmdParameters.length;
 			if (pathCmd && nbCmdParam > 0) {
 
-				return modifyCmdFile(pathCmd, cmdParameters, res, req);
+				return await modifyCmdFile(pathCmd, cmdParameters, res, req);
 
 			} else {
 				return res.send(req.body);
 			}
-		});
-	});
 
-	app.post("/baseCMD", (req, res) => {
-		log.info("POST /baseCMD", req.body);
-		res.setHeader("Access-Control-Allow-Origin", "*");
-
-		const cmdParameters = req.body.cmdParameters;
-
-		const pathCmd = path.join(config.configFilesPath , config.configFiles.base_cmd);
-
-		const nbCmdParam = cmdParameters.length;
-		if (nbCmdParam > 0) {
-
-			return modifyCmdFile(pathCmd, cmdParameters, res, req);
-
-		} else {
-			return res.send(req.body);
+		} catch (e) {
+			log.error("error executing POST /configFile", e);
+			res.status(500).send( "error executing POST /configFile");
 		}
 	});
 
-	function modifyCmdFile(pathCmd: string, cmdParameters: IParameter[], res: express.Response, req: express.Request) {
+	app.post("/baseCMD", async (req, res) => {
+		log.info("POST /baseCMD", req.body);
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
+
+			const cmdParameters = req.body.cmdParameters;
+
+			const pathCmd = path.join(config.configFilesPath, config.configFiles.base_cmd);
+
+			const nbCmdParam = cmdParameters.length;
+			if (nbCmdParam > 0) {
+
+				return await modifyCmdFile(pathCmd, cmdParameters, res, req);
+
+			} else {
+				return res.send(req.body);
+			}
+		} catch (e) {
+			log.error("error executing POST /baseCMD", e);
+			res.status(500).send( "error executing POST /baseCMD");
+		}
+	});
+
+	async function modifyCmdFile(pathCmd: string, cmdParameters: IParameter[], res: express.Response, req: express.Request) {
 		let cmdFileAsString = "";
 
-		fs.readFile(pathCmd, "utf-8", function read(errCmd, dataCmd) {
-			if (errCmd) {
-				throw errCmd;
-			}
+		const dataCmd = await fs.readFile(pathCmd, "utf-8");
 
-			const linesCmd = dataCmd.split("\n");
-			const nbLinesCmd = linesCmd.length;
+		const linesCmd = dataCmd.split("\n");
+		const nbLinesCmd = linesCmd.length;
 
-			for (let j = 0; j < nbLinesCmd; j++) {
-				const currentCmdLine = linesCmd[j];
+		for (let j = 0; j < nbLinesCmd; j++) {
+			const currentCmdLine = linesCmd[j];
 
-				if (currentCmdLine.substring(0, 1) !== "#") {
-					const cmdLineComponents = currentCmdLine.split(" ");
+			if (currentCmdLine.substring(0, 1) !== "#") {
+				const cmdLineComponents = currentCmdLine.split(" ");
 
-					if (cmdLineComponents.length > 0) {
-						const currentCmdType = cmdLineComponents[1];
+				if (cmdLineComponents.length > 0) {
+					const currentCmdType = cmdLineComponents[1];
 
-						switch (currentCmdType) {
-							case "CFG-RATE":
-							case "CFG-PRT":
-								cmdFileAsString += getCmdLine(currentCmdType, cmdLineComponents, cmdParameters);
-								break;
-							default:
-								cmdFileAsString += currentCmdLine + "\n";
-								break;
-						}
-					} else {
-						cmdFileAsString += currentCmdLine + "\n";
+					switch (currentCmdType) {
+						case "CFG-RATE":
+						case "CFG-PRT":
+							cmdFileAsString += getCmdLine(currentCmdType, cmdLineComponents, cmdParameters);
+							break;
+						default:
+							cmdFileAsString += currentCmdLine + "\n";
+							break;
 					}
 				} else {
 					cmdFileAsString += currentCmdLine + "\n";
 				}
+			} else {
+				cmdFileAsString += currentCmdLine + "\n";
 			}
+		}
 
-			fs.writeFile(pathCmd, cmdFileAsString, (err) => {
-				if (err) {
-					throw err;
-				}
-				console.log("CMD file saved!");
+		await fs.writeFile(pathCmd, cmdFileAsString);
+		console.log("CMD file saved!");
 
-				return res.send(req.body);
-			});
-		});
+		return res.send(req.body);
 	}
 
 	function getCmdLine(cmdType: string, cmdLineComponents: string[], params: IParameter[]) {
@@ -771,14 +774,12 @@ export default function configFileEditor(app: express.Express) {
 		return commandToReturn;
 	}
 
-	app.get("/runBase", (req, res) => {
+	app.get("/runBase", async (req, res) => {
 		log.info("GET /runBase");
-		res.setHeader("Access-Control-Allow-Origin", "*");
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
 
-		fs.readFile(path.join(config.runBaseFilePath , config.runBaseName), "utf-8", function read(err, data) {
-			if (err) {
-				throw err;
-			}
+			const data = await fs.readFile(path.join(config.runBaseFilePath, config.runBaseName), "utf-8");
 
 			let type;
 			let value;
@@ -810,32 +811,37 @@ export default function configFileEditor(app: express.Express) {
 				type,
 				value
 			});
-		});
+		} catch (e) {
+			log.error("error executing GET /runBase", e);
+			res.status(500).send( "error executing GET /runBase");
+		}
 	});
 
-	app.post("/runBase", (req, res) => {
+	app.post("/runBase", async (req, res) => {
 		log.info("POST /runBase", req.body);
-		res.setHeader("Access-Control-Allow-Origin", "*");
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
 
-		let runBaseFileAsString = "#!/bin/bash\n";
-		runBaseFileAsString = runBaseFileAsString + "# Drotek SMARTNAV-RTK\n\n";
+			let runBaseFileAsString = "#!/bin/bash\n";
+			runBaseFileAsString = runBaseFileAsString + "# Drotek SMARTNAV-RTK\n\n";
 
-		runBaseFileAsString = runBaseFileAsString + "DIR=/usr/drotek\n";
-		runBaseFileAsString = runBaseFileAsString + "RTKLIBDIR=$DIR/rtklib\n";
-		runBaseFileAsString = runBaseFileAsString + "RTKLIBLOGDIR=$DIR/logs\n";
-		runBaseFileAsString = runBaseFileAsString + "RTKLIBCONFDIR=$DIR/config\n\n";
+			runBaseFileAsString = runBaseFileAsString + "DIR=/usr/drotek\n";
+			runBaseFileAsString = runBaseFileAsString + "RTKLIBDIR=$DIR/rtklib\n";
+			runBaseFileAsString = runBaseFileAsString + "RTKLIBLOGDIR=$DIR/logs\n";
+			runBaseFileAsString = runBaseFileAsString + "RTKLIBCONFDIR=$DIR/config\n\n";
 
-		// -out tcpsvr://:2424 or file:///$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx
-		runBaseFileAsString = runBaseFileAsString + "$RTKLIBDIR/str2str -c $RTKLIBCONFDIR/base.cmd -in serial://ttyACM0 -out " + req.body.out + "\n";
+			// -out tcpsvr://:2424 or file:///$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx
+			runBaseFileAsString = runBaseFileAsString + "$RTKLIBDIR/str2str -c $RTKLIBCONFDIR/base.cmd -in serial://ttyACM0 -out " + req.body.out + "\n";
 
-		fs.writeFile(path.join(config.runBaseFilePath + config.runBaseName), runBaseFileAsString, (err) => {
-			if (err) {
-				throw err;
-			}
+			await fs.writeFile(path.join(config.runBaseFilePath + config.runBaseName), runBaseFileAsString);
+
 			console.log("run-base saved");
-		});
 
-		return res.send(req.body);
+			return res.send(req.body);
+		} catch (e) {
+			log.error("error executing POST /runBase", e);
+			res.status(500).send( "error executing POST /runBase");
+		}
 	});
 
 }

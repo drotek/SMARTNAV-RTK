@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc",
     "start": "ts-node app.ts",
+    "start-dev" : "nodemon --watch app.ts --watch routes/*.ts --watch utilities/*.ts --exec ts-node app.ts",
     "tslint": "tslint -c tslint.json './*.ts' './routes/*.ts'",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -26,5 +27,8 @@
     "tslint": "^5.4.2",
     "typescript": "^2.3.4",
     "winston": "^2.3.1"
+  },
+  "devDependencies": {
+    "nodemon": "^1.11.0"
   }
 }

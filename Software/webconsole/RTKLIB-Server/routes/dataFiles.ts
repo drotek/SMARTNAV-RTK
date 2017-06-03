@@ -23,7 +23,8 @@
  * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
  */
 
-import fs = require("fs");
+// import fs = require("fs");
+import * as fs from "../utilities/fs_wrapper";
 import express = require("express");
 import * as config from "../config";
 import path = require("path");
@@ -32,11 +33,11 @@ import * as logger from "../utilities/logger";
 const log = logger.getLogger("data_files");
 export default function dataFilesReader(app: express.Express) {
 
-	app.get("/roverSatellites", (req, res) => {
+	app.get("/roverSatellites", async (req, res) => {
 		log.info("GET /roverSatellites");
 		res.setHeader("Access-Control-Allow-Origin", "*");
 
-		const files = fs.readdirSync(config.dataFilesPath).reverse();
+		const files = (await fs.readdir(config.dataFilesPath)).reverse();
 
 		let currentDataFile = files[0];
 		const nbFile = files.length;
@@ -52,31 +53,25 @@ export default function dataFilesReader(app: express.Express) {
 			return;
 		}
 
-		fs.readFile(path.join(config.dataFilesPath, currentDataFile), "utf-8", function read(err, data) {
+		const data = await fs.readFile(path.join(config.dataFilesPath, currentDataFile), "utf-8");
 
-			if (err) {
-				throw err;
+		const lines = data.split("\n");
+		const nbLines = lines.length;
+
+		const listSatData = [];
+
+		for (let i = nbLines - 1; i >= 0 && listSatData.length < 100; i--) {
+			const currentLine = lines[i];
+
+			if (currentLine.indexOf("$SAT") > -1) {
+				listSatData.push(currentLine);
 			}
+		}
 
-			const lines = data.split("\n");
-			const nbLines = lines.length;
-
-			const listSatData = [];
-
-			for (let i = nbLines - 1; i >= 0 && listSatData.length < 100; i--) {
-				const currentLine = lines[i];
-
-				if (currentLine.indexOf("$SAT") > -1) {
-					listSatData.push(currentLine);
-				}
-			}
-
-			res.send({
-				fileName: currentDataFile,
-				nbLine: nbLines,
-				listSatData
-			});
-
+		res.send({
+			fileName: currentDataFile,
+			nbLine: nbLines,
+			listSatData
 		});
 
 	});
@@ -87,11 +82,11 @@ export default function dataFilesReader(app: express.Express) {
 			!isNaN(parseInt(value.toString(), 10));
 	}
 
-	app.get("/positions", (req, res) => {
+	app.get("/positions", async (req, res) => {
 		log.info("GET /positions");
 		res.setHeader("Access-Control-Allow-Origin", "*");
 
-		const files = fs.readdirSync(config.dataFilesPath).reverse();
+		const files = (await fs.readdir(config.dataFilesPath)).reverse();
 
 		let currentDataFile = files[0];
 		const nbFile = files.length;
@@ -107,46 +102,40 @@ export default function dataFilesReader(app: express.Express) {
 			return;
 		}
 
-		fs.readFile(path.join(config.dataFilesPath, currentDataFile), "utf-8", function read(err, data) {
+		const data = await fs.readFile(path.join(config.dataFilesPath, currentDataFile), "utf-8");
 
-			if (err) {
-				throw err;
-			}
+		const lines = data.split("\n");
+		const nbLines = lines.length;
 
-			const lines = data.split("\n");
-			const nbLines = lines.length;
+		const listSatData = [];
 
-			const listSatData = [];
+		let nbPos = 200;
+		if (req.query.nbPos && isInt(req.query.nbPos)) {
+			nbPos = req.query.nbPos;
+		}
 
-			let nbPos = 200;
-			if (req.query.nbPos && isInt(req.query.nbPos)) {
-				nbPos = req.query.nbPos;
-			}
+		for (let i = nbLines - 1; i >= 0 && listSatData.length < nbPos; i--) {
+			const currentLine = lines[i];
 
-			for (let i = nbLines - 1; i >= 0 && listSatData.length < nbPos; i--) {
-				const currentLine = lines[i];
+			if (currentLine.indexOf("$POS") > -1) {
 
-				if (currentLine.indexOf("$POS") > -1) {
+				const status = currentLine.split(",")[3];
 
-					const status = currentLine.split(",")[3];
-
-					if (status === "1") { // is Fix
-						listSatData.push(currentLine);
-					} else if (status === "2") { // is Float
-						listSatData.push(currentLine);
-					} else if (status === "5") { // is Single
-						listSatData.push(currentLine);
-					}
+				if (status === "1") { // is Fix
+					listSatData.push(currentLine);
+				} else if (status === "2") { // is Float
+					listSatData.push(currentLine);
+				} else if (status === "5") { // is Single
+					listSatData.push(currentLine);
 				}
-
 			}
 
-			res.send({
-				fileName: currentDataFile,
-				nbLine: nbLines,
-				listPosData: listSatData
-			});
+		}
 
+		res.send({
+			fileName: currentDataFile,
+			nbLine: nbLines,
+			listPosData: listSatData
 		});
 
 	});
