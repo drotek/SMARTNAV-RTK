@@ -1,0 +1,15 @@
+apps:
+    - script: app.ts
+      node_args: --require ts-node/register
+      interpreter: node
+      max_restarts: 1
+      name  : RTKLIB-Server
+      watch : ["src", "routes","utilities"]
+      cwd   : RTKLIB-Server
+      ignore_watch: [".git", ".idea", ".gitignore"]
+    - script: start.js
+      max_restarts: 1
+      ignore_watch: [".git", ".idea", ".gitignore"]
+      name  : RTKLIB-WebConsole
+      watch : ["src"]
+      cwd   : RTKLIB-WebConsole
