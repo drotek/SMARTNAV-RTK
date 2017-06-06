@@ -45,8 +45,8 @@ export interface portConfig {
 
 export interface IAdminService {
     adminService(command: string, config?: string): angular.IPromise<IModuleResponse>;
-    getConfigType(): angular.IPromise<IModuleResponse>;
-    getActiveMode(): string;
+    // getConfigType(): angular.IPromise<IModuleResponse>;
+    // getActiveMode(): string;
 
     updatePlatform(): angular.IPromise<IModuleResponse>;
     syncTime(): angular.IPromise<IModuleResponse>;
@@ -61,15 +61,15 @@ export default function () {
         $get: /*@ngInject*/ function ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
 
             /* Déclaration des variables utilisées dans le service */
-            var activeMode = '';
+            var activeMode = 'BASE';
 
             /**
             * Opérations disponibles pour le service configuration.
             */
             var service: IAdminService = {
                 adminService: adminService,
-                getConfigType: getConfigType,
-                getActiveMode: getActiveMode,
+                // getConfigType: getConfigType,
+                // getActiveMode: getActiveMode,
                 updatePlatform: updatePlatform,
                 listPorts : listPorts,
                 syncTime: syncTime
@@ -99,37 +99,37 @@ export default function () {
                     url: url,
                     data: params
                 }).then((response) => {
-                    //console.log(response.data);
+                    console.log("adminService",params, response.data);
                     return <IModuleResponse>response.data;
                 });
 
             }
 
-            function getActiveMode() {
-                return activeMode;
-            }
+            // function getActiveMode() {
+            //     return activeMode;
+            // }
 
-            function getConfigType() {
-                return adminService('status', 'ROVER').then((response) => {
-                    console.log('status ROVER ', response);
-                    if (response.isEnabled === true) {
-                        console.log('ROVER enable');
-                        activeMode = 'ROVER';
-                        return response;
-                    } else {
-                        return adminService('status', 'BASE').then(function (response2) {
-                            console.log('status BASE ', response2);
-                            if (response2.isEnabled === true) {
-                                console.log('BASE enable');
-                                activeMode = 'BASE';
-                            }
-                            return response2;
-                        });
-                    }
+            // function getConfigType() {
+            //     return adminService('status', 'ROVER').then((response) => {
+            //         console.log('status ROVER ', response);
+            //         if (response.isEnabled === true) {
+            //             console.log('ROVER enable');
+            //             activeMode = 'ROVER';
+            //             return response;
+            //         } else {
+            //             return adminService('status', 'BASE').then(function (response2) {
+            //                 console.log('status BASE ', response2);
+            //                 if (response2.isEnabled === true) {
+            //                     console.log('BASE enable');
+            //                     activeMode = 'BASE';
+            //                 }
+            //                 return response2;
+            //             });
+            //         }
 
 
-                });
-            }
+            //     });
+            // }
 
             function updatePlatform() {
                 var url = $rootScope.host + ':3000/updatePlatform'
@@ -138,7 +138,7 @@ export default function () {
                     method: 'GET',
                     url: url
                 }).then(function (response) {
-                    //console.log(response.data);
+                    console.log("updatePlatform", response.data);
                     return response.data as IModuleResponse;
                 });
             }
@@ -150,7 +150,7 @@ export default function () {
                     method: 'GET',
                     url: url
                 }).then(function (response) {
-                    //console.log(response.data);
+                    console.log("syncTime",response.data);
                     return response.data;
                 });
             }
@@ -162,6 +162,7 @@ export default function () {
                     method: 'GET',
                     url: url
                 }).then(function (response) {
+                    console.log("listPorts", response.data);
                     return response.data;
                 });
             }

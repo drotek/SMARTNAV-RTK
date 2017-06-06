@@ -39,13 +39,13 @@ export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminServ
     });
 
     /* Watch Expressions */
-    $scope.$watch(() => {
-        return admin.getActiveMode();
-    }, (newVal) => {
-        if (typeof newVal !== 'undefined') {
-            checkMode(newVal);
-        }
-    });
+    // $scope.$watch(() => {
+    //     return admin.getActiveMode();
+    // }, (newVal) => {
+    //     if (typeof newVal !== 'undefined') {
+    //         checkMode(newVal);
+    //     }
+    // });
 
     $scope.switchMenu = () => {
         $scope.isMenuOpen = !$scope.isMenuOpen;
@@ -56,10 +56,19 @@ export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminServ
     };
 
     /* Loading Process */
-    admin.getConfigType();
+    //admin.getConfigType();
 
     $rootScope.$on("unhandledException", (e, err: string, cause) => {
-        toastr.error(err.substr(0, err.indexOf(":")), 'Error');
+        if (err){
+            if (err.indexOf){
+                let error_column_index = err.indexOf(":");
+                if (error_column_index != -1){
+                    toastr.error(err.substr(0, error_column_index), 'Error');
+                    return;
+                }
+            }
+            toastr.error(err,"Error");
+        }
     });
 
 };

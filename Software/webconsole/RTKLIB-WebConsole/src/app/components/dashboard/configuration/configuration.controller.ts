@@ -25,18 +25,18 @@
 
 import angular = require("angular");
 import angular_ui_bootstrap = require('angular-ui-bootstrap');
-import { IConfigurationService } from "../../../shared/services/configuration.service";
+import { IConfigurationService, IParameter } from "../../../shared/services/configuration.service";
 import { IAdminService } from "../../../shared/services/admin.service";
 
 import push_conf_controller from '../modals/push-conf/push-conf.controller';
 import save_conf_controller from '../modals/save-conf/save-conf.controller';
 import open_conf_controller from '../modals/open-conf/open-conf.controller';
 
-interface IRTKOutputTypes{
-    [id:string] : {default?:string, example:string};
+export interface IRTKStreamTypes {
+    [id: string]: { default?: string, example: string };
 }
 
-const rtkOutputTypes:IRTKOutputTypes = {
+const rtkStreamTypes: IRTKStreamTypes = {
 
     "serial": {
         default: 'ttyUSB0:57600:8:n:1:off',
@@ -48,7 +48,7 @@ const rtkOutputTypes:IRTKOutputTypes = {
     },
     "tcpsvr": {
         default: "2424",
-        example: "port"
+        example: ":port"
     },
     "tcpcli": {
         example: "addr:port"
@@ -67,7 +67,34 @@ const rtkOutputTypes:IRTKOutputTypes = {
     },
 };
 
-export default/*@ngInject*/ function ($scope: angular.IScope, configuration: IConfigurationService, $modal: angular_ui_bootstrap.IModalService,
+export interface INavSys {
+    name: string;
+    value: number;
+    selected: boolean;
+}
+
+export interface IStreamInfo {
+    streamType: "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
+    streamPath: string;
+}
+
+export interface IConfigurationScope extends angular.IScope {
+    oneAtATime: boolean;
+    status: { isRequiredOpen: boolean; isFirstDisabled: boolean;  isBaseCmdOpen: boolean; isInputParametersOpen: boolean;isOutputParametersOpen:boolean; };
+    requiredParams: IParameter[];
+    advancedParams: IParameter[];
+    otherParams: IParameter[];
+    cmdParams: IParameter[];
+    isRover: boolean;
+    inputStreams: IStreamInfo[];
+    outputStreams: IStreamInfo[];
+    streamTypes:IRTKStreamTypes;
+    currentMode: "ROVER" | "BASE";
+    listNavSys: INavSys[];
+    //navSysParameter: INavSys;
+}
+
+export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration: IConfigurationService, $modal: angular_ui_bootstrap.IModalService,
     $rootScope: angular.IRootScopeService, admin: IAdminService) {
 
     /* Déclaration du logger */
@@ -77,21 +104,21 @@ export default/*@ngInject*/ function ($scope: angular.IScope, configuration: ICo
     $scope = angular.extend($scope, {
         oneAtATime: true,
         status: {
-            isRequieredOpen: true,
+            isRequiredOpen: true,
             isFirstDisabled: false,
-            isRunBaseOpen: true,
-            isBaseCmdOpen: true
+            isBaseCmdOpen: true,
+            isInputParametersOpen: true,
+            isOutputParametersOpen: true
         },
-        requiredParams: [],
-        advancedParams: [],
-        otherParams: [],
-        cmdParams: [],
-        isRover: true,
-
-        selectedOutputType: '',
-        outputTypes: ["serial", "file", "tcpsvr", "tcpcli", "udp", "ntrips", "ntripc", "ftp", "http"],//['file','tcpsvr','serial'],
-        outputPath: '',
-        currentMode: '',
+        requiredParams: [] as IParameter[],
+        advancedParams: [] as IParameter[],
+        otherParams: [] as IParameter[],
+        cmdParams: [] as IParameter[],
+        isRover: false,
+        inputStreams: [] as IStreamInfo[],
+        outputStreams: [] as IStreamInfo[],
+        streamTypes: rtkStreamTypes,
+        currentMode: null,
         listNavSys: [
             { value: 1, name: 'GPS', selected: false },
             { value: 2, name: 'SBAS', selected: false },
@@ -99,33 +126,69 @@ export default/*@ngInject*/ function ($scope: angular.IScope, configuration: ICo
             { value: 4, name: 'GLONASS', selected: false },
             { value: 16, name: 'QZSS', selected: false },
             { value: 32, name: 'BEIDOU', selected: false }
-        ],
-        navSysParameter: undefined
+        ] as INavSys[]//,
+        //navSysParameter: undefined
+    } as IConfigurationScope);
+
+    $scope.listNavSys.sort((a: INavSys, b: INavSys) => {
+        return a.value - b.value;
     });
 
-    $scope.listNavSys.sort((a, b) => {
-        return parseFloat(a.value) - parseFloat(b.value);
+    function resize_streams(streams: IStreamInfo[], desired_number: number) {
+        console.log("resizing stream from ", streams,"to", desired_number);
+        let add_streams = desired_number - streams.length;
+        if (add_streams > 0) {
+            for (let i = 0; i < add_streams; i++) {
+                streams.push({
+                    streamType: "serial",
+                    streamPath: ""
+                });
+            }
+        }
+
+        let remove_streams = streams.length - desired_number;
+        if (remove_streams > 0) {
+            streams.length = desired_number;
+        }
+    }
+
+    $scope.$watch(()=>{return $scope.currentMode;}, () => {
+        console.log("currentMode", $scope.currentMode);
+        if ($scope.currentMode == "ROVER") {
+            resize_streams($scope.inputStreams, 3);
+            resize_streams($scope.outputStreams, 3);
+        } else if ($scope.currentMode == "BASE") {
+            resize_streams($scope.inputStreams, 1);
+            resize_streams($scope.outputStreams, 3);
+        } else {
+            $scope.currentMode = "BASE";
+            console.log("unknown mode, setting stream default",$scope.currentMode);
+             resize_streams($scope.inputStreams, 1);
+            resize_streams($scope.outputStreams, 3);
+        }
     });
+
+
 
     /* Watch Expressions */
-    $scope.$watch(() => {
-        return admin.getActiveMode();
-    }, (newVal) => {
-        if (typeof newVal !== 'undefined') {
-            $scope.currentMode = newVal;
-            configuration.setMode(newVal);
-            checkMode(newVal);
-        }
-    });
+    // $scope.$watch(() => {
+    //     return admin.getActiveMode();
+    // }, (newVal) => {
+    //     if (typeof newVal !== 'undefined') {
+    //         $scope.currentMode = newVal;
+    //         configuration.setMode(newVal);
+    //         checkMode(newVal);
+    //     }
+    // });
 
-    $scope.$watch(() => {
-        return configuration.getMode();
-    }, (newVal) => {
-        if (typeof newVal !== 'undefined') {
-            $scope.currentMode = newVal;
-            checkMode(newVal);
-        }
-    });
+    // $scope.$watch(() => {
+    //     return configuration.getMode();
+    // }, (newVal) => {
+    //     if (typeof newVal !== 'undefined') {
+    //         $scope.currentMode = newVal;
+    //         checkMode(newVal);
+    //     }
+    // });
 
     $scope.$watch(() => {
         return configuration.getOutputType();
@@ -176,13 +239,13 @@ export default/*@ngInject*/ function ($scope: angular.IScope, configuration: ICo
     });
 
     $scope.inputPorts = [];
-    admin.listPorts().then((ports)=>{
+    admin.listPorts().then((ports) => {
         $scope.inputPorts = ports;
     })
-    
+
 
     /* Utility functions */
-    $scope.hasRestriction = (obj) => {
+    $scope.hasRestriction = (obj: string[]) => {
         let result = false;
         if (obj) {
             result = obj.length > 0;
@@ -190,19 +253,18 @@ export default/*@ngInject*/ function ($scope: angular.IScope, configuration: ICo
         return result;
     };
 
-    function checkMode(newVal?: string) {
+    function checkMode(newVal?: "ROVER" | "BASE") {
         if (newVal) {
-            throw new Error("not implemented");
+            $scope.currentMode = newVal;
         }
-        $scope.isRover = $scope.currentMode === 'ROVER';
+        //$scope.isRover = ($scope.currentMode === 'ROVER');
     };
 
-    $scope.getDefaultPath = (selectedItem) => {
+    $scope.getDefaultPath = (selectedItem: string) => {
         $scope.selectedOutputType = selectedItem;
 
-        if (rtkOutputTypes[selectedItem]) {
-            $scope.outputPath = rtkOutputTypes[selectedItem].default;
-            $scope.outputExample = rtkOutputTypes[selectedItem].example;
+        if (rtkStreamTypes[selectedItem]) {
+            $scope.outputPath = rtkStreamTypes[selectedItem].default;
         }
 
         //$scope.outputExample
@@ -324,24 +386,26 @@ export default/*@ngInject*/ function ($scope: angular.IScope, configuration: ICo
     };
 
     $scope.switchConf = () => {
-        console.log('switch');
-        configuration.switchMode();
+        //console.log('switch');
+        //configuration.switchMode();
+        $scope.currentMode = ($scope.isRover) ? "ROVER" : "BASE";
+        console.log("switching mode", $scope.currentMode);
     };
 
-    $scope.initNavSys = (navSys, value) => {
+    $scope.initNavSys = (navSys: IParameter, value: string | number) => {
         return navSys.value <= value;
     }
 
-    $scope.decodeNavSysValue = (navSys) => {
+    $scope.decodeNavSysValue = (navSys: IParameter) => {
 
-        $scope.navSysParameter = navSys;
+        //$scope.navSysParameter = navSys;
         var value = navSys.value;
 
         var nbNavSys = $scope.listNavSys.length - 1;
         for (var i = nbNavSys; 0 <= i && value !== 0; i--) {
-            var currentNavSys = $scope.listNavSys[i];
+            var currentNavSys = $scope.listNavSys[i] as INavSys;
             if (value >= currentNavSys.value) {
-                value -= currentNavSys.value;
+                value = <number>value - currentNavSys.value;
                 currentNavSys.selected = true;
             }
         }
@@ -356,17 +420,18 @@ export default/*@ngInject*/ function ($scope: angular.IScope, configuration: ICo
                 navSysValue += currentNavSys.value;
             }
         }
-        $scope.navSysParameter.value = navSysValue;
+        //$scope.navSysParameter.value = navSysValue;
 
         return navSysValue;
     }
 
     /* Loading Process */
     configuration.getFile().then(() => {
-        if (configuration.getMode() === 'BASE') {
-            configuration.getBaseCmdFile();
-        }
-        configuration.getRunBase();
+        // if (configuration.getMode() === 'BASE') {
+        //     configuration.getBaseCmdFile();
+        // }
+        // configuration.getRunBase();
+        console.log("getFile");
     });
 
 };

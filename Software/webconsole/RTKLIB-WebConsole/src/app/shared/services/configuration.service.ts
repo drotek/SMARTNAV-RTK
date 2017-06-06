@@ -42,12 +42,40 @@ export interface IParamResponse {
 	cmdParameters?: IParameter[];
 }
 
-export interface IRunBase {
-	out: string;
+// export interface IRunBase {
+// 	out: string;
+// }
+
+
+
+export interface IOutputStream {
+	out_stream: string;
+	out_stream_format: string;
+}
+
+export interface ISTR2STRConfig {
+	in_stream: string;
+	in_stream_format: string;
+	out_streams: IOutputStream[];
+	command: string;
+	station_id: string;
+	relay_messages_back: boolean;
+	enabled: boolean;
+}
+
+export interface IRTKRCVConfig {
+	options_file: string;
+	trace_level: number;
+	output_solution_status_file_level: number;
+	console_port: number;
+	monitor_port: number;
+	login_password: string;
+	station_name: string;
+	enabled: boolean;
 }
 
 export interface IConfigurationService {
-	getMode(): string;
+	//getMode(): string;
 	getRequiredParams(): IParameter[];
 	getAdvancedParams(): IParameter[];
 	getOtherParams(): IParameter[];
@@ -55,14 +83,20 @@ export interface IConfigurationService {
 	getOutputType(): string;
 	getOutputValue(): string;
 	getFile(fileName?: string): angular.IPromise<boolean>;
-	getBaseCmdFile(): angular.IPromise<boolean>;
-	getRunBase(): angular.IPromise<void>;
+	//getBaseCmdFile(): angular.IPromise<boolean>;
+	//getRunBase(): angular.IPromise<void>;
 	saveFile(fileContent: IParamResponse): angular.IPromise<IParamResponse>;
-	saveBaseCmdFile(fileContent: IParamResponse): angular.IPromise<IParamResponse>;
-	saveRunBase(params: IRunBase): angular.IPromise<IRunBase>;
+	//saveBaseCmdFile(fileContent: IParamResponse): angular.IPromise<IParamResponse>;
+	//saveRunBase(params: IRunBase): angular.IPromise<IRunBase>;
 	getListConfigFile(): angular.IPromise<string[]>;
-	switchMode(): void;
-	setMode(modeToSet: string): void;
+	// switchMode(): void;
+	// setMode(modeToSet: string): void;
+
+	saveSTR2STRConfig(config: ISTR2STRConfig): angular.IPromise<ISTR2STRConfig>;
+	saveRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig>;
+	getSTR2STRConfig(): angular.IPromise<ISTR2STRConfig>
+	getRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig>
+
 }
 
 export default function () {
@@ -71,7 +105,7 @@ export default function () {
 
 			/* Déclaration des variables utilisées dans le service */
 
-			let mode = '';
+			//let mode = '';
 			let requiredParams: IParameter[] = [];
 			let advancedParams: IParameter[] = [];
 			let otherParams: IParameter[] = [];
@@ -83,7 +117,7 @@ export default function () {
 			* Opérations disponibles pour le service configuration.
 			*/
 			var service: IConfigurationService = {
-				getMode: getMode,
+				//getMode: getMode,
 				getRequiredParams: getRequiredParams,
 				getAdvancedParams: getAdvancedParams,
 				getOtherParams: getOtherParams,
@@ -91,39 +125,45 @@ export default function () {
 				getOutputType: getOutputType,
 				getOutputValue: getOutputValue,
 				getFile: getFile,
-				getBaseCmdFile: getBaseCmdFile,
-				getRunBase: getRunBase,
+				//getBaseCmdFile: getBaseCmdFile,
+				//getRunBase: getRunBase,
 				saveFile: saveFile,
-				saveBaseCmdFile: saveBaseCmdFile,
-				saveRunBase: saveRunBase,
+				//saveBaseCmdFile: saveBaseCmdFile,
+				//saveRunBase: saveRunBase,
 				getListConfigFile: getListConfigFile,
-				switchMode: switchMode,
-				setMode: setMode
+				// switchMode: switchMode,
+				// setMode: setMode,
+
+				saveSTR2STRConfig: saveSTR2STRConfig,
+				saveRTKRCVConfig: saveRTKRCVConfig,
+				getSTR2STRConfig: getSTR2STRConfig,
+				getRTKRCVConfig: getRTKRCVConfig
+
 			};
 
 			return service;
 
 			/* Définition des fonctions du service de configuration */
 
-			function setMode(modeToSet: string): void {
-				mode = modeToSet;
-			}
+			// function setMode(modeToSet: string): void {
+			// 	mode = modeToSet;
+			// }
 
-			function switchMode(): void {
-				if (mode === 'ROVER') {
-					getBaseCmdFile().then(() => {
-						mode = 'BASE';
-					});
-				} else {
-					getFile().then(() => {
-						mode = 'ROVER';
-					});
-				}
-			}
+			// function switchMode(): void {
+			// 	if (mode === 'ROVER') {
+			// 		getBaseCmdFile().then(() => {
+			// 			mode = 'BASE';
+			// 		});
+			// 	} else {
+			// 		getFile().then(() => {
+			// 			mode = 'ROVER';
+			// 		});
+			// 	}
+			// }
 
-			function getMode(): string {
-				return mode;
-			}
+			// function getMode(): string {
+			// 	return mode;
+			// }
 
 			function getRequiredParams(): IParameter[] {
 				return requiredParams;
@@ -182,39 +222,6 @@ export default function () {
 
 			}
 
-			function getBaseCmdFile(): angular.IPromise<boolean> {
-
-				var url = $rootScope.host + ':3000/baseCMD';
-
-				return $http({
-					method: 'GET',
-					url: url
-				}).then((response) => {
-					return response.data as IParamResponse;
-				}).then((params) => {
-					requiredParams = params.requiredParameters;
-					advancedParams = params.advancedParameters;
-					otherParams = params.otherParameters;
-					cmdParams = params.cmdParameters;
-					return true;
-				});
-
-			}
-
-			function getRunBase(): angular.IPromise<void> {
-				var url = $rootScope.host + ':3000/runBase';
-
-				return $http({
-					method: 'GET',
-					url: url
-				}).then((response) => {
-					return response.data as { type: string, value: string };
-				}).then((output) => {
-					outputType = output.type;
-					outputValue = output.value;
-				});
-			}
-
 			function saveFile(fileContent: IParamResponse): angular.IPromise<IParamResponse> {
 				return $http({
 					method: 'POST',
@@ -226,23 +233,99 @@ export default function () {
 
 			}
 
-			function saveBaseCmdFile(fileContent: IParamResponse): angular.IPromise<IParamResponse> {
+			// function getBaseCmdFile(): angular.IPromise<boolean> {
+
+			// 	var url = $rootScope.host + ':3000/baseCMD';
+
+			// 	return $http({
+			// 		method: 'GET',
+			// 		url: url
+			// 	}).then((response) => {
+			// 		return response.data as IParamResponse;
+			// 	}).then((params) => {
+			// 		requiredParams = params.requiredParameters;
+			// 		advancedParams = params.advancedParameters;
+			// 		otherParams = params.otherParameters;
+			// 		cmdParams = params.cmdParameters;
+			// 		return true;
+			// 	});
+
+			// }
+
+			// function getRunBase(): angular.IPromise<void> {
+			// 	var url = $rootScope.host + ':3000/runBase';
+
+			// 	return $http({
+			// 		method: 'GET',
+			// 		url: url
+			// 	}).then((response) => {
+			// 		return response.data as { type: string, value: string };
+			// 	}).then((output) => {
+			// 		outputType = output.type;
+			// 		outputValue = output.value;
+			// 	});
+			// }
+
+
+
+			// function saveBaseCmdFile(fileContent: IParamResponse): angular.IPromise<IParamResponse> {
+			// 	return $http({
+			// 		method: 'POST',
+			// 		url: $rootScope.host + ':3000/baseCMD',
+			// 		data: fileContent
+			// 	}).then((response) => {
+			// 		return response.data as IParamResponse;
+			// 	});
+			// }
+
+			// function saveRunBase(params: IRunBase): angular.IPromise<IRunBase> {
+			// 	return $http({
+			// 		method: 'POST',
+			// 		url: $rootScope.host + ':3000/runBase',
+			// 		data: params
+			// 	}).then((response) => {
+			// 		return response.data;
+			// 	});
+			// }
+
+
+			function saveSTR2STRConfig(config: ISTR2STRConfig): angular.IPromise<ISTR2STRConfig> {
 				return $http({
 					method: 'POST',
-					url: $rootScope.host + ':3000/baseCMD',
-					data: fileContent
+					url: $rootScope.host + ':3000/saveSTR2STRConfig',
+					data: config
 				}).then((response) => {
-					return response.data as IParamResponse;
+					return response.data as ISTR2STRConfig;
 				});
 			}
 
-			function saveRunBase(params: IRunBase): angular.IPromise<IRunBase> {
+			function saveRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig> {
 				return $http({
 					method: 'POST',
-					url: $rootScope.host + ':3000/runBase',
-					data: params
+					url: $rootScope.host + ':3000/saveRTKRCVConfig',
+					data: config
 				}).then((response) => {
-					return response.data;
+					return response.data as IRTKRCVConfig;
+				});
+			}
+
+
+			function getSTR2STRConfig(): angular.IPromise<ISTR2STRConfig> {
+				return $http({
+					method: 'GET',
+					url: $rootScope.host + ':3000/getSTR2STRConfig'
+
+				}).then((response) => {
+					return response.data as ISTR2STRConfig;
+				});
+			}
+
+			function getRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig> {
+				return $http({
+					method: 'GET',
+					url: $rootScope.host + ':3000/getRTKRCVConfig',
+				}).then((response) => {
+					return response.data as IRTKRCVConfig;
 				});
 			}
 

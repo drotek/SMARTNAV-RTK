@@ -24,9 +24,9 @@
 -->
 
 <div class="configuration-panel">
-    
+
     <div class="configuration-parameter-list">
-        
+
         <div class="confSwitch">
             <input type="checkbox" name="confSwitch" class="confSwitch-checkbox" id="myConfSwitch" ng-model="isRover" ng-click="switchConf()">
             <label class="confSwitch-label" for="myConfSwitch">
@@ -35,19 +35,80 @@
             </label>
         </div>
 
-         <accordion close-others="false">
-            <accordion-group heading="GPS Parameters" is-open="status.isGPSParametersOpen">
-                <div style="margin:5px">
-                    <div class="label-size parameter-label">
-                        Input Port
-                    </div>
-                    <div class="parameter-restriction">
-                        <select ng-model="selectedInputPort" ng-options="port.comName as port.comName  for port in inputPorts" ng-change="getDefaultPath(selectedInputPort)">
+        <accordion close-others="false">
+            <accordion-group heading="Input Parameters" is-open="status.isInputParametersOpen">
+                <div ng-repeat="item in inputStreams">
+                    <fieldset>
+                        <legend>Input {{$index + 1}}</legend>
+
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Input type
+                            </div>
+                            <div class="parameter-restriction">
+                                <select ng-model="item.streamType" ng-options="key as key for (key,val) in streamTypes" >
                         </select>
-                    </div>
+                            </div>
+                        </div>
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Input path
+                            </div>
+                            <div class="parameter-restriction">
+                                <input type="text" name="input" ng-model="item.streamPath" />{{item.streamType}}://{{item.streamPath}}
+                            </div>
+                        </div>
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Example
+                            </div>
+                            <div class="parameter-restriction">
+                                {{streamTypes[item.streamType].example}}&nbsp;
+                            </div>
+                        </div>
+
+                    </fieldset>
+                </div>
+
+            </accordion-group>
+
+
+            <accordion-group heading="Output Parameters" is-open="status.isOutputParametersOpen">
+                <div ng-repeat="item in outputStreams">
+                    <fieldset>
+                        <legend>Output {{$index + 1}}</legend>
+
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Output type
+                            </div>
+                            <div class="parameter-restriction">
+                                <select ng-model="item.streamType" ng-options="key as key for (key,val) in streamTypes" >
+                        </select>
+                            </div>
+                        </div>
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Output path
+                            </div>
+                            <div class="parameter-restriction">
+                                <input type="text" name="input" ng-model="item.streamPath" />{{item.streamType}}://{{item.streamPath}}
+                            </div>
+                        </div>
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Example
+                            </div>
+                            <div class="parameter-restriction">
+                                {{streamTypes[item.streamType].example}}&nbsp;
+                            </div>
+                        </div>
+
+                    </fieldset>
                 </div>
             </accordion-group>
-          
+
+
             <accordion-group heading="CMD File" is-open="status.isBaseCmdOpen">
                 <div ng-if="cmdParams.length">
                     <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
@@ -55,16 +116,15 @@
                             {{item.comment}}
                         </div>
                         <div class="parameter-restriction">
-                            <input type="text" name="input" ng-model="item.value"/>
-                            {{item.unit}}
+                            <input type="text" name="input" ng-model="item.value" /> {{item.unit}}
                         </div>
                     </div>
                 </div>
             </accordion-group>
-      </accordion>
-        
+        </accordion>
+
         <accordion close-others="oneAtATime" ng-if="isRover">
-            <accordion-group heading="Required Parameters" is-open="status.isRequieredOpen">
+            <accordion-group heading="Required Parameters" is-open="status.isRequiredOpen">
                 <div ng-if="requiredParams.length">
                     <div ng-repeat="item in requiredParams | orderBy:'key'" style="margin:5px">
                         <div class="label-size parameter-label" title="{{item.comment}}">
@@ -72,12 +132,10 @@
                         </div>
                         <div class="parameter-restriction" ng-if="hasRestriction(item.restriction)">
                             <select ng-model="item.value" ng-options="value for value in item.restriction">
-                            </select>
-                            {{item.unit}}
+                            </select> {{item.unit}}
                         </div>
                         <div class="parameter-restriction" ng-if="!hasRestriction(item.restriction)">
-                            <input type="text" name="input" ng-model="item.value"/>
-                            {{item.unit}}
+                            <input type="text" name="input" ng-model="item.value" /> {{item.unit}}
                         </div>
                     </div>
                 </div>
@@ -91,13 +149,11 @@
                         </div>
                         <div class="parameter-restriction" ng-if="hasRestriction(item.restriction)">
                             <select ng-model="item.value" ng-options="value for value in item.restriction">
-                            </select>
-                            {{item.unit}}
+                            </select> {{item.unit}}
                         </div>
                         <div class="parameter-restriction" ng-if="!hasRestriction(item.restriction)">
                             <div ng-if="item.key !== 'pos1-navsys'">
-                                <input type="text" name="input" ng-model="item.value"/>
-                                {{item.unit}}
+                                <input type="text" name="input" ng-model="item.value" /> {{item.unit}}
                             </div>
                             <div ng-if="item.key === 'pos1-navsys'" ng-init="decodeNavSysValue(item)">
                                 <label ng-repeat="navSys in listNavSys" class="navSys">
@@ -117,17 +173,15 @@
                         </div>
                         <div class="parameter-restriction" ng-if="hasRestriction(item.restriction)">
                             <select ng-model="item.value" ng-options="value for value in item.restriction">
-                            </select>
-                            {{item.unit}}
+                            </select> {{item.unit}}
                         </div>
                         <div class="parameter-restriction" ng-if="!hasRestriction(item.restriction)">
-                            <input type="text" name="input" ng-model="item.value"/>
-                            {{item.unit}}
+                            <input type="text" name="input" ng-model="item.value" /> {{item.unit}}
                         </div>
                     </div>
                 </div>
             </accordion-group>
-            
+
             <accordion-group heading="CMD File">
                 <div ng-if="cmdParams.length">
                     <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
@@ -135,44 +189,17 @@
                             {{item.comment}}
                         </div>
                         <div class="parameter-restriction">
-                            <input type="text" name="input" ng-model="item.value"/>
-                            {{item.unit}}
+                            <input type="text" name="input" ng-model="item.value" /> {{item.unit}}
                         </div>
                     </div>
                 </div>
             </accordion-group>
 
-      </accordion>
-        
-      <accordion close-others="false" ng-if="!isRover">
-            <accordion-group heading="Parameters" is-open="status.isRunBaseOpen">
-                <div style="margin:5px">
-                    <div class="label-size parameter-label">
-                        Output type
-                    </div>
-                    <div class="parameter-restriction">
-                        <select ng-model="selectedOutputType" ng-options="value for value in outputTypes" ng-change="getDefaultPath(selectedOutputType)">
-                        </select>
-                    </div>
-                </div>
-                <div style="margin:5px">
-                    <div class="label-size parameter-label">
-                        Output path
-                    </div>
-                    <div class="parameter-restriction">
-                        <input type="text" name="input" ng-model="outputPath"/>
-                    </div>
-                </div>
-                <div style="margin:5px">
-                    <div class="label-size parameter-label">
-                        Example
-                    </div>
-                    <div class="parameter-restriction">
-                        <input type="text" name="input" ng-model="outputExample"/>
-                    </div>
-                </div>
-            </accordion-group>
-          
+        </accordion>
+
+        <accordion close-others="false" ng-if="!isRover">
+            
+
             <accordion-group heading="CMD File" is-open="status.isBaseCmdOpen">
                 <div ng-if="cmdParams.length">
                     <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
@@ -180,19 +207,18 @@
                             {{item.comment}}
                         </div>
                         <div class="parameter-restriction">
-                            <input type="text" name="input" ng-model="item.value"/>
-                            {{item.unit}}
+                            <input type="text" name="input" ng-model="item.value" /> {{item.unit}}
                         </div>
                     </div>
                 </div>
             </accordion-group>
-      </accordion>
+        </accordion>
     </div>
-        
+
     <div class="configuration-actions-bar">
         <button type="button" class="btn btn-default btn-sm action-button" ng-click="open($event)" ng-disabled="!isRover">OPEN</button>
         <button type="button" class="btn btn-danger btn-sm action-button red-circle-button" ng-click="push($event)">PUSH</button>
         <button type="button" class="btn btn-default btn-sm action-button" ng-click="save($event)" ng-disabled="!isRover">SAVE</button>
     </div>
-    
+
 </div>

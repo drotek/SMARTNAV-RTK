@@ -43,8 +43,8 @@ export default /*@ngInject*/ function ($scope: angular.IScope, configuration: IC
     $scope.outputType = outputType;
     $scope.outputValue = outputValue;
 
-    $scope.isRover = $scope.mode === 'ROVER';
-    $scope.isBase = $scope.mode === 'BASE';
+    // $scope.isRover = $scope.mode === 'ROVER';
+    // $scope.isBase = $scope.mode === 'BASE';
 
     $scope.loading = false;
 
@@ -57,59 +57,63 @@ export default /*@ngInject*/ function ($scope: angular.IScope, configuration: IC
     };
 
     function pushAndStart(shouldEnable: boolean) {
-        if ($scope.isRover) {
-            configuration.saveFile({
-                'requiredParameters': $scope.requiredParameters,
-                'advancedParameters': $scope.advancedParameters,
-                'otherParameters': $scope.otherParameters,
-                'cmdParameters': $scope.cmdParameters
-            }).then(() => {
-                if (shouldEnable) {
-                    admin.adminService('enable', $scope.mode).then(() => {
-                        admin.adminService('start', $scope.mode).then(() => {
-                            admin.getConfigType();
-                            $scope.loading = false;
-                            $modalInstance.close();
-                        });
-                    });
-                } else {
-                    admin.adminService('start', $scope.mode).then(() => {
-                        admin.getConfigType();
-                        $scope.loading = false;
-                        $modalInstance.close();
-                    });
-                }
-            });
-        } else if ($scope.isBase) {
-            configuration.saveBaseCmdFile({
-                'cmdParameters': $scope.cmdParameters
-            }).then(() => {
-                var out = $scope.outputType + '://';
-                if ($scope.outputType === 'tcpsvr') {
-                    out = out + ':'
-                }
-                out = out + $scope.outputValue;
+        if ($scope.mode == "ROVER") {
+            throw new Error("BASE config save not implemented");
+            // configuration.saveFile({
+            //     'requiredParameters': $scope.requiredParameters,
+            //     'advancedParameters': $scope.advancedParameters,
+            //     'otherParameters': $scope.otherParameters,
+            //     'cmdParameters': $scope.cmdParameters
+            // }).then(() => {
+            //     if (shouldEnable) {
+            //         admin.adminService('enable', $scope.mode).then(() => {
+            //             admin.adminService('start', $scope.mode).then(() => {
+            //                 //admin.getConfigType();
+            //                 $scope.loading = false;
+            //                 $modalInstance.close();
+            //             });
+            //         });
+            //     } else {
+            //         admin.adminService('start', $scope.mode).then(() => {
+            //             //admin.getConfigType();
+            //             $scope.loading = false;
+            //             $modalInstance.close();
+            //         });
+            //     }
+            // });
+        } else if ($scope.mode == "BASE") {
+            throw new Error("BASE config save not implemented");
+            // configuration.saveBaseCmdFile({
+            //     'cmdParameters': $scope.cmdParameters
+            // }).then(() => {
+            //     var out = $scope.outputType + '://';
+            //     if ($scope.outputType === 'tcpsvr') {
+            //         out = out + ':'
+            //     }
+            //     out = out + $scope.outputValue;
 
-                configuration.saveRunBase({
-                    'out': out
-                }).then(() => {
-                    if (shouldEnable) {
-                        admin.adminService('enable', $scope.mode).then(() => {
-                            admin.adminService('start', $scope.mode).then(() => {
-                                admin.getConfigType();
-                                $scope.loading = false;
-                                $modalInstance.close();
-                            });
-                        });
-                    } else {
-                        admin.adminService('start', $scope.mode).then(() => {
-                            admin.getConfigType();
-                            $scope.loading = false;
-                            $modalInstance.close();
-                        });
-                    }
-                });
-            });
+            //     configuration.saveRunBase({
+            //         'out': out
+            //     }).then(() => {
+            //         if (shouldEnable) {
+            //             admin.adminService('enable', $scope.mode).then(() => {
+            //                 admin.adminService('start', $scope.mode).then(() => {
+            //                     admin.getConfigType();
+            //                     $scope.loading = false;
+            //                     $modalInstance.close();
+            //                 });
+            //             });
+            //         } else {
+            //             admin.adminService('start', $scope.mode).then(() => {
+            //                 admin.getConfigType();
+            //                 $scope.loading = false;
+            //                 $modalInstance.close();
+            //             });
+            //         }
+            //     });
+            // });
+        }else{
+            throw new Error("mode not implemented " + $scope.mode);
         }
     }
 
