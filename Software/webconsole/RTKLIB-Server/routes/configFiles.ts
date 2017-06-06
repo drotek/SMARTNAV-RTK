@@ -31,6 +31,9 @@ import path = require("path");
 import * as logger from "../utilities/logger";
 const log = logger.getLogger("config_files");
 
+import * as rtkrcv from "../utilities/rtkrcv";
+import * as str2str from "../utilities/str2str";
+
 interface IParams {
 	[id: string]: string[];
 }
@@ -297,7 +300,7 @@ export default function configFileEditor(app: express.Express) {
 			res.send(toReturn);
 		} catch (e) {
 			log.error("error executing GET /listConfigFile", e);
-			res.status(500).send( "error executing GET /listConfigFile");
+			res.status(500).send("error executing GET /listConfigFile");
 		}
 	});
 
@@ -311,7 +314,9 @@ export default function configFileEditor(app: express.Express) {
 				fileName = req.query.name;
 			}
 
-			const data = await fs.readFile(path.join(config.configFilesPath, fileName), "utf-8");
+			let current_configuration_filename = path.join(config.configFilesPath, fileName);
+			log.debug("reading current configuration from", current_configuration_filename);
+			const data = await fs.readFile(current_configuration_filename, "utf-8");
 
 			const lines = data.split("\n");
 			const nbLines = lines.length;
@@ -366,6 +371,8 @@ export default function configFileEditor(app: express.Express) {
 			}
 
 			if (pathCmd) {
+				pathCmd = path.resolve(path.join(config.configFilesPath, pathCmd));
+				log.debug("file-cmdfile1 found, reading", pathCmd);
 				const dataCmd = await fs.readFile(pathCmd, "utf-8");
 
 				const linesCmd = dataCmd.split("\n");
@@ -423,7 +430,7 @@ export default function configFileEditor(app: express.Express) {
 			}
 		} catch (e) {
 			log.error("error executing GET /configFile", e);
-			res.status(500).send( "error executing GET /configFile");
+			res.status(500).send("error executing GET /configFile");
 		}
 
 	});
@@ -475,7 +482,7 @@ export default function configFileEditor(app: express.Express) {
 			});
 		} catch (e) {
 			log.error("error executing GET /baseCMD", e);
-			res.status(500).send( "error executing GET /baseCMD");
+			res.status(500).send("error executing GET /baseCMD");
 		}
 	});
 
@@ -535,7 +542,7 @@ export default function configFileEditor(app: express.Express) {
 
 		} catch (e) {
 			log.error("error executing GET /basePosition", e);
-			res.status(500).send( "error executing GET /basePosition");
+			res.status(500).send("error executing GET /basePosition");
 		}
 
 	});
@@ -666,181 +673,240 @@ export default function configFileEditor(app: express.Express) {
 			console.log("Config file saved!");
 
 			const nbCmdParam = cmdParameters.length;
-			if (pathCmd && nbCmdParam > 0) {
+			// if (pathCmd && nbCmdParam > 0) {
+			
+			// 	return await modifyCmdFile(pathCmd, cmdParameters, res, req);
 
-				return await modifyCmdFile(pathCmd, cmdParameters, res, req);
-
-			} else {
+			// } else {
 				return res.send(req.body);
-			}
+			//}
 
 		} catch (e) {
 			log.error("error executing POST /configFile", e);
-			res.status(500).send( "error executing POST /configFile");
+			res.status(500).send("error executing POST /configFile");
 		}
 	});
 
-	app.post("/baseCMD", async (req, res) => {
-		log.info("POST /baseCMD", req.body);
+	// app.post("/baseCMD", async (req, res) => {
+	// 	log.info("POST /baseCMD", req.body);
+	// 	try {
+	// 		res.setHeader("Access-Control-Allow-Origin", "*");
+
+	// 		const cmdParameters = req.body.cmdParameters;
+
+	// 		const pathCmd = path.join(config.configFilesPath, config.configFiles.base_cmd);
+
+	// 		const nbCmdParam = cmdParameters.length;
+	// 		if (nbCmdParam > 0) {
+
+	// 			return await modifyCmdFile(pathCmd, cmdParameters, res, req);
+
+	// 		} else {
+	// 			return res.send(req.body);
+	// 		}
+	// 	} catch (e) {
+	// 		log.error("error executing POST /baseCMD", e);
+	// 		res.status(500).send( "error executing POST /baseCMD");
+	// 	}
+	// });
+
+	// async function modifyCmdFile(pathCmd: string, cmdParameters: IParameter[], res: express.Response, req: express.Request) {
+	// 	let cmdFileAsString = "";
+
+	// 	const dataCmd = await fs.readFile(pathCmd, "utf-8");
+
+	// 	const linesCmd = dataCmd.split("\n");
+	// 	const nbLinesCmd = linesCmd.length;
+
+	// 	for (let j = 0; j < nbLinesCmd; j++) {
+	// 		const currentCmdLine = linesCmd[j];
+
+	// 		if (currentCmdLine.substring(0, 1) !== "#") {
+	// 			const cmdLineComponents = currentCmdLine.split(" ");
+
+	// 			if (cmdLineComponents.length > 0) {
+	// 				const currentCmdType = cmdLineComponents[1];
+
+	// 				switch (currentCmdType) {
+	// 					case "CFG-RATE":
+	// 					case "CFG-PRT":
+	// 						cmdFileAsString += getCmdLine(currentCmdType, cmdLineComponents, cmdParameters);
+	// 						break;
+	// 					default:
+	// 						cmdFileAsString += currentCmdLine + "\n";
+	// 						break;
+	// 				}
+	// 			} else {
+	// 				cmdFileAsString += currentCmdLine + "\n";
+	// 			}
+	// 		} else {
+	// 			cmdFileAsString += currentCmdLine + "\n";
+	// 		}
+	// 	}
+
+	// 	await fs.writeFile(pathCmd, cmdFileAsString);
+	// 	console.log("CMD file saved!");
+
+	// 	return res.send(req.body);
+	// }
+
+	// function getCmdLine(cmdType: string, cmdLineComponents: string[], params: IParameter[]) {
+	// 	let commandToReturn = null;
+
+	// 	const nbCmdParam = params.length;
+	// 	for (let i = 0; i < nbCmdParam && commandToReturn === null; i++) {
+	// 		const currentParam = params[i];
+
+	// 		if (cmdType === currentParam.key) {
+	// 			if (cmdType === "CFG-RATE") {
+	// 				const period = 1000 / parseInt(currentParam.value as string);
+	// 				commandToReturn = "!UBX CFG-RATE " + period + " " +
+	// 					cmdLineComponents[3] + " " +
+	// 					cmdLineComponents[4] + "\n";
+	// 			} else if (cmdType === "CFG-PRT") {
+	// 				commandToReturn = "!UBX CFG-PRT " +
+	// 					cmdLineComponents[2] + " " +
+	// 					cmdLineComponents[3] + " " +
+	// 					cmdLineComponents[4] + " " +
+	// 					cmdLineComponents[5] + " " +
+	// 					+currentParam.value + " " +
+	// 					cmdLineComponents[7] + " " +
+	// 					cmdLineComponents[8] + " " +
+	// 					cmdLineComponents[9] + " " +
+	// 					cmdLineComponents[10] + "\n";
+	// 			}
+	// 		}
+	// 	}
+
+	// 	return commandToReturn;
+	// }
+
+	// app.get("/runBase", async (req, res) => {
+	// 	log.info("GET /runBase");
+	// 	try {
+	// 		res.setHeader("Access-Control-Allow-Origin", "*");
+
+	// 		const data = await fs.readFile(config.str2str_config, "utf-8");
+
+	// 		let type;
+	// 		let value;
+
+	// 		const lines = data.split("\n");
+	// 		const nbLines = lines.length;
+
+	// 		let i = 0;
+	// 		while (i < nbLines && (!type || !value)) {
+
+	// 			let currentLine = lines[i];
+	// 			currentLine = currentLine.replace(/\s/g, "");
+
+	// 			if (currentLine !== "" && currentLine.substring(0, 1) !== "#") {
+	// 				if (currentLine.indexOf("-outtcpsvr:") > -1) {
+	// 					type = "tcpsvr";
+	// 					value = currentLine.substring(currentLine.indexOf("tcpsvr://") + 7, currentLine.length).split(":")[1];
+	// 				} else if (currentLine.indexOf("-outfile:") > -1) {
+	// 					type = "file";
+	// 					value = currentLine.substring(currentLine.indexOf("file://") + 7, currentLine.length);
+	// 				}
+	// 			}
+
+	// 			i++;
+
+	// 		}
+
+	// 		res.send({
+	// 			type,
+	// 			value
+	// 		});
+	// 	} catch (e) {
+	// 		log.error("error executing GET /runBase", e);
+	// 		res.status(500).send( "error executing GET /runBase");
+	// 	}
+	// });
+
+	// app.post("/runBase", async (req, res) => {
+	// 	log.info("POST /runBase", req.body);
+	// 	try {
+	// 		res.setHeader("Access-Control-Allow-Origin", "*");
+
+	// 		let runBaseFileAsString = "#!/bin/bash\n";
+	// 		runBaseFileAsString = runBaseFileAsString + "# Drotek SMARTNAV-RTK\n\n";
+
+	// 		runBaseFileAsString = runBaseFileAsString + "DIR=/usr/drotek\n";
+	// 		runBaseFileAsString = runBaseFileAsString + "RTKLIBDIR=$DIR/rtklib\n";
+	// 		runBaseFileAsString = runBaseFileAsString + "RTKLIBLOGDIR=$DIR/logs\n";
+	// 		runBaseFileAsString = runBaseFileAsString + "RTKLIBCONFDIR=$DIR/config\n\n";
+
+	// 		// -out tcpsvr://:2424 or file:///$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx
+	// 		runBaseFileAsString = runBaseFileAsString + "$RTKLIBDIR/str2str -c $RTKLIBCONFDIR/base.cmd -in serial://ttyACM0 -out " + req.body.out + "\n";
+
+	// 		await fs.writeFile(path.join(config.str2str_config), runBaseFileAsString);
+
+	// 		console.log("run-base saved");
+
+	// 		return res.send(req.body);
+	// 	} catch (e) {
+	// 		log.error("error executing POST /runBase", e);
+	// 		res.status(500).send( "error executing POST /runBase");
+	// 	}
+	// });
+
+		app.get("/getSTR2STRConfig", async (req, res) => {
+		log.info("GET /getSTR2STRConfig");
 		try {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 
-			const cmdParameters = req.body.cmdParameters;
+			let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 
-			const pathCmd = path.join(config.configFilesPath, config.configFiles.base_cmd);
-
-			const nbCmdParam = cmdParameters.length;
-			if (nbCmdParam > 0) {
-
-				return await modifyCmdFile(pathCmd, cmdParameters, res, req);
-
-			} else {
-				return res.send(req.body);
-			}
+			return res.send(str2str_configuration);
 		} catch (e) {
-			log.error("error executing POST /baseCMD", e);
-			res.status(500).send( "error executing POST /baseCMD");
+			log.error("error executing GET /saveSTR2STRConfig", e);
+			res.status(500).send("error executing GET /saveSTR2STRConfig");
 		}
 	});
 
-	async function modifyCmdFile(pathCmd: string, cmdParameters: IParameter[], res: express.Response, req: express.Request) {
-		let cmdFileAsString = "";
-
-		const dataCmd = await fs.readFile(pathCmd, "utf-8");
-
-		const linesCmd = dataCmd.split("\n");
-		const nbLinesCmd = linesCmd.length;
-
-		for (let j = 0; j < nbLinesCmd; j++) {
-			const currentCmdLine = linesCmd[j];
-
-			if (currentCmdLine.substring(0, 1) !== "#") {
-				const cmdLineComponents = currentCmdLine.split(" ");
-
-				if (cmdLineComponents.length > 0) {
-					const currentCmdType = cmdLineComponents[1];
-
-					switch (currentCmdType) {
-						case "CFG-RATE":
-						case "CFG-PRT":
-							cmdFileAsString += getCmdLine(currentCmdType, cmdLineComponents, cmdParameters);
-							break;
-						default:
-							cmdFileAsString += currentCmdLine + "\n";
-							break;
-					}
-				} else {
-					cmdFileAsString += currentCmdLine + "\n";
-				}
-			} else {
-				cmdFileAsString += currentCmdLine + "\n";
-			}
-		}
-
-		await fs.writeFile(pathCmd, cmdFileAsString);
-		console.log("CMD file saved!");
-
-		return res.send(req.body);
-	}
-
-	function getCmdLine(cmdType: string, cmdLineComponents: string[], params: IParameter[]) {
-		let commandToReturn = null;
-
-		const nbCmdParam = params.length;
-		for (let i = 0; i < nbCmdParam && commandToReturn === null; i++) {
-			const currentParam = params[i];
-
-			if (cmdType === currentParam.key) {
-				if (cmdType === "CFG-RATE") {
-					const period = 1000 / parseInt(currentParam.value as string);
-					commandToReturn = "!UBX CFG-RATE " + period + " " +
-						cmdLineComponents[3] + " " +
-						cmdLineComponents[4] + "\n";
-				} else if (cmdType === "CFG-PRT") {
-					commandToReturn = "!UBX CFG-PRT " +
-						cmdLineComponents[2] + " " +
-						cmdLineComponents[3] + " " +
-						cmdLineComponents[4] + " " +
-						cmdLineComponents[5] + " " +
-						+currentParam.value + " " +
-						cmdLineComponents[7] + " " +
-						cmdLineComponents[8] + " " +
-						cmdLineComponents[9] + " " +
-						cmdLineComponents[10] + "\n";
-				}
-			}
-		}
-
-		return commandToReturn;
-	}
-
-	app.get("/runBase", async (req, res) => {
-		log.info("GET /runBase");
+	app.get("/getRTKRCVConfig", async (req, res) => {
+		log.info("GET /getRTKRCVConfig", req.body);
 		try {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 
-			const data = await fs.readFile(path.join(config.runBaseFilePath, config.runBaseName), "utf-8");
+			let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 
-			let type;
-			let value;
-
-			const lines = data.split("\n");
-			const nbLines = lines.length;
-
-			let i = 0;
-			while (i < nbLines && (!type || !value)) {
-
-				let currentLine = lines[i];
-				currentLine = currentLine.replace(/\s/g, "");
-
-				if (currentLine !== "" && currentLine.substring(0, 1) !== "#") {
-					if (currentLine.indexOf("-outtcpsvr:") > -1) {
-						type = "tcpsvr";
-						value = currentLine.substring(currentLine.indexOf("tcpsvr://") + 7, currentLine.length).split(":")[1];
-					} else if (currentLine.indexOf("-outfile:") > -1) {
-						type = "file";
-						value = currentLine.substring(currentLine.indexOf("file://") + 7, currentLine.length);
-					}
-				}
-
-				i++;
-
-			}
-
-			res.send({
-				type,
-				value
-			});
+			return res.send(rtkrcv_configuration);
 		} catch (e) {
-			log.error("error executing GET /runBase", e);
-			res.status(500).send( "error executing GET /runBase");
+			log.error("error executing GET /getRTKRCVConfig", e);
+			res.status(500).send("error executing GET /getRTKRCVConfig");
 		}
 	});
 
-	app.post("/runBase", async (req, res) => {
-		log.info("POST /runBase", req.body);
+
+	app.post("/saveSTR2STRConfig", async (req, res) => {
+		log.info("POST /saveSTR2STRConfig", req.body);
+		try {
+			res.setHeader("Access-Control-Allow-Origin", "*");
+			
+			await fs.serialize_file<str2str.ISTR2STRConfig>(config.str2str_config, req.body);
+
+			let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+			return res.send(str2str_configuration);
+		} catch (e) {
+			log.error("error executing POST /saveSTR2STRConfig", e);
+			res.status(500).send("error executing POST /saveSTR2STRConfig");
+		}
+	});
+
+	app.post("/saveRTKRCVConfig", async (req, res) => {
+		log.info("POST /saveRTKRCVConfig", req.body);
 		try {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 
-			let runBaseFileAsString = "#!/bin/bash\n";
-			runBaseFileAsString = runBaseFileAsString + "# Drotek SMARTNAV-RTK\n\n";
+			await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, req.body);
 
-			runBaseFileAsString = runBaseFileAsString + "DIR=/usr/drotek\n";
-			runBaseFileAsString = runBaseFileAsString + "RTKLIBDIR=$DIR/rtklib\n";
-			runBaseFileAsString = runBaseFileAsString + "RTKLIBLOGDIR=$DIR/logs\n";
-			runBaseFileAsString = runBaseFileAsString + "RTKLIBCONFDIR=$DIR/config\n\n";
-
-			// -out tcpsvr://:2424 or file:///$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx
-			runBaseFileAsString = runBaseFileAsString + "$RTKLIBDIR/str2str -c $RTKLIBCONFDIR/base.cmd -in serial://ttyACM0 -out " + req.body.out + "\n";
-
-			await fs.writeFile(path.join(config.runBaseFilePath + config.runBaseName), runBaseFileAsString);
-
-			console.log("run-base saved");
-
-			return res.send(req.body);
+			let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+			return res.send(rtkrcv_configuration);
 		} catch (e) {
-			log.error("error executing POST /runBase", e);
-			res.status(500).send( "error executing POST /runBase");
+			log.error("error executing POST /saveRTKRCVConfig", e);
+			res.status(500).send("error executing POST /saveRTKRCVConfig");
 		}
 	});
 

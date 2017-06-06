@@ -1,5 +1,7 @@
 import path = require("path");
 
+export const log_level = "debug";
+
 const rootFilePath = path.resolve("../../");
 
 const scriptsFilePath = path.join(rootFilePath, "scripts");
@@ -24,4 +26,8 @@ export const configFiles = {
 export const logFilesPath = path.join(rootFilePath, "logs"); // '/usr/drotek/logs/'
 export const dataFilesPath = path.join(rootFilePath, "data"); // '/usr/drotek/rtklib/'
 
-export const runBaseName = "run-base";
+// export const runBaseName = "run-base";
+export const str2str_config = path.join(rootFilePath, "binary", "str2str.json");
+export const str2str =  path.join(rootFilePath, "binary", "str2str");
+export const rtkrcv_config = path.join(rootFilePath, "binary", "rtkrcv.json");
+export const rtkrcv =  path.join(rootFilePath, "binary", "rtkrcv");

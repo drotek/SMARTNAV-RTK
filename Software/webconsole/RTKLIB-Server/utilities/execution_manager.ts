@@ -7,7 +7,7 @@ const spawn = child_process.spawn;
 import events = require("events");
 
 export class execution_manager extends events.EventEmitter {
-	private _process: child_process.ChildProcess;
+	private _process: child_process.ChildProcess = null;
 
 	private _stdout: string;
 	private _stderr: string;
@@ -21,7 +21,7 @@ export class execution_manager extends events.EventEmitter {
 	}
 
 	public start(): void {
-		if (!this._process) {
+		if (this._process) {
 			log.error("error starting, already active ", this.command, this.args);
 			throw new Error("already active");
 		}
@@ -32,13 +32,16 @@ export class execution_manager extends events.EventEmitter {
 		this._process = spawn(this.command, this.args, { shell: true });
 
 		this._process.stdout.on("data", (data) => {
-			log.debug("stdout", this.command, this.args, data);
+			log.info("stdout", this.command, this.args, data);
 			this.emit("stdout", data);
 			this._stdout += data;
 		});
 
 		this._process.stderr.on("data", (data) => {
-			log.debug("stderr", this.command, this.args, data);
+			log.error("stderr", 
+				(this.command && this.command.toString) ? this.command.toString() : this.command, 
+				(this.args && this.args.toString ) ? this.args.toString() : this.args, 
+				(data && data.toString) ? data.toString() : data);
 			this.emit("stderr", data);
 			this._stderr += data;
 		});
@@ -56,6 +59,7 @@ export class execution_manager extends events.EventEmitter {
 		if (this._process) {
 			log.debug("killing", this.command, this.args);
 			this._process.kill();
+			this._process = null;
 		}
 	}
 

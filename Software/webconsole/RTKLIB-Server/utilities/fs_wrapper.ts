@@ -95,3 +95,36 @@ export async function access(path: string | Buffer, mode?: number): Promise<void
 }
 
 export const createReadStream = fs.createReadStream;
+
+export async function deserialize_file<T>(filename: string): Promise<T> {
+	return new Promise<T>(async (resolve, reject) => {
+		if (!(await exists(filename))) {
+			reject("file not found");
+			return;
+		}
+
+		fs.readFile(filename, "utf8", (err, data) => {
+			if (err) {
+				reject(err);
+				return;
+			}
+			try {
+				resolve(JSON.parse(data));
+			} catch (e) {
+				reject(e);
+			}
+		});
+	});
+}
+
+export async function serialize_file<T>(filename: string, obj: T): Promise<void> {
+	return new Promise<void>(async (resolve, reject) => {
+		fs.writeFile(filename, JSON.stringify(obj,null,"\t"), { encoding: "utf8" }, (err) => {
+			if (err) {
+				reject(err);
+				return;
+			}
+			resolve();
+		});
+	});
+}
