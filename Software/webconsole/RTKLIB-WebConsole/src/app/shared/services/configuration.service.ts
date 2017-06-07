@@ -26,6 +26,12 @@
 import angular = require("angular");
 import _ = require('lodash');
 
+export interface IStreamInfo {
+	streamType: "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
+	streamFormat: "rtcm2" | "rtcm3" | "nov" | "oem3" | "ubx" | "ss2" | "hemis" | "stq" | "gw10" | "javad" | "nvs" | "binex" | "rt17" | "sbf" | "cmr";
+	streamPath: string;
+}
+
 export interface IParameter {
 	key: string;
 	value?: string | number;
@@ -95,7 +101,7 @@ export interface IConfigurationService {
 	saveSTR2STRConfig(config: ISTR2STRConfig): angular.IPromise<ISTR2STRConfig>;
 	saveRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig>;
 	getSTR2STRConfig(): angular.IPromise<ISTR2STRConfig>
-	getRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig>
+	getRTKRCVConfig(): angular.IPromise<IRTKRCVConfig>
 
 }
 
@@ -320,7 +326,7 @@ export default function () {
 				});
 			}
 
-			function getRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig> {
+			function getRTKRCVConfig(): angular.IPromise<IRTKRCVConfig> {
 				return $http({
 					method: 'GET',
 					url: $rootScope.host + ':3000/getRTKRCVConfig',

@@ -25,22 +25,46 @@
 
 import angular = require("angular");
 import angular_ui_bootstrap = require('angular-ui-bootstrap');
-import { IConfigurationService, IParameter } from "../../../shared/services/configuration.service";
+import { IConfigurationService, IParameter, IStreamInfo, IRTKRCVConfig, ISTR2STRConfig } from "../../../shared/services/configuration.service";
 import { IAdminService } from "../../../shared/services/admin.service";
 
 import push_conf_controller from '../modals/push-conf/push-conf.controller';
 import save_conf_controller from '../modals/save-conf/save-conf.controller';
 import open_conf_controller from '../modals/open-conf/open-conf.controller';
 
+
+
+export interface IRTKStreamFormats {
+    [id: string]: string;
+}
+
+const rtkStreamFormats: IRTKStreamFormats = {
+    "rtcm2": "RTCM 2 (only in)",
+    "rtcm3": "RTCM 3",
+    "nov": "NovAtel OEMV/4/6,OEMStar (only in)",
+    "oem3": "NovAtel OEM3 (only in)",
+    "ubx": "ublox LEA-4T/5T/6T (only in)",
+    "ss2": "NovAtel Superstar II (only in)",
+    "hemis": "Hemisphere Eclipse/Crescent (only in)",
+    "stq": "SkyTraq S1315F (only in)",
+    "gw10": "Furuno GW10 (only in)",
+    "javad": "Javad (only in)",
+    "nvs": "NVS BINR (only in)",
+    "binex": "BINEX (only in)",
+    "rt17": "Trimble RT17 (only in)",
+    "sbf": "Septentrio SBF (only in)",
+    "cmr": "CMR/CMR+ (only in)"
+};
+
 export interface IRTKStreamTypes {
-    [id: string]: { default?: string, example: string };
+    [id: string]: { default?: string, example: string, available?: string, };
 }
 
 const rtkStreamTypes: IRTKStreamTypes = {
 
     "serial": {
         default: 'ttyUSB0:57600:8:n:1:off',
-        example: "port[:bit_rate[:byte[:parity(n|o|e)[:stopb[:fctr(off|on)]]]]]",
+        example: "port[:bit_rate[:byte[:parity(n|o|e)[:stopb[:fctr(off|on)]]]]]"
     },
     "file": {
         default: "$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx",
@@ -73,22 +97,22 @@ export interface INavSys {
     selected: boolean;
 }
 
-export interface IStreamInfo {
-    streamType: "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
-    streamPath: string;
-}
+
 
 export interface IConfigurationScope extends angular.IScope {
     oneAtATime: boolean;
-    status: { isRequiredOpen: boolean; isFirstDisabled: boolean;  isBaseCmdOpen: boolean; isInputParametersOpen: boolean;isOutputParametersOpen:boolean; };
+    status: { isRequiredOpen: boolean; isFirstDisabled: boolean; isBaseCmdOpen: boolean; isInputParametersOpen: boolean; isOutputParametersOpen: boolean; };
     requiredParams: IParameter[];
     advancedParams: IParameter[];
     otherParams: IParameter[];
     cmdParams: IParameter[];
     isRover: boolean;
+    rtkrcv_config: IRTKRCVConfig;
+    str2str_config: ISTR2STRConfig;
     inputStreams: IStreamInfo[];
     outputStreams: IStreamInfo[];
-    streamTypes:IRTKStreamTypes;
+    streamTypes: IRTKStreamTypes;
+    streamFormats: IRTKStreamFormats;
     currentMode: "ROVER" | "BASE";
     listNavSys: INavSys[];
     //navSysParameter: INavSys;
@@ -115,9 +139,14 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
         otherParams: [] as IParameter[],
         cmdParams: [] as IParameter[],
         isRover: false,
+
         inputStreams: [] as IStreamInfo[],
         outputStreams: [] as IStreamInfo[],
+
+        rtkrcv_config: null,
+        str2str_config: null,
         streamTypes: rtkStreamTypes,
+        streamFormats: rtkStreamFormats,
         currentMode: null,
         listNavSys: [
             { value: 1, name: 'GPS', selected: false },
@@ -135,7 +164,7 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
     });
 
     function resize_streams(streams: IStreamInfo[], desired_number: number) {
-        console.log("resizing stream from ", streams,"to", desired_number);
+        console.log("resizing stream from ", streams, "to", desired_number);
         let add_streams = desired_number - streams.length;
         if (add_streams > 0) {
             for (let i = 0; i < add_streams; i++) {
@@ -152,21 +181,25 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
         }
     }
 
-    $scope.$watch(()=>{return $scope.currentMode;}, () => {
+    $scope.$watch(() => { return $scope.currentMode; }, () => {
         console.log("currentMode", $scope.currentMode);
         if ($scope.currentMode == "ROVER") {
+            //$scope.inputStreams = $scope.rtkrcv_config
             resize_streams($scope.inputStreams, 3);
             resize_streams($scope.outputStreams, 3);
         } else if ($scope.currentMode == "BASE") {
+            //$scope.inputStreams = [{streamType :  $scope.str2str_config.in_stream,streamPath: $scope.str2str_config.in_stream_format}];
             resize_streams($scope.inputStreams, 1);
             resize_streams($scope.outputStreams, 3);
         } else {
             $scope.currentMode = "BASE";
-            console.log("unknown mode, setting stream default",$scope.currentMode);
-             resize_streams($scope.inputStreams, 1);
+            console.log("unknown mode, setting stream default", $scope.currentMode);
+            resize_streams($scope.inputStreams, 1);
             resize_streams($scope.outputStreams, 3);
         }
     });
+
+
 
 
 
@@ -189,6 +222,14 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
     //         checkMode(newVal);
     //     }
     // });
+
+    configuration.getRTKRCVConfig().then((val) => {
+            $scope.rtkrcv_config = val;
+        });
+
+    configuration.getSTR2STRConfig().then((val) => {
+            $scope.str2str_config = val;
+        });
 
     $scope.$watch(() => {
         return configuration.getOutputType();
@@ -241,6 +282,7 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
     $scope.inputPorts = [];
     admin.listPorts().then((ports) => {
         $scope.inputPorts = ports;
+        rtkStreamTypes["serial"].available = ports.map((v) => v.comName).join(", ");
     })
 
 
@@ -327,6 +369,12 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
                 },
                 outputValue: () => {
                     return $scope.outputPath;
+                },
+                inputStreams: () => {
+                    return $scope.inputStreams;
+                },
+                outputStreams: () => {
+                    return $scope.outputStreams;
                 }
             }
         });

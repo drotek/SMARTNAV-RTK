@@ -27,12 +27,28 @@ import angular = require("angular");
 import angular_ui_bootstrap = require('angular-ui-bootstrap');
 
 import { IAdminService } from "../../../../shared/services/admin.service";
-import { IConfigurationService,IParameter } from "../../../../shared/services/configuration.service";
+import { IConfigurationService,IParameter,IStreamInfo } from "../../../../shared/services/configuration.service";
 
-export default /*@ngInject*/ function ($scope: angular.IScope, configuration: IConfigurationService, admin: IAdminService,
+export interface IPushConfScope extends angular.IScope{
+    mode:string;
+    requiredParameters:IParameter[];
+    advancedParameters:IParameter[];
+    otherParameters: IParameter[];
+    cmdParameters:IParameter[];
+    outputType:string;
+    outputValue:string;
+    inputStreams : IStreamInfo[];
+     outputStreams: IStreamInfo[];
+
+     wasRoverStarted : boolean;
+     wasBaseStated: boolean;
+
+}
+
+export default /*@ngInject*/ function ($q: ng.IQService, $scope: IPushConfScope, configuration: IConfigurationService, admin: IAdminService,
     $modalInstance: angular_ui_bootstrap.IModalInstanceService, mode : string,
-    requiredParams : IParameter, advancedParams : IParameter, otherParams : IParameter, cmdParams : IParameter,
-    outputType : string, outputValue : string) {
+    requiredParams : IParameter[], advancedParams : IParameter[], otherParams : IParameter[], cmdParams : IParameter[],
+    outputType : string, outputValue : string,inputStreams : IStreamInfo[], outputStreams: IStreamInfo[]) {
 
     /* Controller parameters */
     $scope.mode = mode;
@@ -42,6 +58,11 @@ export default /*@ngInject*/ function ($scope: angular.IScope, configuration: IC
     $scope.cmdParameters = cmdParams;
     $scope.outputType = outputType;
     $scope.outputValue = outputValue;
+    $scope.inputStreams = inputStreams;
+    $scope.outputStreams = outputStreams;
+
+    $scope.wasBaseStated = false;
+    $scope.wasRoverStarted = false;
 
     // $scope.isRover = $scope.mode === 'ROVER';
     // $scope.isBase = $scope.mode === 'BASE';
@@ -51,20 +72,22 @@ export default /*@ngInject*/ function ($scope: angular.IScope, configuration: IC
     /**
      * Function called to push config file
      */
-    $scope.ok = function () {
+    $scope.ok =  () =>{
         $scope.loading = true;
-        stopRunningService(pushAndStart);
+        stopRunningService().then((response)=>{
+
+        });
     };
 
     function pushAndStart(shouldEnable: boolean) {
         if ($scope.mode == "ROVER") {
-            throw new Error("BASE config save not implemented");
-            // configuration.saveFile({
-            //     'requiredParameters': $scope.requiredParameters,
-            //     'advancedParameters': $scope.advancedParameters,
-            //     'otherParameters': $scope.otherParameters,
-            //     'cmdParameters': $scope.cmdParameters
-            // }).then(() => {
+            configuration.saveFile({
+                'requiredParameters': $scope.requiredParameters,
+                'advancedParameters': $scope.advancedParameters,
+                'otherParameters': $scope.otherParameters,
+                'cmdParameters': $scope.cmdParameters
+            }).then(() => {
+                
             //     if (shouldEnable) {
             //         admin.adminService('enable', $scope.mode).then(() => {
             //             admin.adminService('start', $scope.mode).then(() => {
@@ -80,12 +103,12 @@ export default /*@ngInject*/ function ($scope: angular.IScope, configuration: IC
             //             $modalInstance.close();
             //         });
             //     }
-            // });
+             });
         } else if ($scope.mode == "BASE") {
-            throw new Error("BASE config save not implemented");
-            // configuration.saveBaseCmdFile({
-            //     'cmdParameters': $scope.cmdParameters
-            // }).then(() => {
+            //throw new Error("BASE config save not implemented");
+            configuration.saveFile({
+                'cmdParameters': $scope.cmdParameters
+            }).then(() => {
             //     var out = $scope.outputType + '://';
             //     if ($scope.outputType === 'tcpsvr') {
             //         out = out + ':'
@@ -111,56 +134,85 @@ export default /*@ngInject*/ function ($scope: angular.IScope, configuration: IC
             //             });
             //         }
             //     });
-            // });
+             });
         }else{
             throw new Error("mode not implemented " + $scope.mode);
         }
     }
 
-    function stopRunningService(callback: (success: boolean) => void) {
-        admin.adminService('status', 'ROVER').then((response) => {
-            if (response.isActive) {
-                admin.adminService('stop', 'ROVER').then(() => {
-                    if ($scope.isRover === false) {
-                        admin.adminService('disable', 'ROVER').then(() => {
-                            callback(true);
-                        });
-                    } else {
-                        callback(false);
-                    }
-                });
-            } else if (response.isEnabled) {
-                if ($scope.isRover === false) {
-                    admin.adminService('disable', 'ROVER').then(() => {
-                        callback(true);
-                    });
-                } else {
-                    callback(false);
-                }
-            } else {
-                admin.adminService('status', 'BASE').then((response) => {
-                    if (response.isActive) {
-                        admin.adminService('stop', 'BASE').then(() => {
-                            if ($scope.isBase === false) {
-                                admin.adminService('disable', 'BASE').then(() => {
-                                    callback(true);
-                                });
-                            } else {
-                                callback(false);
-                            }
-                        });
-                    } else if (response.isEnabled) {
-                        if ($scope.isBase === false) {
-                            admin.adminService('disable', 'BASE').then(() => {
-                                callback(true);
-                            });
-                        } else {
-                            callback(false);
-                        }
-                    }
-                });
+    function stopRunningService() : angular.IPromise<boolean> {
+        let stop_rover_promise = admin.adminService("status","ROVER").then((response)=>{
+            if (response.isActive){
+                $scope.wasRoverStarted = true;
             }
-        });
+                admin.adminService("stop","ROVER").then((response)=>{
+                    
+                    return true;
+                });
+            });
+            let stop_base_promise = admin.adminService("status","BASE").then((response)=>{
+                if (response.isActive){
+                    $scope.wasBaseStated = true;
+                }
+                admin.adminService("stop","BASE").then((response)=>{
+                    return true;
+                });
+            });
+
+
+
+        return $q.all<boolean>(
+            {
+                stop_rover_promise,
+                stop_base_promise
+            }    
+        );
+        
+
+
+        // admin.adminService('status', 'ROVER').then((response) => {
+        //     if (response.isActive) {
+        //         admin.adminService('stop', 'ROVER').then(() => {
+        //             if ($scope.isRover === false) {
+        //                 admin.adminService('disable', 'ROVER').then(() => {
+        //                     callback(true);
+        //                 });
+        //             } else {
+        //                 callback(false);
+        //             }
+        //         });
+        //     } else if (response.isEnabled) {
+        //         if ($scope.isRover === false) {
+        //             admin.adminService('disable', 'ROVER').then(() => {
+        //                 callback(true);
+        //             });
+        //         } else {
+        //             callback(false);
+        //         }
+        //     } else {
+        //         admin.adminService('status', 'BASE').then((response) => {
+        //             if (response.isActive) {
+        //                 admin.adminService('stop', 'BASE').then(() => {
+        //                     if ($scope.isBase === false) {
+        //                         admin.adminService('disable', 'BASE').then(() => {
+        //                             callback(true);
+        //                         });
+        //                     } else {
+        //                         callback(false);
+        //                     }
+        //                 });
+        //             } else if (response.isEnabled) {
+        //                 if ($scope.isBase === false) {
+        //                     admin.adminService('disable', 'BASE').then(() => {
+        //                         callback(true);
+        //                     });
+        //                 } else {
+        //                     callback(false);
+        //                 }
+        //             }
+        //         });
+        //     }
+        // });
     }
 
     /**

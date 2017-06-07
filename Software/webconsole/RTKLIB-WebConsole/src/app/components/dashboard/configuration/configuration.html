@@ -46,16 +46,34 @@
                                 Input type
                             </div>
                             <div class="parameter-restriction">
-                                <select ng-model="item.streamType" ng-options="key as key for (key,val) in streamTypes" >
-                        </select>
+                                <select ng-model="item.streamType" ng-options="key as key for (key,val) in streamTypes" ></select>
                             </div>
                         </div>
+
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Input format
+                            </div>
+                            <div class="parameter-restriction">
+                                <select ng-model="item.streamFormat" ng-options="key as value for (key , value) in streamFormats" ></select>
+                            </div>
+                        </div>
+
+
                         <div style="margin:5px">
                             <div class="label-size parameter-label">
                                 Input path
                             </div>
                             <div class="parameter-restriction">
-                                <input type="text" name="input" ng-model="item.streamPath" />{{item.streamType}}://{{item.streamPath}}
+                                <input type="text" name="input" ng-model="item.streamPath" />{{item.streamType}}://{{item.streamPath}}#{{item.streamFormat}}
+                            </div>
+                        </div>
+                        <div style="margin:5px" ng-if="streamTypes[item.streamType].available">
+                            <div class="label-size parameter-label">
+                                Available
+                            </div>
+                            <div class="parameter-restriction">
+                                {{streamTypes[item.streamType].available}}&nbsp;
                             </div>
                         </div>
                         <div style="margin:5px">
@@ -83,16 +101,34 @@
                                 Output type
                             </div>
                             <div class="parameter-restriction">
-                                <select ng-model="item.streamType" ng-options="key as key for (key,val) in streamTypes" >
-                        </select>
+                                <select ng-model="item.streamType" ng-options="key as key for (key,val) in streamTypes" ></select>
                             </div>
                         </div>
+
+                        <div style="margin:5px">
+                            <div class="label-size parameter-label">
+                                Output format
+                            </div>
+                            <div class="parameter-restriction">
+                                <select ng-model="item.streamFormat" ng-options="key as value for (key , value) in streamFormats" ></select>
+                            </div>
+                        </div>
+
+
                         <div style="margin:5px">
                             <div class="label-size parameter-label">
                                 Output path
                             </div>
                             <div class="parameter-restriction">
-                                <input type="text" name="input" ng-model="item.streamPath" />{{item.streamType}}://{{item.streamPath}}
+                                <input type="text" name="input" ng-model="item.streamPath" />{{item.streamType}}://{{item.streamPath}}#{{item.streamFormat}}
+                            </div>
+                        </div>
+                        <div style="margin:5px" ng-if="streamTypes[item.streamType].available">
+                            <div class="label-size parameter-label">
+                                Available
+                            </div>
+                            <div class="parameter-restriction">
+                                {{streamTypes[item.streamType].available}}&nbsp;
                             </div>
                         </div>
                         <div style="margin:5px">
@@ -109,7 +145,7 @@
             </accordion-group>
 
 
-            <accordion-group heading="CMD File" is-open="status.isBaseCmdOpen">
+            <!--<accordion-group heading="CMD File" is-open="status.isBaseCmdOpen">
                 <div ng-if="cmdParams.length">
                     <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
                         <div class="label-size parameter-label" title="{{item.key}}">
@@ -120,7 +156,7 @@
                         </div>
                     </div>
                 </div>
-            </accordion-group>
+            </accordion-group>-->
         </accordion>
 
         <accordion close-others="oneAtATime" ng-if="isRover">
