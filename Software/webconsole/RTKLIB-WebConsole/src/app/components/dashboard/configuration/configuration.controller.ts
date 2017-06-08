@@ -170,7 +170,8 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
             for (let i = 0; i < add_streams; i++) {
                 streams.push({
                     streamType: "serial",
-                    streamPath: ""
+                    streamPath: "",
+                    streamFormat: ""
                 });
             }
         }
@@ -181,22 +182,90 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
         }
     }
 
-    $scope.$watch(() => { return $scope.currentMode; }, () => {
-        console.log("currentMode", $scope.currentMode);
+    // inpstr1-type =serial
+    // inpstr1-path =ttyACM0:57600:8:n:1:off # rover
+    // inpstr1-format =ubx
+
+    function cleanup_value(val: string | number | null): string {
+        if (val === null || val == undefined) {
+            return "";
+        }
+        if (typeof val == typeof 0) {
+            return val.toString();
+        }
+        let comment_idx = (val as string).indexOf("#");
+        if (comment_idx == -1) {
+            return (val as string).trim();
+        }
+        return (val as string).substr(0, comment_idx).trim();
+    }
+
+    function get_iparameter_value(parameters: IParameter[], find_key: string): string {
+        let parameter = (parameters) ? parameters.find((p) => p.key == find_key) : null;
+        return cleanup_value((parameter) ? parameter.value : null);
+    }
+
+    function parse_config_file() {
+        //let config_params = $scope.otherParams.filter((p)=>p.key.startsWith("inpstr") || p.key.startsWith("outstr"));
+        $scope.inputStreams = [];
+        $scope.outputStreams = [];
+        for (let i = 1; i < 4; i++) {
+            {
+                let in_type = get_iparameter_value($scope.otherParams, `inpstr${i}-type`);
+                let in_path = get_iparameter_value($scope.otherParams, `inpstr${i}-path`);
+                let in_format = get_iparameter_value($scope.otherParams, `inpstr${i}-format`);
+
+                if (in_path) {
+                    $scope.inputStreams.push({
+                        streamPath: in_path,
+                        streamFormat: in_format,
+                        streamType: in_type
+                    });
+                }
+            }
+
+            {
+                let out_type = get_iparameter_value($scope.otherParams, `outstr${i}-type`);
+                let out_path = get_iparameter_value($scope.otherParams, `outstr${i}-path`);
+                let out_format = get_iparameter_value($scope.otherParams, `outstr${i}-format`);
+
+                if (out_path) {
+                    $scope.inputStreams.push({
+                        streamPath: out_path,
+                        streamFormat: out_format,
+                        streamType: out_type
+                    });
+                }
+            }
+
+        }
+    }
+
+    function update_streams(){
         if ($scope.currentMode == "ROVER") {
             //$scope.inputStreams = $scope.rtkrcv_config
             resize_streams($scope.inputStreams, 3);
             resize_streams($scope.outputStreams, 3);
         } else if ($scope.currentMode == "BASE") {
-            //$scope.inputStreams = [{streamType :  $scope.str2str_config.in_stream,streamPath: $scope.str2str_config.in_stream_format}];
+            $scope.inputStreams = ($scope.str2str_config) ? $scope.str2str_config.in_streams : [];
+            $scope.outputStreams = ($scope.str2str_config) ?$scope.str2str_config.out_streams : [];
             resize_streams($scope.inputStreams, 1);
             resize_streams($scope.outputStreams, 3);
         } else {
             $scope.currentMode = "BASE";
+
+            $scope.inputStreams = ($scope.str2str_config) ? $scope.str2str_config.in_streams : [];
+            $scope.outputStreams = ($scope.str2str_config) ? $scope.str2str_config.out_streams : [];
+
             console.log("unknown mode, setting stream default", $scope.currentMode);
             resize_streams($scope.inputStreams, 1);
             resize_streams($scope.outputStreams, 3);
         }
+    }
+
+    $scope.$watch(() => { return $scope.currentMode; }, () => {
+        console.log("currentMode", $scope.currentMode);
+        update_streams();
     });
 
 
@@ -224,12 +293,16 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
     // });
 
     configuration.getRTKRCVConfig().then((val) => {
-            $scope.rtkrcv_config = val;
-        });
+        $scope.rtkrcv_config = val;
+        update_streams();
+        console.log("loaded rtkrcv config", val)
+    });
 
     configuration.getSTR2STRConfig().then((val) => {
-            $scope.str2str_config = val;
-        });
+        $scope.str2str_config = val;
+        update_streams();
+        console.log("loaded str2str config", val);
+    });
 
     $scope.$watch(() => {
         return configuration.getOutputType();

@@ -68,16 +68,7 @@ export default function configFileEditor(app: express.Express) {
 		"ant2-postype": ["llh", "xyz", "single", "posfile", "rinexhead", "rtcm"],
 		"ant2-pos1": [],
 		"ant2-pos2": [],
-		"ant2-pos3": [],
-		"inpstr2-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli", "ftp", "http"],
-		"inpstr2-path": [],
-		"inpstr2-format": ["rtcm2", "rtcm3", "oem4", "oem3", "ubx", "ss2", "hemis", "skytraq", "gw10", "javad", "sp3"],
-		"outstr1-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli"],
-		"outstr2-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli"],
-		"outstr1-path": [],
-		"outstr2-path": [],
-		"outstr1-format": ["llh", "xyz", "enu", "nmea", "ubx", "base"],
-		"outstr2-format": ["llh", "xyz", "enu", "nmea", "ubx", "base"]
+		"ant2-pos3": []
 	};
 
 	const advancedParams: IParams = {
@@ -176,12 +167,27 @@ export default function configFileEditor(app: express.Express) {
 		"file-geexefile": [],
 		"file-solstatfile": [],
 		"file-tracefile": [],
+		
 		"inpstr1-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli", "ftp", "http"],
-		"inpstr3-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli", "ftp", "http"],
 		"inpstr1-path": [],
-		"inpstr3-path": [],
 		"inpstr1-format": ["rtcm2", "rtcm3", "oem4", "oem3", "ubx", "ss2", "hemis", "skytraq", "gw10", "javad", "sp3"],
+
+		"inpstr2-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli", "ftp", "http"],
+		"inpstr2-path": [],
+		"inpstr2-format": ["rtcm2", "rtcm3", "oem4", "oem3", "ubx", "ss2", "hemis", "skytraq", "gw10", "javad", "sp3"],
+
+		"inpstr3-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli", "ftp", "http"],
+		"inpstr3-path": [],
 		"inpstr3-format": ["rtcm2", "rtcm3", "oem4", "oem3", "ubx", "ss2", "hemis", "skytraq", "gw10", "javad", "sp3"],
+		
+		"outstr1-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli"],
+		"outstr1-format": ["llh", "xyz", "enu", "nmea", "ubx", "base"],
+		"outstr1-path": [],
+
+		"outstr2-path": [],
+		"outstr2-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli"],
+		"outstr2-format": ["llh", "xyz", "enu", "nmea", "ubx", "base"],
+
 		"inpstr2-nmeareq": ["off", "latlon", "single"],
 		"inpstr2-nmealat": [],
 		"inpstr2-nmealon": [],
@@ -860,8 +866,8 @@ export default function configFileEditor(app: express.Express) {
 
 			return res.send(str2str_configuration);
 		} catch (e) {
-			log.error("error executing GET /saveSTR2STRConfig", e);
-			res.status(500).send("error executing GET /saveSTR2STRConfig");
+			log.error("error executing GET /getSTR2STRConfig", e);
+			res.status(500).send("error executing GET /getSTR2STRConfig");
 		}
 	});
 

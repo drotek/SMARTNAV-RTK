@@ -78,15 +78,15 @@ const STREAM_FORMATS = [
 //  -fl file          log file [str2str.trace]
 //  -h                print help
 
-export interface IOutputStream{
-	out_stream: string;
-	out_stream_format: string;
+export interface IStreamInfo {
+	streamType: "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
+	streamFormat: null | "" | "rtcm2" | "rtcm3" | "nov" | "oem3" | "ubx" | "ss2" | "hemis" | "stq" | "gw10" | "javad" | "nvs" | "binex" | "rt17" | "sbf" | "cmr";
+	streamPath: string;
 }
 
 export interface ISTR2STRConfig {
-	in_stream: string;
-	in_stream_format: string;
-	out_streams : IOutputStream[];
+	in_streams : IStreamInfo[];
+	out_streams : IStreamInfo[];
 	command: string;
 	station_id: string;
 	relay_messages_back : boolean;
@@ -102,23 +102,25 @@ export class str2str extends execution_manager {
 			ret.push(str2str_config.command);
 
 		}
-		if (str2str_config.in_stream && str2str_config.in_stream != "") {
-			if (str2str_config.in_stream_format && STREAM_FORMATS.indexOf(str2str_config.in_stream_format) === -1) {
-				throw new Error("in stream format is invalid:" + str2str_config.in_stream_format);
-			}
+		if (str2str_config.in_streams && str2str_config.in_streams.length) {
+			for (let in_stream of str2str_config.in_streams){
+				if (in_stream.streamFormat && STREAM_FORMATS.indexOf(in_stream.streamFormat) === -1) {
+					throw new Error("in stream format is invalid:" + in_stream.streamFormat);
+				}
 
-			ret.push("-in");
-			ret.push(str2str_config.in_stream + ((str2str_config.in_stream_format) ? "#" + str2str_config.in_stream_format : ""));
+				ret.push("-in");
+				ret.push(in_stream.streamPath + ((in_stream.streamFormat) ? "#" + in_stream.streamFormat : ""));
+			}
 		}
 
 		if (str2str_config.out_streams && str2str_config.out_streams.length) {
 			for (let out_stream of str2str_config.out_streams){
-				if (out_stream.out_stream_format && STREAM_FORMATS.indexOf(out_stream.out_stream_format) === -1) {
-					throw new Error("out stream format is invalid:" + out_stream.out_stream_format);
+				if (out_stream.streamFormat && STREAM_FORMATS.indexOf(out_stream.streamFormat) === -1) {
+					throw new Error("out stream format is invalid:" + out_stream.streamFormat);
 				}
 
 				ret.push("-out");
-				ret.push(out_stream.out_stream + ((out_stream.out_stream_format) ? "#" + out_stream.out_stream_format : ""));
+				ret.push(out_stream.streamPath + ((out_stream.streamFormat) ? "#" + out_stream.streamFormat : ""));
 			}
 		}
 

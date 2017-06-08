@@ -27,8 +27,8 @@ import angular = require("angular");
 import _ = require('lodash');
 
 export interface IStreamInfo {
-	streamType: "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
-	streamFormat: "rtcm2" | "rtcm3" | "nov" | "oem3" | "ubx" | "ss2" | "hemis" | "stq" | "gw10" | "javad" | "nvs" | "binex" | "rt17" | "sbf" | "cmr";
+	streamType: string | "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
+	streamFormat: string | "" | "rtcm2" | "rtcm3" | "nov" | "oem3" | "ubx" | "ss2" | "hemis" | "stq" | "gw10" | "javad" | "nvs" | "binex" | "rt17" | "sbf" | "cmr";
 	streamPath: string;
 }
 
@@ -52,21 +52,13 @@ export interface IParamResponse {
 // 	out: string;
 // }
 
-
-
-export interface IOutputStream {
-	out_stream: string;
-	out_stream_format: string;
-}
-
 export interface ISTR2STRConfig {
-	in_stream: string;
-	in_stream_format: string;
-	out_streams: IOutputStream[];
+	in_streams : IStreamInfo[];
+	out_streams : IStreamInfo[];
 	command: string;
 	station_id: string;
-	relay_messages_back: boolean;
-	enabled: boolean;
+	relay_messages_back : boolean;
+	enabled:boolean;
 }
 
 export interface IRTKRCVConfig {
