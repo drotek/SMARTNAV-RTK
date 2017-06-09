@@ -594,14 +594,14 @@ export default function configFileEditor(app: express.Express) {
 		try {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 
-			const requiredParameters = req.body.requiredParameters;
-			const advancedParameters = req.body.advancedParameters;
-			const otherParameters = req.body.otherParameters;
-			const cmdParameters = req.body.cmdParameters;
+			const requiredParameters = req.body.requiredParameters || [];
+			const advancedParameters = req.body.advancedParameters || [];
+			const otherParameters = req.body.otherParameters || [];
+			const cmdParameters = req.body.cmdParameters || [];
 
 			let pathCmd: string;
 
-			let configFileAsString = "# SMARTNAV-RTK options (2013/03/01 10:41:04, v.2.4.2)\n\n";
+			let configFileAsString = `# SMARTNAV-RTK options (${new Date()})\n\n`;
 			configFileAsString = configFileAsString + "#Logs location /usr/drotek/logs/\n\n";
 
 			configFileAsString = configFileAsString + "#Required parameters\n";
