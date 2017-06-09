@@ -116,7 +116,7 @@ export interface IConfigurationScope extends angular.IScope {
 	// navSysParameter: INavSys;
 }
 
-export default/*@ngInject*/ async function(
+export default/*@ngInject*/ async function (
 	$scope: IConfigurationScope, configuration: IConfigurationService, $modal: angular_ui_bootstrap.IModalService,
 	$rootScope: angular.IRootScopeService, admin: IAdminService, toastr: angular.toastr.IToastrService) {
 
@@ -447,11 +447,11 @@ export default/*@ngInject*/ async function(
 			}
 		});
 
-		const modal_result = await modalInstance.result; // returned input on ok
-		if (modal_result) {
+		try {
+			const modal_result = await modalInstance.result; // returned input on ok
 			console.log("Config pushed");
-		} else {
-			console.log("Push config modal dismissed at: " + new Date());
+		} catch (e) {
+			console.log("Push config modal dismissed at: " + new Date(), e);
 		}
 	};
 
@@ -478,11 +478,11 @@ export default/*@ngInject*/ async function(
 			}
 		});
 
-		const result = await modalInstance.result; // returned input on ok
-		if (result) {
+		try {
+			const result = await modalInstance.result; // returned input on ok
 			console.log("Config saved");
-		} else {
-			console.log("Save config modal dismissed at: " + new Date());
+		} catch (e) {
+			console.log("Save config modal dismissed at: " + new Date(), e);
 		}
 	};
 
@@ -495,11 +495,12 @@ export default/*@ngInject*/ async function(
 			controller: open_conf_controller,
 		});
 
-		const result = modalInstance.result; // returned input on ok
-		if (result) {
+		try {
+			const result = modalInstance.result; // returned input on ok
+
 			console.log("Config opened");
-		} else {
-			console.log("Open config modal dismissed at: " + new Date());
+		} catch (e) {
+			console.log("Open config modal dismissed at: " + new Date(), e);
 		}
 	};
 

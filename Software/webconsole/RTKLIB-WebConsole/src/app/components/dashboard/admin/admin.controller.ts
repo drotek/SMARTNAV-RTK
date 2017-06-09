@@ -37,7 +37,7 @@ import export_ubx_controller from "../modals/export-ubx/export-ubx.controller";
 import share_log_controller from "../modals/share-log/share-log.controller";
 import update_platform_controller from "../modals/update-platform/update-platform.controller";
 
-export default /*@ngInject*/ function(
+export default /*@ngInject*/ function (
 	$scope: angular.IScope, log: ILogService, admin: IAdminService, configuration: IConfigurationService,
 	$modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
 
@@ -79,12 +79,12 @@ export default /*@ngInject*/ function(
 			controller: export_log_controller,
 		});
 
-		const result = await modalInstance.result;
-		if (result) {
+		try {
+			const result = await modalInstance.result;
 			console.log("Log exported");
 			toastr.info("Log exported");
-		} else {
-			console.log("Export log modal dismissed at: " + new Date());
+		} catch (e) {
+			console.log("Export log modal dismissed at: " + new Date(), e);
 		}
 
 	};
@@ -132,12 +132,13 @@ export default /*@ngInject*/ function(
 			controller: export_ubx_controller,
 		});
 
-		const result = await modalInstance.result; // returned input on ok
-		if (result) {
+
+		try {
+			const result = await modalInstance.result; // returned input on ok
 			console.log("Ubx exported");
 			toastr.info("Ubx exported");
-		} else {
-			console.log("Export ubx modal dismissed at: " + new Date());
+		} catch (e) {
+			console.log("Export ubx modal dismissed at: " + new Date(), e);
 		}
 	};
 
@@ -150,12 +151,12 @@ export default /*@ngInject*/ function(
 			controller: share_log_controller,
 		});
 
-		const result = await modalInstance.result; // returned input on ok
-		if (result) {
+		try {
+			const result = await modalInstance.result; // returned input on ok
 			console.log("Log shared");
 			toastr.info("Log shared");
-		} else {
-			console.log("share log modal dismissed at: " + new Date());
+		} catch (e) {
+			console.log("share log modal dismissed at: " + new Date(), e);
 		}
 	};
 
@@ -178,12 +179,13 @@ export default /*@ngInject*/ function(
 			controller: update_platform_controller,
 		});
 
-		const result = await modalInstance.result; // returned input on ok
-		if (result) {
+		try {
+			const result = await modalInstance.result; // returned input on ok
+
 			console.log("Platform updated");
 			toastr.error("Platform updated");
-		} else {
-			console.log("Update platform modal dismissed at: " + new Date());
+		} catch (e) {
+			console.log("Update platform modal dismissed at: " + new Date(), e);
 		}
 	};
 
