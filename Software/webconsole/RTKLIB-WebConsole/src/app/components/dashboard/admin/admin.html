@@ -29,28 +29,39 @@
         
         <accordion close-others="oneAtATime">
             <accordion-group heading="Service" is-open="status.isServiceOpen">
-                <div>
-                    <div class="label-50 parameter-label" title="{{item.comment}}" ng-if="confType == 'ROVER'">
-                        Rover Status:
+                <div ng-repeat="(key, value) in services" class="service-container">
+
+                <div >
+                    <div class="same-line" title="{{item.comment}}">
+                        {{key}} Status:
                     </div>
-                    <div class="label-50 parameter-label" title="{{item.comment}}" ng-if="confType == 'BASE'">
-                        Base Status:
-                    </div>
-                    <div ng-if="isServiceActive">
+                    <div class="same-line" ng-if="value.isActive">
                         <div class="led-green"></div>
                         <div class="rtklib-status">ACTIVE</div>
                     </div>
-                    <div ng-if="!isServiceActive">
+                    <div class="same-line" ng-if="!value.isActive">
                         <div class="led-red"></div>
                         <div class="rtklib-status">INACTIVE</div>
+                    </div>
+
+                    <div class="same-line" ng-if="value.isEnabled">
+                        <div class="led-green"></div>
+                        <div class="rtklib-status">ENABLED</div>
+                    </div>
+                    <div class="same-line" ng-if="!value.isEnabled">
+                        <div class="led-red"></div>
+                        <div class="rtklib-status">DISABLED</div>
                     </div>
                 </div>
                 
                 <div class="admin-service-actions-bar">
-                    <button type="button" class="btn btn-success btn-sm action-button" ng-click="start($event)">START</button>
-                    <button type="button" class="btn btn-danger btn-sm action-button" ng-click="stop($event)">STOP</button>
+                    <button type="button" class="btn btn-success btn-sm action-button" ng-click="start($event,key)">START</button>
+                    <button type="button" class="btn btn-danger btn-sm action-button" ng-click="stop($event,key)">STOP</button>
+                    <button type="button" class="btn btn-success btn-sm action-button" ng-click="enable($event,key)">ENABLE</button>
+                    <button type="button" class="btn btn-danger btn-sm action-button" ng-click="disable($event,key)">DISABLE</button>
                 </div>
                 
+                </div>
             </accordion-group>
 
             <accordion-group heading="Logs" is-open="status.isLogsOpen">

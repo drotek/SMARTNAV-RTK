@@ -23,12 +23,11 @@
  * along with RTKLIB WEB CONSOLE. If not, see <http://www.gnu.org/licenses/>.
  */
 
-///// <reference path="../../../../../node_modules/@types/angular/index.d.ts" />
 import angular = require("angular");
 import angular_ui_bootstrap = require("angular-ui-bootstrap");
 import angular_toastr = require("angular-toastr");
 
-import { IAdminService } from "../../../shared/services/admin.service";
+import { IAdminService, IModuleResponse } from "../../../shared/services/admin.service";
 import { IConfigurationService } from "../../../shared/services/configuration.service";
 import { ILogService } from "../../../shared/services/log.service";
 
@@ -37,12 +36,25 @@ import export_ubx_controller from "../modals/export-ubx/export-ubx.controller";
 import share_log_controller from "../modals/share-log/share-log.controller";
 import update_platform_controller from "../modals/update-platform/update-platform.controller";
 
-export default /*@ngInject*/ function (
-	$scope: angular.IScope, log: ILogService, admin: IAdminService, configuration: IConfigurationService,
+export interface IAdminScope extends angular.IScope {
+	oneAtATime: boolean;
+	status: {
+		isServiceOpen: boolean,
+		isLogsOpen: boolean,
+		isUpdateOpen: boolean,
+		isFirstDisabled: boolean
+	};
+	//isServiceActive: boolean;
+	logFiles: string[];
+	services: { [id: string]: IModuleResponse; };
+}
+
+export default /*@ngInject*/ async function (
+	$scope: IAdminScope, log: ILogService, admin: IAdminService, configuration: IConfigurationService,
 	$modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
 
 	/* Déclaration du logger */
-	console.log("dashboard.admin");
+	console.log("dashboard.admin.controller");
 
 	/* Déclaration des variables utilisées dans le controlleur */
 	$scope = angular.extend($scope, {
@@ -53,22 +65,13 @@ export default /*@ngInject*/ function (
 			isUpdateOpen: true,
 			isFirstDisabled: false
 		},
-		isServiceActive: false,
+		//isServiceActive: false,
 		logFiles: [],
-		confType: $rootScope.confType // ROVER/BASE
-		// isRover: true
-	});
+		services: {} // ROVER/BASE
+	} as IAdminScope);
 
 	/* Watch Expressions */
-	// $scope.$watch(() => {
-	//     return admin.getActiveMode();
-	// }, (newVal) => {
-	//     if (typeof newVal !== 'undefined') {
-	//         console.log('admin.getActiveMode() ' + newVal);
-	//         $rootScope.confType = newVal;
-	//         checkMode();
-	//     }
-	// });
+	await refreshStatus();
 
 	$scope.exportLog = async ($event: angular.IAngularEvent): Promise<any> => {
 		$event.stopPropagation();
@@ -91,20 +94,42 @@ export default /*@ngInject*/ function (
 
 	/* Screen Functionnalities */
 	async function refreshStatus() {
-		const response = await admin.adminService("status");
-		if (response) {
-			$scope.isServiceActive = response.isActive;
-			if (response.error || response.stderr) {
-				toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Getting Status");
+		try {
+			let rover_status = await admin.adminService("status", "ROVER");
+			if (typeof rover_status !== 'undefined') {
+				console.log('admin.adminService("status","ROVER") ', rover_status);
+				$scope.services["ROVER"] = rover_status;
+
+				if (rover_status.error || rover_status.stderr) {
+					toastr.error((rover_status.error) ? rover_status.error.message : "" + rover_status.stderr, "Error ROVER Status");
+				}
 			}
+		} catch (e) {
+			console.log("error checking service status", "ROVER", e);
+			toastr.error(e, "Error Checking ROVER Status");
 		}
 
+		try {
+			let base_status = await admin.adminService("status", "BASE");
+			if (typeof base_status !== 'undefined') {
+				console.log('admin.adminService("status","BASE") ' , base_status);
+				$scope.services["BASE"] = base_status;
+
+				if (base_status.error || base_status.stderr) {
+					toastr.error((base_status.error) ? base_status.error.message : "" + base_status.stderr, "Error BASE Status");
+				}
+			}
+		} catch (e) {
+			console.log("error checking service status", "BASE", e);
+			toastr.error(e, "Error Checking BASE Status");
+		}
 	}
 
-	$scope.start = async ($event: angular.IAngularEvent) => {
+	$scope.start = async ($event: angular.IAngularEvent, service_name : string) => {
 		$event.stopPropagation();
+		console.log("starting service",service_name, $event);
 
-		const response = await admin.adminService("start");
+		const response = await admin.adminService("start",service_name);
 		if (response && response.error) {
 			console.log(response);
 			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Starting Service");
@@ -112,13 +137,38 @@ export default /*@ngInject*/ function (
 		await refreshStatus();
 	};
 
-	$scope.stop = async ($event: angular.IAngularEvent) => {
+	$scope.stop = async ($event: angular.IAngularEvent, service_name : string) => {
 		$event.stopPropagation();
+		console.log("stopping service",service_name, $event);
 
-		const response = await admin.adminService("stop");
+		const response = await admin.adminService("stop",service_name);
 		if (response.error) {
 			console.log(response.error);
 			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Stopping Service");
+		}
+		await refreshStatus();
+	};
+
+	$scope.enable = async ($event: angular.IAngularEvent, service_name : string) => {
+		$event.stopPropagation();
+		console.log("enabling service",service_name, $event);
+
+		const response = await admin.adminService("enable",service_name);
+		if (response.error) {
+			console.log(response.error);
+			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Enabling Service");
+		}
+		await refreshStatus();
+	};
+
+	$scope.disable = async ($event: angular.IAngularEvent, service_name : string) => {
+		$event.stopPropagation();
+		console.log("disabling service",service_name, $event);
+
+		const response = await admin.adminService("disable",service_name);
+		if (response.error) {
+			console.log(response.error);
+			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Disabling Service");
 		}
 		await refreshStatus();
 	};
@@ -188,22 +238,6 @@ export default /*@ngInject*/ function (
 			console.log("Update platform modal dismissed at: " + new Date(), e);
 		}
 	};
-
-	function checkMode() {
-		// $scope.isRover = $rootScope.confType === 'ROVER';
-		$scope.confType = $rootScope.confType;
-	}
-
-	/* Loading Process */
-	// let response = await admin.getConfigType();
-	//     if (response && response.isActive) {
-	//         $scope.isServiceActive = response.isActive === true;
-	//     }
-	//     if (response.error) {
-	//         console.log(response.error);
-	//         toastr.error(response.error || "" + response.stderr, 'Error Getting Config');
-	//     }
-	//
 
 	setInterval(refreshStatus, 5000);
 

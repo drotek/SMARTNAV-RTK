@@ -107,6 +107,9 @@ export default function adminModule(app: express.Express) {
 							let rtkrcv_config = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 							response.isActive = rtkrcv_instance && rtkrcv_instance.status();
 							response.isEnabled = rtkrcv_config.enabled;
+							if (!response.isActive){
+								rtkrcv_instance = null;
+							}
 							break;
 						case "enable": {
 							let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
@@ -159,6 +162,9 @@ export default function adminModule(app: express.Express) {
 							let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 							response.isActive = str2str_instance && str2str_instance.status();
 							response.isEnabled = str2str_configuration.enabled;
+							if (!response.isActive){
+								str2str_instance = null;
+							}
 						}
 							break;
 						case "enable": {

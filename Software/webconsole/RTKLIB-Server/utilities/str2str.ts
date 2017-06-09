@@ -104,23 +104,27 @@ export class str2str extends execution_manager {
 		}
 		if (str2str_config.in_streams && str2str_config.in_streams.length) {
 			for (let in_stream of str2str_config.in_streams){
-				if (in_stream.streamFormat && STREAM_FORMATS.indexOf(in_stream.streamFormat) === -1) {
-					throw new Error("in stream format is invalid:" + in_stream.streamFormat);
-				}
+				// if (in_stream.streamFormat && STREAM_FORMATS.indexOf(in_stream.streamFormat) === -1) {
+				// 	throw new Error("in stream format is invalid:" + in_stream.streamFormat);
+				// }
 
-				ret.push("-in");
-				ret.push(in_stream.streamPath + ((in_stream.streamFormat) ? "#" + in_stream.streamFormat : ""));
+				if (in_stream.streamPath){
+					ret.push("-in");
+					ret.push(((in_stream.streamType) ? in_stream.streamType + "://" : "") + in_stream.streamPath);// + ((in_stream.streamFormat) ? "#" + in_stream.streamFormat : ""));
+				}
 			}
 		}
 
 		if (str2str_config.out_streams && str2str_config.out_streams.length) {
 			for (let out_stream of str2str_config.out_streams){
-				if (out_stream.streamFormat && STREAM_FORMATS.indexOf(out_stream.streamFormat) === -1) {
-					throw new Error("out stream format is invalid:" + out_stream.streamFormat);
-				}
+				// if (out_stream.streamFormat && STREAM_FORMATS.indexOf(out_stream.streamFormat) === -1) {
+				// 	throw new Error("out stream format is invalid:" + out_stream.streamFormat);
+				// }
 
-				ret.push("-out");
-				ret.push(out_stream.streamPath + ((out_stream.streamFormat) ? "#" + out_stream.streamFormat : ""));
+				if (out_stream.streamPath){
+					ret.push("-out");
+					ret.push(((out_stream.streamType)?  out_stream.streamType + "://" : "") + out_stream.streamPath);// + ((out_stream.streamFormat) ? "#" + out_stream.streamFormat : ""));
+				}
 			}
 		}
 
@@ -135,6 +139,9 @@ export class str2str extends execution_manager {
 				ret.push("yes");
 			}
 		}
+
+		ret.push("-t");
+		ret.push("5");
 
 		return ret;
 	}

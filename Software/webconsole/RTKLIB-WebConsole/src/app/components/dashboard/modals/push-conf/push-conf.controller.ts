@@ -25,6 +25,7 @@
 
 import angular = require("angular");
 import angular_ui_bootstrap = require("angular-ui-bootstrap");
+import angular_toastr = require("angular-toastr");
 
 import { IAdminService } from "../../../../shared/services/admin.service";
 import { IConfigurationService, IParameter, IStreamInfo } from "../../../../shared/services/configuration.service";
@@ -45,9 +46,9 @@ export interface IPushConfScope extends angular.IScope {
 
 }
 
-export default /*@ngInject*/ function(
+export default /*@ngInject*/ function (
 	$q: ng.IQService, $scope: IPushConfScope, configuration: IConfigurationService, admin: IAdminService,
-	$modalInstance: angular_ui_bootstrap.IModalInstanceService, mode: string,
+	$modalInstance: angular_ui_bootstrap.IModalInstanceService, toastr: angular.toastr.IToastrService, mode: string,
 	requiredParams: IParameter[], advancedParams: IParameter[], otherParams: IParameter[], cmdParams: IParameter[],
 	outputType: string, outputValue: string, inputStreams: IStreamInfo[], outputStreams: IStreamInfo[]) {
 
@@ -65,20 +66,22 @@ export default /*@ngInject*/ function(
 	$scope.wasBaseStated = false;
 	$scope.wasRoverStarted = false;
 
-	// $scope.isRover = $scope.mode === 'ROVER';
-	// $scope.isBase = $scope.mode === 'BASE';
-
 	$scope.loading = false;
 
 	// Function called to push config file
 	$scope.ok = async () => {
-		$scope.loading = true;
-		const response = await stopRunningService();
-		if (response) {
-			console.log("services stopped successfully");
-			await pushAndStart();
-		} else {
-			console.log("failed to stop services");
+		try {
+			$scope.loading = true;
+			const response = await stopRunningService();
+			if (response) {
+				console.log("services stopped successfully");
+				await pushAndStart();
+			} else {
+				console.log("failed to stop services");
+			}
+		} catch (e) {
+			console.log("error pushing changes", e);
+			toastr.error("Error Pushing Changes");
 		}
 	};
 
@@ -96,6 +99,7 @@ export default /*@ngInject*/ function(
 	async function pushAndStart() {
 		if ($scope.mode === "ROVER") {
 			// copy back input streams
+			console.log("update ROVER input streams");
 			if ($scope.inputStreams) {
 				for (let i = 0; i < $scope.inputStreams.length; i++) {
 					find_or_create_property($scope.otherParameters, `inpstr${i}-type`).value = $scope.inputStreams[i].streamType;
@@ -104,6 +108,7 @@ export default /*@ngInject*/ function(
 				}
 			}
 
+			console.log("update ROVER output streams");
 			// copy back output streams
 			if ($scope.outputStreams) {
 				for (let i = 0; i < $scope.outputStreams.length; i++) {
@@ -113,76 +118,39 @@ export default /*@ngInject*/ function(
 				}
 			}
 
-			configuration.saveFile({
+			console.log("saving configuration file");
+			await configuration.saveFile({
 				requiredParameters: $scope.requiredParameters,
 				advancedParameters: $scope.advancedParameters,
 				otherParameters: $scope.otherParameters,
 				cmdParameters: $scope.cmdParameters
-			}).then(() => {
-				if ($scope.wasRoverStarted) {
-					admin.adminService("start", "ROVER").then((response) => {
-						$modalInstance.close();
-						return true;
-					});
-				}
-				//     if (shouldEnable) {
-				//         admin.adminService('enable', $scope.mode).then(() => {
-				//             admin.adminService('start', $scope.mode).then(() => {
-				//                 //admin.getConfigType();
-				//                 $scope.loading = false;
-				//                 $modalInstance.close();
-				//             });
-				//         });
-				//     } else {
-				//         admin.adminService('start', $scope.mode).then(() => {
-				//             //admin.getConfigType();
-				//             $scope.loading = false;
-				//             $modalInstance.close();
-				//         });
-				//     }
 			});
+
+			if ($scope.wasRoverStarted) {
+				console.log("starting ROVER service");
+				let response = await admin.adminService("start", "ROVER");
+			}
+
+			$modalInstance.close();
+			return true;
 		} else if ($scope.mode === "BASE") {
+			console.log("saving str2str(BASE) configuration");
 			const config = await configuration.getSTR2STRConfig();
 			config.in_streams = $scope.inputStreams;
 			config.out_streams = $scope.outputStreams;
 			const saved_config = await configuration.saveSTR2STRConfig(config);
 
-			configuration.saveFile({
+			console.log("saving BASE configuration file");
+			await configuration.saveFile({
 				cmdParameters: $scope.cmdParameters,
 				otherParameters: $scope.otherParameters
-			}).then(() => {
-				if ($scope.wasBaseStated) {
-					admin.adminService("start", "BASE").then((response) => {
-						$modalInstance.close();
-						return true;
-					});
-				}
-				//     var out = $scope.outputType + '://';
-				//     if ($scope.outputType === 'tcpsvr') {
-				//         out = out + ':'
-				//     }
-				//     out = out + $scope.outputValue;
-
-				//     configuration.saveRunBase({
-				//         'out': out
-				//     }).then(() => {
-				//         if (shouldEnable) {
-				//             admin.adminService('enable', $scope.mode).then(() => {
-				//                 admin.adminService('start', $scope.mode).then(() => {
-				//                     admin.getConfigType();
-				//                     $scope.loading = false;
-				//                     $modalInstance.close();
-				//                 });
-				//             });
-				//         } else {
-				//             admin.adminService('start', $scope.mode).then(() => {
-				//                 admin.getConfigType();
-				//                 $scope.loading = false;
-				//                 $modalInstance.close();
-				//             });
-				//         }
-				//     });
 			});
+
+			if ($scope.wasBaseStated) {
+				let response = await admin.adminService("start", "BASE");
+			}
+			$modalInstance.close();
+			return true;
 		} else {
 			throw new Error("mode not implemented " + $scope.mode);
 		}
@@ -202,49 +170,6 @@ export default /*@ngInject*/ function(
 		const stop_base_result = await admin.adminService("stop", "BASE");
 
 		return true;
-		// admin.adminService('status', 'ROVER').then((response) => {
-		//     if (response.isActive) {
-		//         admin.adminService('stop', 'ROVER').then(() => {
-		//             if ($scope.isRover === false) {
-		//                 admin.adminService('disable', 'ROVER').then(() => {
-		//                     callback(true);
-		//                 });
-		//             } else {
-		//                 callback(false);
-		//             }
-		//         });
-		//     } else if (response.isEnabled) {
-		//         if ($scope.isRover === false) {
-		//             admin.adminService('disable', 'ROVER').then(() => {
-		//                 callback(true);
-		//             });
-		//         } else {
-		//             callback(false);
-		//         }
-		//     } else {
-		//         admin.adminService('status', 'BASE').then((response) => {
-		//             if (response.isActive) {
-		//                 admin.adminService('stop', 'BASE').then(() => {
-		//                     if ($scope.isBase === false) {
-		//                         admin.adminService('disable', 'BASE').then(() => {
-		//                             callback(true);
-		//                         });
-		//                     } else {
-		//                         callback(false);
-		//                     }
-		//                 });
-		//             } else if (response.isEnabled) {
-		//                 if ($scope.isBase === false) {
-		//                     admin.adminService('disable', 'BASE').then(() => {
-		//                         callback(true);
-		//                     });
-		//                 } else {
-		//                     callback(false);
-		//                 }
-		//             }
-		//         });
-		//     }
-		// });
 	}
 
 	// Function called to cancel the push.
