@@ -27,7 +27,7 @@ import angular = require("angular");
 import angular_toastr = require("angular-toastr");
 import { IAdminService } from "../../shared/services/admin.service";
 
-export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminService, $rootScope: angular.IRootScopeService, toastr: any) {
+export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
 
     /* Déclaration du logger */
     console.log('dashboard');

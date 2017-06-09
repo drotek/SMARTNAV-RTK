@@ -25,6 +25,7 @@
 
 import angular = require("angular");
 import angular_ui_bootstrap = require('angular-ui-bootstrap');
+import angular_toastr = require("angular-toastr");
 import { IConfigurationService, IParameter, IStreamInfo, IRTKRCVConfig, ISTR2STRConfig } from "../../../shared/services/configuration.service";
 import { IAdminService } from "../../../shared/services/admin.service";
 
@@ -119,7 +120,7 @@ export interface IConfigurationScope extends angular.IScope {
 }
 
 export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration: IConfigurationService, $modal: angular_ui_bootstrap.IModalService,
-    $rootScope: angular.IRootScopeService, admin: IAdminService) {
+    $rootScope: angular.IRootScopeService, admin: IAdminService,toastr: angular.toastr.IToastrService) {
 
     /* Déclaration du logger */
     console.log('dashboard.configuration');
@@ -244,6 +245,7 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
     function update_streams(){
         if ($scope.currentMode == "ROVER") {
             //$scope.inputStreams = $scope.rtkrcv_config
+            parse_config_file();
             resize_streams($scope.inputStreams, 3);
             resize_streams($scope.outputStreams, 3);
         } else if ($scope.currentMode == "BASE") {
@@ -405,16 +407,18 @@ export default/*@ngInject*/ function ($scope: IConfigurationScope, configuration
 
     /* Screen Functionnalities */
     $scope.push = ($event: angular.IAngularEvent) => {
-
-
-
         $event.stopPropagation();
-
-        console.log($scope.currentMode);
+        console.log("pushing configuration", $scope.currentMode);
 
         if ($scope.currentMode === 'ROVER') {
             console.log(computeNavSysValue());
             console.log($scope.advancedParams);
+        }else if ($scope.currentMode == "BASE"){
+
+        }else{
+            console.log("unable to push, no currentMode set");
+            toastr.warning("Unable to push, bad state","Warning");
+            return;
         }
 
         var modalInstance = $modal.open({

@@ -38,7 +38,7 @@ import share_log_controller from '../modals/share-log/share-log.controller';
 import update_platform_controller from '../modals/update-platform/update-platform.controller';
 
 export default /*@ngInject*/ function ($scope: angular.IScope, log: ILogService, admin: IAdminService, configuration: IConfigurationService,
-    $modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: any) {
+    $modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
 
     /* Déclaration du logger */
     console.log('dashboard.admin');
@@ -93,7 +93,7 @@ export default /*@ngInject*/ function ($scope: angular.IScope, log: ILogService,
             if (response) {
                 $scope.isServiceActive = response.isActive;
                 if (response.error || response.stderr) {
-                    toastr.error(response.error || "" + response.stderr, 'Error Getting Status');
+                    toastr.error((response.error) ? response.error.message : "" + response.stderr, 'Error Getting Status');
                 }
             }
         });
@@ -105,7 +105,7 @@ export default /*@ngInject*/ function ($scope: angular.IScope, log: ILogService,
         admin.adminService('start').then((response) => {
             if (response && response.error) {
                 console.log(response);
-                toastr.error(response.error || "" + response.stderr, 'Error Starting Service');
+                toastr.error((response.error) ? response.error.message : "" + response.stderr, 'Error Starting Service');
             }
             refreshStatus();
         });
@@ -117,7 +117,7 @@ export default /*@ngInject*/ function ($scope: angular.IScope, log: ILogService,
         admin.adminService('stop').then((response) => {
             if (response.error) {
                 console.log(response.error);
-                toastr.error(response.error || "" + response.stderr, 'Error Stopping Service');
+                toastr.error((response.error) ? response.error.message : "" + response.stderr, 'Error Stopping Service');
             }
             refreshStatus();
         });
@@ -163,7 +163,7 @@ export default /*@ngInject*/ function ($scope: angular.IScope, log: ILogService,
         admin.syncTime().then((response) => {
             if (response.error) {
                 console.log(response.error);
-                toastr.error(response.error || "" + response.stderr, 'Error Syncing Time');
+                toastr.error((response.error) ? response.error.message : "" + response.stderr, 'Error Syncing Time');
             }
         });
     };

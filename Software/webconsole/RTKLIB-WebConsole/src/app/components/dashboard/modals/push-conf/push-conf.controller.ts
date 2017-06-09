@@ -75,19 +75,58 @@ export default /*@ngInject*/ function ($q: ng.IQService, $scope: IPushConfScope,
     $scope.ok =  () =>{
         $scope.loading = true;
         stopRunningService().then((response)=>{
-
+            if (response){
+                console.log("services stopped successfully");
+                pushAndStart();
+            }else{
+                console.log("failed to stop services");
+            }
         });
     };
 
-    function pushAndStart(shouldEnable: boolean) {
+    function find_or_create_property(parameters: IParameter[], key_name : string){
+        let parameter = parameters.find((p)=>p.key == key_name);
+        if (parameter == null){
+            parameter = {
+                key : key_name
+            }
+            parameters.push(parameter);
+        }
+        return parameter;
+    }
+
+    function pushAndStart() {
         if ($scope.mode == "ROVER") {
+            //copy back input streams
+            if ($scope.inputStreams){
+                for (let i = 0; i < $scope.inputStreams.length;i++){
+                    find_or_create_property($scope.otherParameters,`inpstr${i}-type`).value = $scope.inputStreams[i].streamType;
+                    find_or_create_property($scope.otherParameters,`inpstr${i}-path`).value = $scope.inputStreams[i].streamPath;
+                    find_or_create_property($scope.otherParameters, `inpstr${i}-format`).value = $scope.inputStreams[i].streamFormat;
+                }
+            }
+
+            //copy back output streams
+            if ($scope.outputStreams){
+                for (let i = 0; i < $scope.outputStreams.length;i++){
+                    find_or_create_property($scope.otherParameters, `outstr${i}-type`).value = $scope.outputStreams[i].streamType;
+                    find_or_create_property($scope.otherParameters, `outstr${i}-path`).value = $scope.outputStreams[i].streamPath;
+                    find_or_create_property($scope.otherParameters, `outstr${i}-format`).value = $scope.outputStreams[i].streamFormat;
+                }
+            }
+
             configuration.saveFile({
                 'requiredParameters': $scope.requiredParameters,
                 'advancedParameters': $scope.advancedParameters,
                 'otherParameters': $scope.otherParameters,
                 'cmdParameters': $scope.cmdParameters
             }).then(() => {
-                
+                if ($scope.wasRoverStarted){
+                    admin.adminService("start","ROVER").then((response)=>{
+                        $modalInstance.close();
+                        return true;
+                    });
+                }
             //     if (shouldEnable) {
             //         admin.adminService('enable', $scope.mode).then(() => {
             //             admin.adminService('start', $scope.mode).then(() => {
@@ -107,8 +146,15 @@ export default /*@ngInject*/ function ($q: ng.IQService, $scope: IPushConfScope,
         } else if ($scope.mode == "BASE") {
             //throw new Error("BASE config save not implemented");
             configuration.saveFile({
-                'cmdParameters': $scope.cmdParameters
+                'cmdParameters': $scope.cmdParameters,
+                "otherParameters" : $scope.otherParameters
             }).then(() => {
+                if ($scope.wasBaseStated){
+                    admin.adminService("start","BASE").then((response)=>{
+                        $modalInstance.close();
+                        return true;
+                    });
+                }
             //     var out = $scope.outputType + '://';
             //     if ($scope.outputType === 'tcpsvr') {
             //         out = out + ':'
