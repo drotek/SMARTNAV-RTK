@@ -24,9 +24,9 @@
  */
 
 import angular = require("angular");
-import configuration_routes  from  './configuration.routes';
+import configuration_routes from "./configuration.routes";
 
-console.log('Configuration');
+console.log("Configuration");
 
-export default angular.module('dashboard.configuration', [])
-  .config(configuration_routes).name;
+export default angular.module("dashboard.configuration", [])
+	.config(configuration_routes).name;

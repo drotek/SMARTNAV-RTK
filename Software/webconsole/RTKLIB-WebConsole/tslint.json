@@ -11,7 +11,8 @@
         "class-name": false,
         "no-namespace": [false],
         "no-bitwise": false,
-        "interface-name": [false,"always-prefix"]
+        "interface-name": [false,"always-prefix"],
+        "no-var-requires": false
     },
     "extends": "tslint:recommended"
 }

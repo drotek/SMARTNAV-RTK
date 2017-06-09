@@ -24,44 +24,38 @@
  */
 
 import angular = require("angular");
-import angular_ui_bootstrap  = require( 'angular-ui-bootstrap');
-import {ILogService} from "../../../../shared/services/log.service";
+import angular_ui_bootstrap = require("angular-ui-bootstrap");
+import { ILogService } from "../../../../shared/services/log.service";
 
-export default /*@ngInject*/ function ($scope : angular.IScope, log : ILogService, $modalInstance : angular_ui_bootstrap.IModalServiceInstance) {
+export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogService, $modalInstance: angular_ui_bootstrap.IModalServiceInstance) {
 
-    /* Controller parameters */
-    $scope = angular.extend($scope, {
-        mailAdress: 'x@y.com',
-        downloadFile: undefined,
+	/* Controller parameters */
+	$scope = angular.extend($scope, {
+		mailAdress: "x@y.com",
+		downloadFile: undefined,
 		logFiles: undefined
-    });
-    
-    log.getListLogFiles().then((result)=>{
-        $scope.logFiles = result;
-        $scope.downloadFile = result[0];
-    });
-    
-    /**
-     * Function called to share log file
-     */
-    $scope.ok = function () {
-        log.getLogFile($scope.downloadFile).then((result)=>{
-            
-            var blob = new Blob([result], {type: 'text/plain;charset=utf-8'});
-            
-            var formattedBody = result;
-            var mailToLink = 'mailto:'+$scope.mailAdress+'?subject=[RTKLIB Web Console] '+$scope.downloadFile+'&body=' + encodeURIComponent(formattedBody);
-            window.location.href = mailToLink;
-            
-            $modalInstance.close();
-        });
-    };
+	});
 
-    /**
-     * Function called to cancel the share.
-     */
-    $scope.cancel = function () {
-        $modalInstance.dismiss('cancel');
-    };
-    
+	const log_files = await log.getListLogFiles();
+	$scope.logFiles = log_files;
+	$scope.downloadFile = log_files[0];
+
+	// Function called to share log file
+	$scope.ok = async () => {
+		const result = await log.getLogFile($scope.downloadFile);
+
+		const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+
+		const formattedBody = result;
+		const mailToLink = "mailto:" + $scope.mailAdress + "?subject=[RTKLIB Web Console] " + $scope.downloadFile + "&body=" + encodeURIComponent(formattedBody);
+		window.location.href = mailToLink;
+
+		$modalInstance.close();
+	};
+
+	// Function called to cancel the share.
+	$scope.cancel = () => {
+		$modalInstance.dismiss("cancel");
+	};
+
 }

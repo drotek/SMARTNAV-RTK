@@ -25,71 +25,71 @@
 
 import angular = require("angular");
 
-console.log('index');
+console.log("index");
 
-import angular_bootstrap = require('angular-bootstrap');
-import angular_animate = require('angular-animate');
-import angular_sanitize = require('angular-sanitize');
-import angular_ui_router = require('angular-ui-router');
-import angular_touch = require('angular-touch');
-import angular_chartjs = require('angular-chartjs');
+const angular_bootstrap = require("angular-bootstrap");
+import angular_animate = require("angular-animate");
+import angular_sanitize = require("angular-sanitize");
+import angular_ui_router = require("angular-ui-router");
+const angular_touch = require("angular-touch");
+const angular_chartjs = require("angular-chartjs");
 import angular_toastr = require("angular-toastr");
 
 const force_load_typescript_quirk = {
-    angular_bootstrap,
-    angular_animate,
-    angular_sanitize,
-    angular_ui_router,
-    angular_touch,
-    angular_chartjs,
-    angular_toastr
+	angular_bootstrap,
+	angular_animate,
+	angular_sanitize,
+	angular_ui_router,
+	angular_touch,
+	angular_chartjs,
+	angular_toastr
 };
 
-import dashboard from './components/dashboard';
+import dashboard from "./components/dashboard";
 
-var dependencies = [
-    'ui.router',
-    'ngAnimate',
-    'ngSanitize',
-    'ui.bootstrap',
-    'ngTouch',
-    'chartjs',
-    'toastr',
-    dashboard
+const dependencies = [
+	"ui.router",
+	"ngAnimate",
+	"ngSanitize",
+	"ui.bootstrap",
+	"ngTouch",
+	"chartjs",
+	"toastr",
+	dashboard
 ];
 
-import app_routes from './app.routes';
-import app_run from './app.run';
-import stop_event from './shared/directives/stop-event';
-import spinner from './shared/directives/spinner';
-import gps_factory from './shared/factories/gps.factory';
-import arrays_factory from './shared/factories/arrays.factory';
-import admin_service from './shared/services/admin.service';
-import configuration_service from './shared/services/configuration.service';
-import log_service from './shared/services/log.service';
-import map_service from './shared/services/map.service';
-import status_service from './shared/services/status.service';
+import app_routes from "./app.routes";
+import app_run from "./app.run";
+import spinner from "./shared/directives/spinner";
+import stop_event from "./shared/directives/stop-event";
+import arrays_factory from "./shared/factories/arrays.factory";
+import gps_factory from "./shared/factories/gps.factory";
+import admin_service from "./shared/services/admin.service";
+import configuration_service from "./shared/services/configuration.service";
+import log_service from "./shared/services/log.service";
+import map_service from "./shared/services/map.service";
+import status_service from "./shared/services/status.service";
 
-angular.module('rtklib-web-console', dependencies)
-    .config(app_routes)
+angular.module("rtklib-web-console", dependencies)
+	.config(app_routes)
 
-    .run(app_run)
+	.run(app_run)
 
-    .directive('stopEvent', stop_event)
-    .directive('spinner', spinner)
+	.directive("stopEvent", stop_event)
+	.directive("spinner", spinner)
 
-    .factory('gps', gps_factory)
-    .factory('arrays', arrays_factory)
+	.factory("gps", gps_factory)
+	.factory("arrays", arrays_factory)
 
-    .provider('admin', admin_service)
-    .provider('configuration', configuration_service)
-    .provider('log', log_service)
-    .provider('map', map_service)
-    .provider('status', status_service)
+	.provider("admin", admin_service)
+	.provider("configuration", configuration_service)
+	.provider("log", log_service)
+	.provider("map", map_service)
+	.provider("status", status_service)
 
-  .factory('$exceptionHandler', ["$injector",($injector: angular.auto.IInjectorService)=> {
-    return function myExceptionHandler(exception :Error , cause : string) {
-      console.warn(exception, cause);
-      $injector.get("$rootScope").$broadcast("unhandledException", exception,cause);
-    };
-  }]);
+	.factory("$exceptionHandler", ["$injector", ($injector: angular.auto.IInjectorService) => {
+		return function myExceptionHandler(exception: Error, cause: string) {
+			console.warn(exception, cause);
+			$injector.get("$rootScope").$broadcast("unhandledException", exception, cause);
+		};
+	}]);

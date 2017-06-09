@@ -24,7 +24,7 @@
  */
 
 import angular = require("angular");
-import _ = require('lodash');
+import _ = require("lodash");
 
 export interface IStreamInfo {
 	streamType: string | "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
@@ -53,12 +53,12 @@ export interface IParamResponse {
 // }
 
 export interface ISTR2STRConfig {
-	in_streams : IStreamInfo[];
-	out_streams : IStreamInfo[];
+	in_streams: IStreamInfo[];
+	out_streams: IStreamInfo[];
 	command: string;
 	station_id: string;
-	relay_messages_back : boolean;
-	enabled:boolean;
+	relay_messages_back: boolean;
+	enabled: boolean;
 }
 
 export interface IRTKRCVConfig {
@@ -73,69 +73,67 @@ export interface IRTKRCVConfig {
 }
 
 export interface IConfigurationService {
-	//getMode(): string;
+	// getMode(): string;
 	getRequiredParams(): IParameter[];
 	getAdvancedParams(): IParameter[];
 	getOtherParams(): IParameter[];
 	getCmdParams(): IParameter[];
 	getOutputType(): string;
 	getOutputValue(): string;
-	getFile(fileName?: string): angular.IPromise<boolean>;
-	//getBaseCmdFile(): angular.IPromise<boolean>;
-	//getRunBase(): angular.IPromise<void>;
-	saveFile(fileContent: IParamResponse): angular.IPromise<IParamResponse>;
-	//saveBaseCmdFile(fileContent: IParamResponse): angular.IPromise<IParamResponse>;
-	//saveRunBase(params: IRunBase): angular.IPromise<IRunBase>;
-	getListConfigFile(): angular.IPromise<string[]>;
+	getFile(fileName?: string): Promise<boolean>;
+	// getBaseCmdFile(): Promise<boolean>;
+	// getRunBase(): Promise<void>;
+	saveFile(fileContent: IParamResponse): Promise<IParamResponse>;
+	// saveBaseCmdFile(fileContent: IParamResponse): Promise<IParamResponse>;
+	// saveRunBase(params: IRunBase): Promise<IRunBase>;
+	getListConfigFile(): Promise<string[]>;
 	// switchMode(): void;
 	// setMode(modeToSet: string): void;
 
-	saveSTR2STRConfig(config: ISTR2STRConfig): angular.IPromise<ISTR2STRConfig>;
-	saveRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig>;
-	getSTR2STRConfig(): angular.IPromise<ISTR2STRConfig>
-	getRTKRCVConfig(): angular.IPromise<IRTKRCVConfig>
+	saveSTR2STRConfig(config: ISTR2STRConfig): Promise<ISTR2STRConfig>;
+	saveRTKRCVConfig(config: IRTKRCVConfig): Promise<IRTKRCVConfig>;
+	getSTR2STRConfig(): Promise<ISTR2STRConfig>;
+	getRTKRCVConfig(): Promise<IRTKRCVConfig>;
 
 }
 
-export default function () {
+export default function() {
 	return {
-		$get: /*@ngInject*/ function ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
+		$get($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
 
 			/* Déclaration des variables utilisées dans le service */
 
-			//let mode = '';
+			// let mode = '';
 			let requiredParams: IParameter[] = [];
 			let advancedParams: IParameter[] = [];
 			let otherParams: IParameter[] = [];
 			let cmdParams: IParameter[] = [];
-			let outputType = '';
-			let outputValue = '';
+			const outputType = "";
+			const outputValue = "";
 
-			/**
-			* Opérations disponibles pour le service configuration.
-			*/
-			var service: IConfigurationService = {
-				//getMode: getMode,
-				getRequiredParams: getRequiredParams,
-				getAdvancedParams: getAdvancedParams,
-				getOtherParams: getOtherParams,
-				getCmdParams: getCmdParams,
-				getOutputType: getOutputType,
-				getOutputValue: getOutputValue,
-				getFile: getFile,
-				//getBaseCmdFile: getBaseCmdFile,
-				//getRunBase: getRunBase,
-				saveFile: saveFile,
-				//saveBaseCmdFile: saveBaseCmdFile,
-				//saveRunBase: saveRunBase,
-				getListConfigFile: getListConfigFile,
+			// Opérations disponibles pour le service configuration.
+			const service: IConfigurationService = {
+				// getMode: getMode,
+				getRequiredParams,
+				getAdvancedParams,
+				getOtherParams,
+				getCmdParams,
+				getOutputType,
+				getOutputValue,
+				getFile,
+				// getBaseCmdFile: getBaseCmdFile,
+				// getRunBase: getRunBase,
+				saveFile,
+				// saveBaseCmdFile: saveBaseCmdFile,
+				// saveRunBase: saveRunBase,
+				getListConfigFile,
 				// switchMode: switchMode,
 				// setMode: setMode,
 
-				saveSTR2STRConfig: saveSTR2STRConfig,
-				saveRTKRCVConfig: saveRTKRCVConfig,
-				getSTR2STRConfig: getSTR2STRConfig,
-				getRTKRCVConfig: getRTKRCVConfig
+				saveSTR2STRConfig,
+				saveRTKRCVConfig,
+				getSTR2STRConfig,
+				getRTKRCVConfig
 
 			};
 
@@ -187,51 +185,48 @@ export default function () {
 				return outputValue;
 			}
 
-			function getListConfigFile(): angular.IPromise<string[]> {
-				return $http({
-					method: 'GET',
-					url: $rootScope.host + ':3000/listConfigFile'
-				}).then((response) => {
-					return <{ listConfigFiles: string[] }>response.data;
-				}).then((result) => {
-					return result.listConfigFiles;
+			async function getListConfigFile(): Promise<string[]> {
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/listConfigFile"
 				});
+				const result = response.data as { listConfigFiles: string[] };
+
+				return result.listConfigFiles;
 			}
 
-			function getFile(fileName?: string): angular.IPromise<boolean> {
+			async function getFile(fileName?: string): Promise<boolean> {
 
-				var url = $rootScope.host + ':3000/configFile';
+				let url = $rootScope.host + ":3000/configFile";
 				if (fileName) {
-					url += '?name=' + fileName;
+					url += "?name=" + fileName;
 				}
 
-				return $http({
-					method: 'GET',
-					url: url
-				}).then((response) => {
-					return response.data as IParamResponse;
-				}).then((params) => {
-					requiredParams = params.requiredParameters;
-					advancedParams = params.advancedParameters;
-					otherParams = params.otherParameters;
-					cmdParams = params.cmdParameters;
-					return true;
+				const response = await $http({
+					method: "GET",
+					url
 				});
+				const params = response.data as IParamResponse;
+
+				requiredParams = params.requiredParameters;
+				advancedParams = params.advancedParameters;
+				otherParams = params.otherParameters;
+				cmdParams = params.cmdParameters;
+				return true;
 
 			}
 
-			function saveFile(fileContent: IParamResponse): angular.IPromise<IParamResponse> {
-				return $http({
-					method: 'POST',
-					url: $rootScope.host + ':3000/configFile',
+			async function saveFile(fileContent: IParamResponse): Promise<IParamResponse> {
+				const response = await $http({
+					method: "POST",
+					url: $rootScope.host + ":3000/configFile",
 					data: fileContent
-				}).then((response) => {
-					return response.data as IParamResponse;
 				});
+				return response.data as IParamResponse;
 
 			}
 
-			// function getBaseCmdFile(): angular.IPromise<boolean> {
+			// function getBaseCmdFile(): Promise<boolean> {
 
 			// 	var url = $rootScope.host + ':3000/baseCMD';
 
@@ -250,7 +245,7 @@ export default function () {
 
 			// }
 
-			// function getRunBase(): angular.IPromise<void> {
+			// function getRunBase(): Promise<void> {
 			// 	var url = $rootScope.host + ':3000/runBase';
 
 			// 	return $http({
@@ -264,9 +259,7 @@ export default function () {
 			// 	});
 			// }
 
-
-
-			// function saveBaseCmdFile(fileContent: IParamResponse): angular.IPromise<IParamResponse> {
+			// function saveBaseCmdFile(fileContent: IParamResponse): Promise<IParamResponse> {
 			// 	return $http({
 			// 		method: 'POST',
 			// 		url: $rootScope.host + ':3000/baseCMD',
@@ -276,7 +269,7 @@ export default function () {
 			// 	});
 			// }
 
-			// function saveRunBase(params: IRunBase): angular.IPromise<IRunBase> {
+			// function saveRunBase(params: IRunBase): Promise<IRunBase> {
 			// 	return $http({
 			// 		method: 'POST',
 			// 		url: $rootScope.host + ':3000/runBase',
@@ -286,50 +279,43 @@ export default function () {
 			// 	});
 			// }
 
-
-			function saveSTR2STRConfig(config: ISTR2STRConfig): angular.IPromise<ISTR2STRConfig> {
-				return $http({
-					method: 'POST',
-					url: $rootScope.host + ':3000/saveSTR2STRConfig',
+			async function saveSTR2STRConfig(config: ISTR2STRConfig): Promise<ISTR2STRConfig> {
+				const response = await $http({
+					method: "POST",
+					url: $rootScope.host + ":3000/saveSTR2STRConfig",
 					data: config
-				}).then((response) => {
-					return response.data as ISTR2STRConfig;
 				});
+				return response.data as ISTR2STRConfig;
 			}
 
-			function saveRTKRCVConfig(config: IRTKRCVConfig): angular.IPromise<IRTKRCVConfig> {
-				return $http({
-					method: 'POST',
-					url: $rootScope.host + ':3000/saveRTKRCVConfig',
+			async function saveRTKRCVConfig(config: IRTKRCVConfig): Promise<IRTKRCVConfig> {
+				const response = await $http({
+					method: "POST",
+					url: $rootScope.host + ":3000/saveRTKRCVConfig",
 					data: config
-				}).then((response) => {
-					return response.data as IRTKRCVConfig;
 				});
+				return response.data as IRTKRCVConfig;
 			}
 
+			async function getSTR2STRConfig(): Promise<ISTR2STRConfig> {
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/getSTR2STRConfig"
 
-			function getSTR2STRConfig(): angular.IPromise<ISTR2STRConfig> {
-				return $http({
-					method: 'GET',
-					url: $rootScope.host + ':3000/getSTR2STRConfig'
-
-				}).then((response) => {
-					return response.data as ISTR2STRConfig;
 				});
+				return response.data as ISTR2STRConfig;
 			}
 
-			function getRTKRCVConfig(): angular.IPromise<IRTKRCVConfig> {
-				return $http({
-					method: 'GET',
-					url: $rootScope.host + ':3000/getRTKRCVConfig',
-				}).then((response) => {
-					return response.data as IRTKRCVConfig;
+			async function getRTKRCVConfig(): Promise<IRTKRCVConfig> {
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/getRTKRCVConfig",
 				});
+				return response.data as IRTKRCVConfig;
 			}
 
 			// fin - Définition des fonctions du service
 
-
 		}
 	};
-};
+}

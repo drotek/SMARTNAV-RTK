@@ -24,19 +24,19 @@
  */
 
 import angular = require("angular");
-import angular_ui_router = require('angular-ui-router');
+import angular_ui_router = require("angular-ui-router");
 
-import log_controller  from  './log.controller.js';
+import log_controller from "./log.controller.js";
 
-export default/*@ngInject*/ function ($stateProvider : angular_ui_router.StateProvider) {
-  $stateProvider
-    .state('global.dashboard.log', {
-      url: '/log',
-      views: {
-        '@global.dashboard': {
-          template:require( './log.html'),
-          controller: log_controller
-        }
-      }
-    });
-};
+export default/*@ngInject*/ function($stateProvider: angular_ui_router.StateProvider) {
+	$stateProvider
+		.state("global.dashboard.log", {
+			url: "/log",
+			views: {
+				"@global.dashboard": {
+					template: require("./log.html"),
+					controller: log_controller
+				}
+			}
+		});
+}

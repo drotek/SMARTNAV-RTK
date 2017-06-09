@@ -25,22 +25,21 @@
 
 import angular = require("angular");
 
+import admin from "./admin";
 import configuration from "./configuration";
+import log from "./log";
 import map from "./map";
 import status from "./status";
-import admin from "./admin";
-import log from "./log";
 
 import dashboard_routes from "./dashboard.routes";
 
-console.log('Dashboard');
+console.log("Dashboard");
 
-export default angular.module('dashboard', [
-  configuration,
-  map,
-  status,
-  admin,
-  log
+export default angular.module("dashboard", [
+	configuration,
+	map,
+	status,
+	admin,
+	log
 ])
-  .config(dashboard_routes).name;
-
+	.config(dashboard_routes).name;

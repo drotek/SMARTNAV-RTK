@@ -24,9 +24,9 @@
  */
 
 import angular = require("angular");
-import log_routes  from  './log.routes';
+import log_routes from "./log.routes";
 
-console.log('Logs');
+console.log("Logs");
 
-export default angular.module('dashboard.log', [])
-  .config(log_routes).name;
+export default angular.module("dashboard.log", [])
+	.config(log_routes).name;

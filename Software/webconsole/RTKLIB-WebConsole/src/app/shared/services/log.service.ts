@@ -24,98 +24,91 @@
  */
 
 import angular = require("angular");
-import _ = require('lodash');
+import _ = require("lodash");
 
 export interface ILogService {
-	getListLogFiles(): angular.IPromise<string[]>;
-	getLogFile(logFileName: string): angular.IPromise<string>;
-	getListUbxFiles(): angular.IPromise<string[]>;
-	getUbxFile(ubxFileName: string): angular.IPromise<ArrayBuffer>;
+	getListLogFiles(): Promise<string[]>;
+	getLogFile(logFileName: string): Promise<string>;
+	getListUbxFiles(): Promise<string[]>;
+	getUbxFile(ubxFileName: string): Promise<ArrayBuffer>;
 }
 
-export default function () {
+export default function() {
 	return {
-		$get: /*@ngInject*/ function ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
+		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
 
 			/* Déclaration des variables utilisées dans le service */
 
-			/**
-			* Opérations disponibles pour le service configuration.
-			*/
-			var service: ILogService = {
-				getListLogFiles: getListLogFiles,
-				getLogFile: getLogFile,
-				getListUbxFiles: getListUbxFiles,
-				getUbxFile: getUbxFile
+			// Opérations disponibles pour le service configuration.
+			const service: ILogService = {
+				getListLogFiles,
+				getLogFile,
+				getListUbxFiles,
+				getUbxFile
 			};
 
 			return service;
 
 			/* Définition des fonctions du service de configuration */
 
-			function getListLogFiles() {
-				return $http({
-					method: 'GET',
-					url: $rootScope.host + ':3000/listLogFiles'
-				}).then((response) => {
-					return response.data as { listFiles: string[] };
-				}).then((result) => {
-					return result.listFiles;
+			async function getListLogFiles(): Promise<string[]> {
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/listLogFiles"
 				});
+				const result = response.data as { listFiles: string[] };
+
+				return result.listFiles;
+
 			}
 
-			function getLogFile(logFileName: string) {
+			async function getLogFile(logFileName: string): Promise<string> {
 
-				var url = $rootScope.host + ':3000/logFile'
+				const url = $rootScope.host + ":3000/logFile";
 
-				var params = {
+				const params = {
 					name: logFileName
-				}
+				};
 
-				return $http({
-					method: 'POST',
-					url: url,
+				const response = await $http({
+					method: "POST",
+					url,
 					data: params
-				}).then((response) => {
-					return response.data as string;
 				});
+				return response.data as string;
 
 			}
 
-			function getListUbxFiles() {
-				return $http({
-					method: 'GET',
-					url: $rootScope.host + ':3000/listUbxFiles'
-				}).then((response) => {
-					return response.data as { listFiles: string[] };
-				}).then((result) => {
-					return result.listFiles;
+			async function getListUbxFiles(): Promise<string[]> {
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/listUbxFiles"
 				});
+				const result = response.data as { listFiles: string[] };
+				return result.listFiles;
 			}
 
-			function getUbxFile(ubxFileName: string) {
+			async function getUbxFile(ubxFileName: string): Promise<ArrayBuffer> {
 
-				var url = $rootScope.host + ':3000/ubxFile'
+				const url = $rootScope.host + ":3000/ubxFile";
 
-				var params = {
+				const params = {
 					name: ubxFileName
-				}
+				};
 
-				return $http({
-					method: 'POST',
-					url: url,
-					responseType: 'arraybuffer',
+				const response = await $http({
+					method: "POST",
+					url,
+					responseType: "arraybuffer",
 					data: params
-				}).then((response) => {
-					console.log(response);
-					return response.data as ArrayBuffer;
 				});
+				console.log(response);
+				return response.data as ArrayBuffer;
 
 			}
 
 			// fin - Définition des fonctions du service
 
-
 		}
 	};
-};
+}

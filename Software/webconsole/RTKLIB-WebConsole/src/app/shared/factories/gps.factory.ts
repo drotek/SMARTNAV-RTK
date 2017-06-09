@@ -25,118 +25,121 @@
 
 import angular = require("angular");
 
-export interface IPosition{
-    x : number;
-    y: number;
-    z : number;
+export interface IPosition {
+	x: number;
+	y: number;
+	z: number;
 }
 
-export interface ILatitudeLongitudeAltitude{
-    lat: number;
-    lng : number;
-    alt : number;
+export interface ILatitudeLongitudeAltitude {
+	lat: number;
+	lng: number;
+	alt: number;
 }
 
-export interface INorthEast{
-    north : number;
-    east: number;
+export interface INorthEast {
+	north: number;
+	east: number;
 }
 
-export interface IGpsFactory{
-    dToR (degrees : number) : number;
-    eceftolla (currentEcef : IPosition) : ILatitudeLongitudeAltitude;
-    eceftoenu(positionBase : IPosition, positionRover : IPosition, llhRover : ILatitudeLongitudeAltitude) : INorthEast;
-    llatoecef(currentLla : ILatitudeLongitudeAltitude) : IPosition;
+export interface IGpsFactory {
+	dToR(degrees: number): number;
+	eceftolla(currentEcef: IPosition): ILatitudeLongitudeAltitude;
+	eceftoenu(positionBase: IPosition, positionRover: IPosition, llhRover: ILatitudeLongitudeAltitude): INorthEast;
+	llatoecef(currentLla: ILatitudeLongitudeAltitude): IPosition;
 }
 
+export default /*@ngInject*/ function() {
 
-export default /*@ngInject*/ function () {
-    
-    var a = 6378137;
-    var f = 0.0034;
-    var b = 6356800; //6.3568e6; 
-    var e = Math.sqrt((Math.pow(a, 2) - Math.pow(b, 2)) / Math.pow(a, 2));
-    var e2 = Math.sqrt((Math.pow(a, 2) - Math.pow(b, 2)) / Math.pow(b, 2));
-    var dtr = Math.PI/180.0;
-    
-    let factory: IGpsFactory = {
-        dToR: dToR,
-        eceftolla: eceftolla,
-        eceftoenu: eceftoenu,
-        llatoecef: llatoecef
-    };
-    return factory;
-    
-    function dToR (degrees : number) : number{ 
-      return degrees * (Math.PI / 180);
-    }
-    
-    function eceftolla (currentEcef : IPosition) : ILatitudeLongitudeAltitude{
+	const a = 6378137;
+	// const f = 0.0034;
+	const b = 6356800; // 6.3568e6;
+	const e = Math.sqrt((Math.pow(a, 2) - Math.pow(b, 2)) / Math.pow(a, 2));
+	const e2 = Math.sqrt((Math.pow(a, 2) - Math.pow(b, 2)) / Math.pow(b, 2));
+	const dtr = Math.PI / 180.0;
 
-        var lat, lon, alt, N , theta, p;
+	const factory: IGpsFactory = {
+		dToR,
+		eceftolla,
+		eceftoenu,
+		llatoecef
+	};
+	return factory;
 
-        p = Math.sqrt(Math.pow(currentEcef.x, 2) + Math.pow(currentEcef.y, 2));
+	function dToR(degrees: number): number {
+		return degrees * (Math.PI / 180);
+	}
 
-        theta = Math.atan((currentEcef.z * a) / (p * b));
+	function eceftolla(currentEcef: IPosition): ILatitudeLongitudeAltitude {
 
-        lon = Math.atan(currentEcef.y / currentEcef.x);
+		let lat;
+		let lon;
+		let alt;
+		let N;
+		let theta;
+		let p;
 
-        lat = Math.atan(((currentEcef.z + Math.pow(e2, 2) * b * Math.pow(Math.sin(theta), 3)) / ((p - Math.pow(e, 2) * a * Math.pow(Math.cos(theta), 3)))));
-        N = a / (Math.sqrt(1 - (Math.pow(e, 2) * Math.pow(Math.sin(lat), 2))));
+		p = Math.sqrt(Math.pow(currentEcef.x, 2) + Math.pow(currentEcef.y, 2));
 
-        var m = (p / Math.cos(lat));
-        alt = m - N;
+		theta = Math.atan((currentEcef.z * a) / (p * b));
 
+		lon = Math.atan(currentEcef.y / currentEcef.x);
 
-        lon = lon * 180 / Math.PI;
-        lat = lat * 180 / Math.PI;
-        
-        return {
-            'lat': lat,
-            'lng': lon,
-            'alt': alt
-        };
+		lat = Math.atan(((currentEcef.z + Math.pow(e2, 2) * b * Math.pow(Math.sin(theta), 3)) / ((p - Math.pow(e, 2) * a * Math.pow(Math.cos(theta), 3)))));
+		N = a / (Math.sqrt(1 - (Math.pow(e, 2) * Math.pow(Math.sin(lat), 2))));
 
-    }
-    
-    function eceftoenu(positionBase : IPosition, positionRover : IPosition, llhRover : ILatitudeLongitudeAltitude) : INorthEast{
-        
-        //North = - sin (phi r) * cos (lambda r) * (Xp-Xr) -  sin (phi r) * sin (lambda r) * (Yp- Yr) +  cos (phi r) * (Zp - Zr)
-        var north = - Math.sin(llhRover.lat) * Math.cos(llhRover.lng) * (positionRover.x-positionBase.x) -
-                      Math.sin(llhRover.lat) * Math.sin(llhRover.lng) * (positionRover.y-positionBase.y) +
-                      Math.cos(llhRover.lat) * (positionRover.z-positionBase.z);
-        
-        //East = - sin (lambda r) * (Xp-Xr) + cos (lambda r) * (Yp- Yr) + 0 * (Zp - Zr)
-        var east =   - Math.sin(llhRover.lng) * (positionRover.x-positionBase.x) + 
-                       Math.cos(llhRover.lng) * (positionRover.y-positionBase.y)
-        
-        return {
-            'north': north,
-            'east': east
-        };
-    }
-    
-    function llatoecef(currentLla : ILatitudeLongitudeAltitude) : IPosition{
-        /*var n = a / Math.sqrt( 1 - Math.pow(e,2) * Math.pow(Math.sin(currentLla.lat),2) );
-        
+		const m = (p / Math.cos(lat));
+		alt = m - N;
+
+		lon = lon * 180 / Math.PI;
+		lat = lat * 180 / Math.PI;
+
+		return {
+			lat,
+			lng: lon,
+			alt
+		};
+
+	}
+
+	function eceftoenu(positionBase: IPosition, positionRover: IPosition, llhRover: ILatitudeLongitudeAltitude): INorthEast {
+
+		// North = - sin (phi r) * cos (lambda r) * (Xp-Xr) -  sin (phi r) * sin (lambda r) * (Yp- Yr) +  cos (phi r) * (Zp - Zr)
+		const north = - Math.sin(llhRover.lat) * Math.cos(llhRover.lng) * (positionRover.x - positionBase.x) -
+			Math.sin(llhRover.lat) * Math.sin(llhRover.lng) * (positionRover.y - positionBase.y) +
+			Math.cos(llhRover.lat) * (positionRover.z - positionBase.z);
+
+		// East = - sin (lambda r) * (Xp-Xr) + cos (lambda r) * (Yp- Yr) + 0 * (Zp - Zr)
+		const east = - Math.sin(llhRover.lng) * (positionRover.x - positionBase.x) +
+			Math.cos(llhRover.lng) * (positionRover.y - positionBase.y);
+
+		return {
+			north,
+			east
+		};
+	}
+
+	function llatoecef(currentLla: ILatitudeLongitudeAltitude): IPosition {
+		/* var n = a / Math.sqrt( 1 - Math.pow(e,2) * Math.pow(Math.sin(currentLla.lat),2) );
+
         var x = (n+currentLla.alt) * Math.cos(dtr*currentLla.lat) * Math.cos(dtr*currentLla.lng);
         var y = (n+currentLla.alt) * Math.cos(dtr*currentLla.lat)  *Math.sin(dtr*currentLla.lng);
         var z = ((Math.pow(b,2)/Math.pow(a,2)) * n + currentLla.alt) * Math.sin(dtr*currentLla.lat);*/
-        
-        var cosLat = Math.cos(currentLla.lat * Math.PI / 180.0);
-        var sinLat = Math.sin(currentLla.lat * Math.PI / 180.0);
-        var cosLon = Math.cos(currentLla.lng * Math.PI / 180.0);
-        var sinLon = Math.sin(currentLla.lng * Math.PI / 180.0);
-        var f = 1.0 / 298.257224;
-        var C = 1.0 / Math.sqrt(cosLat * cosLat + (1 - f) * (1 - f) * sinLat * sinLat);
-        var S = (1.0 - f) * (1.0 - f) * C;
-        var h = currentLla.alt;
-        
-        return {
-            'x': (a * C + h) * cosLat * cosLon,
-            'y': (a * C + h) * cosLat * sinLon,
-            'z': (a * S + h) * sinLat
-        }
-    }
-    
-};
+
+		const cosLat = Math.cos(currentLla.lat * Math.PI / 180.0);
+		const sinLat = Math.sin(currentLla.lat * Math.PI / 180.0);
+		const cosLon = Math.cos(currentLla.lng * Math.PI / 180.0);
+		const sinLon = Math.sin(currentLla.lng * Math.PI / 180.0);
+		const f = 1.0 / 298.257224;
+		const C = 1.0 / Math.sqrt(cosLat * cosLat + (1 - f) * (1 - f) * sinLat * sinLat);
+		const S = (1.0 - f) * (1.0 - f) * C;
+		const h = currentLla.alt;
+
+		return {
+			x: (a * C + h) * cosLat * cosLon,
+			y: (a * C + h) * cosLat * sinLon,
+			z: (a * S + h) * sinLat
+		};
+	}
+
+}

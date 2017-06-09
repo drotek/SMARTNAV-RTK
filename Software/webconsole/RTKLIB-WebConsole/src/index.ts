@@ -25,5 +25,4 @@
 
 import angular = require("angular");
 
-import app = require('./app');
-
+import app = require("./app");

@@ -24,18 +24,18 @@
  */
 
 import angular = require("angular");
-import angular_ui_router = require('angular-ui-router');
-import map_controller  from  './map.controller';
+import angular_ui_router = require("angular-ui-router");
+import map_controller from "./map.controller";
 
-export default /*@ngInject*/ function ($stateProvider  : angular_ui_router.StateProvider) {
-  $stateProvider
-    .state('global.dashboard.map', {
-      url: '/map',
-      views: {
-        '@global.dashboard': {
-          template: require('./map.html'),
-          controller: map_controller
-        }
-      }
-    });
-};
+export default /*@ngInject*/ function($stateProvider: angular_ui_router.StateProvider) {
+	$stateProvider
+		.state("global.dashboard.map", {
+			url: "/map",
+			views: {
+				"@global.dashboard": {
+					template: require("./map.html"),
+					controller: map_controller
+				}
+			}
+		});
+}

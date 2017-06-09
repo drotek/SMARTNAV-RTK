@@ -26,150 +26,141 @@
 import angular = require("angular");
 
 export interface IModuleResponse {
-    error?: Error;
-    stdout?: string;
-    stderr?: string;
-    isActive?: boolean;
-    isEnabled?: boolean;
+	error?: Error;
+	stdout?: string;
+	stderr?: string;
+	isActive?: boolean;
+	isEnabled?: boolean;
 }
 
 export interface portConfig {
-    comName: string;
-    manufacturer: string;
-    serialNumber: string;
-    pnpId: string;
-    locationId: string;
-    vendorId: string;
-    productId: string;
+	comName: string;
+	manufacturer: string;
+	serialNumber: string;
+	pnpId: string;
+	locationId: string;
+	vendorId: string;
+	productId: string;
 }
 
 export interface IAdminService {
-    adminService(command: string, config?: string): angular.IPromise<IModuleResponse>;
-    // getConfigType(): angular.IPromise<IModuleResponse>;
-    // getActiveMode(): string;
+	adminService(command: string, config?: string): Promise<IModuleResponse>;
+	// getConfigType(): Promise<IModuleResponse>;
+	// getActiveMode(): string;
 
-    updatePlatform(): angular.IPromise<IModuleResponse>;
-    syncTime(): angular.IPromise<IModuleResponse>;
+	updatePlatform(): Promise<IModuleResponse>;
+	syncTime(): Promise<IModuleResponse>;
 
-    listPorts() : angular.IPromise<portConfig[]>
+	listPorts(): Promise<portConfig[]>;
 }
 
+export default function() {
+	return {
+		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
 
+			/* Déclaration des variables utilisées dans le service */
+			const activeMode = "BASE";
 
-export default function () {
-    return {
-        $get: /*@ngInject*/ function ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
+			// Opérations disponibles pour le service configuration.
+			const service: IAdminService = {
+				adminService,
+				// getConfigType: getConfigType,
+				// getActiveMode: getActiveMode,
+				updatePlatform,
+				listPorts,
+				syncTime
+			};
 
-            /* Déclaration des variables utilisées dans le service */
-            var activeMode = 'BASE';
+			return service;
 
-            /**
-            * Opérations disponibles pour le service configuration.
-            */
-            var service: IAdminService = {
-                adminService: adminService,
-                // getConfigType: getConfigType,
-                // getActiveMode: getActiveMode,
-                updatePlatform: updatePlatform,
-                listPorts : listPorts,
-                syncTime: syncTime
-            };
+			/* Définition des fonctions du service de configuration */
 
-            return service;
+			async function adminService(command: string, config?: string): Promise<IModuleResponse> {
 
-            /* Définition des fonctions du service de configuration */
+				const url = $rootScope.host + ":3000/service";
 
+				let configType = $rootScope.confType;
+				if (config) {
+					configType = config;
+				}
 
-            function adminService(command: string, config?: string) {
+				const params = {
+					commandType: command,
+					configType
+				};
 
-                var url = $rootScope.host + ':3000/service'
+				const response = await $http({
+					method: "POST",
+					url,
+					data: params
+				});
 
-                var configType = $rootScope.confType;
-                if (config) {
-                    configType = config;
-                }
+				console.log("adminService", params, response.data);
+				return response.data as IModuleResponse;
 
-                var params = {
-                    commandType: command,
-                    configType: configType
-                }
+			}
 
-                return $http({
-                    method: 'POST',
-                    url: url,
-                    data: params
-                }).then((response) => {
-                    console.log("adminService",params, response.data);
-                    return <IModuleResponse>response.data;
-                });
+			// function getActiveMode() {
+			//     return activeMode;
+			// }
 
-            }
+			// function getConfigType() {
+			//     return adminService('status', 'ROVER').then((response) => {
+			//         console.log('status ROVER ', response);
+			//         if (response.isEnabled === true) {
+			//             console.log('ROVER enable');
+			//             activeMode = 'ROVER';
+			//             return response;
+			//         } else {
+			//             return adminService('status', 'BASE').then(function (response2) {
+			//                 console.log('status BASE ', response2);
+			//                 if (response2.isEnabled === true) {
+			//                     console.log('BASE enable');
+			//                     activeMode = 'BASE';
+			//                 }
+			//                 return response2;
+			//             });
+			//         }
 
-            // function getActiveMode() {
-            //     return activeMode;
-            // }
+			//     });
+			// }
 
-            // function getConfigType() {
-            //     return adminService('status', 'ROVER').then((response) => {
-            //         console.log('status ROVER ', response);
-            //         if (response.isEnabled === true) {
-            //             console.log('ROVER enable');
-            //             activeMode = 'ROVER';
-            //             return response;
-            //         } else {
-            //             return adminService('status', 'BASE').then(function (response2) {
-            //                 console.log('status BASE ', response2);
-            //                 if (response2.isEnabled === true) {
-            //                     console.log('BASE enable');
-            //                     activeMode = 'BASE';
-            //                 }
-            //                 return response2;
-            //             });
-            //         }
+			async function updatePlatform(): Promise<IModuleResponse> {
+				const url = $rootScope.host + ":3000/updatePlatform";
 
+				const response = await $http({
+					method: "GET",
+					url
+				});
+				console.log("updatePlatform", response.data);
+				return response.data as IModuleResponse;
+			}
 
-            //     });
-            // }
+			async function syncTime(): Promise<IModuleResponse> {
+				const url = $rootScope.host + ":3000/syncTime";
 
-            function updatePlatform() {
-                var url = $rootScope.host + ':3000/updatePlatform'
+				const response = await $http({
+					method: "GET",
+					url
+				});
+				console.log("syncTime", response.data);
+				return response.data;
+			}
 
-                return $http({
-                    method: 'GET',
-                    url: url
-                }).then(function (response) {
-                    console.log("updatePlatform", response.data);
-                    return response.data as IModuleResponse;
-                });
-            }
+			async function listPorts(): Promise<portConfig[]> {
+				const url = $rootScope.host + ":3000/listPorts";
 
-            function syncTime() {
-                var url = $rootScope.host + ':3000/syncTime'
+				const response = await $http({
+					method: "GET",
+					url
+				});
 
-                return $http({
-                    method: 'GET',
-                    url: url
-                }).then(function (response) {
-                    console.log("syncTime",response.data);
-                    return response.data;
-                });
-            }
+				console.log("listPorts", response.data);
+				return response.data as portConfig[];
+			}
 
-            function listPorts() : angular.IPromise<portConfig[]>{
-                var url = $rootScope.host + ':3000/listPorts'
+			// fin - Définition des fonctions du service
 
-                return $http({
-                    method: 'GET',
-                    url: url
-                }).then(function (response) {
-                    console.log("listPorts", response.data);
-                    return response.data;
-                });
-            }
-
-            // fin - Définition des fonctions du service
-
-
-        }
-    };
-};
+		}
+	};
+}

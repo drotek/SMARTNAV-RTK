@@ -25,13 +25,13 @@
 
 import angular = require("angular");
 
-export default /*@ngInject*/ function () {
-    return {
-        restrict: 'A',
-        link: function (scope: angular.IScope, element: angular.IRootElementService, attrs: angular.IAttributes) {
-            element.on(attrs.stopEvent, (event) => {
-                event.stopPropagation();
-            });
-        }
-    };
-};
+export default /*@ngInject*/ function() {
+	return {
+		restrict: "A",
+		link(scope: angular.IScope, element: angular.IRootElementService, attrs: angular.IAttributes) {
+			element.on(attrs.stopEvent, (event) => {
+				event.stopPropagation();
+			});
+		}
+	};
+}

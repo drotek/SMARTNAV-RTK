@@ -24,22 +24,23 @@
  */
 
 import angular = require("angular");
-import angular_ui_router = require('angular-ui-router');
-import angular_animate = require('angular-animate');
+import angular_ui_router = require("angular-ui-router");
+import angular_animate = require("angular-animate");
 
-export default /*@ngInject*/ function ($stateProvider: angular_ui_router.StateProvider,
-    $urlRouterProvider: angular_ui_router.UrlRouterProvider, $animateProvider: angular.animate.IAnimateProvider) {
+export default /*@ngInject*/ function(
+	$stateProvider: angular_ui_router.StateProvider,
+	$urlRouterProvider: angular_ui_router.UrlRouterProvider, $animateProvider: angular.animate.IAnimateProvider) {
 
-    console.log('Global');
+	console.log("Global");
 
-    $urlRouterProvider.otherwise('/dashboard/admin');
+	$urlRouterProvider.otherwise("/dashboard/admin");
 
-    $stateProvider
-        .state('global', {
-            abstract: true
-        }
-        );
+	$stateProvider
+		.state("global", {
+			abstract: true
+		}
+		);
 
-    $animateProvider.classNameFilter(/animate-/);
+	$animateProvider.classNameFilter(/animate-/);
 
-};
+}

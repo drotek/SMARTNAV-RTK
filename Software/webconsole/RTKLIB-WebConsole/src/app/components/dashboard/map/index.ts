@@ -24,9 +24,9 @@
  */
 
 import angular = require("angular");
-import map_routes  from  './map.routes';
+import map_routes from "./map.routes";
 
-console.log('Map');
+console.log("Map");
 
-export default angular.module('dashboard.map', [])
-  .config(map_routes).name;
+export default angular.module("dashboard.map", [])
+	.config(map_routes).name;

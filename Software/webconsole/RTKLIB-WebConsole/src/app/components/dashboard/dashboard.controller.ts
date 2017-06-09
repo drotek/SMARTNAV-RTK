@@ -27,48 +27,48 @@ import angular = require("angular");
 import angular_toastr = require("angular-toastr");
 import { IAdminService } from "../../shared/services/admin.service";
 
-export default /*@ngInject*/ function ($scope: angular.IScope, admin: IAdminService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
+export default /*@ngInject*/ function($scope: angular.IScope, admin: IAdminService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
 
-    /* Déclaration du logger */
-    console.log('dashboard');
+	/* Déclaration du logger */
+	console.log("dashboard");
 
-    /* Déclaration des variables utilisées dans le controlleur */
-    $scope = angular.extend($scope, {
-        showMenu: true,
-        isMenuOpen: false
-    });
+	/* Déclaration des variables utilisées dans le controlleur */
+	$scope = angular.extend($scope, {
+		showMenu: true,
+		isMenuOpen: false
+	});
 
-    /* Watch Expressions */
-    // $scope.$watch(() => {
-    //     return admin.getActiveMode();
-    // }, (newVal) => {
-    //     if (typeof newVal !== 'undefined') {
-    //         checkMode(newVal);
-    //     }
-    // });
+	/* Watch Expressions */
+	// $scope.$watch(() => {
+	//     return admin.getActiveMode();
+	// }, (newVal) => {
+	//     if (typeof newVal !== 'undefined') {
+	//         checkMode(newVal);
+	//     }
+	// });
 
-    $scope.switchMenu = () => {
-        $scope.isMenuOpen = !$scope.isMenuOpen;
-    };
+	$scope.switchMenu = () => {
+		$scope.isMenuOpen = !$scope.isMenuOpen;
+	};
 
-    function checkMode(newVal: string) {
-        $scope.showMenu = newVal === 'ROVER';
-    };
+	function checkMode(newVal: string) {
+		$scope.showMenu = newVal === "ROVER";
+	}
 
-    /* Loading Process */
-    //admin.getConfigType();
+	/* Loading Process */
+	// admin.getConfigType();
 
-    $rootScope.$on("unhandledException", (e, err: string, cause) => {
-        if (err){
-            if (err.indexOf){
-                let error_column_index = err.indexOf(":");
-                if (error_column_index != -1){
-                    toastr.error(err.substr(0, error_column_index), 'Error');
-                    return;
-                }
-            }
-            toastr.error(err,"Error");
-        }
-    });
+	$rootScope.$on("unhandledException", (e, err: string, cause) => {
+		if (err) {
+			if (err.indexOf) {
+				const error_column_index = err.indexOf(":");
+				if (error_column_index !== -1) {
+					toastr.error(err.substr(0, error_column_index), "Error");
+					return;
+				}
+			}
+			toastr.error(err, "Error");
+		}
+	});
 
-};
+}

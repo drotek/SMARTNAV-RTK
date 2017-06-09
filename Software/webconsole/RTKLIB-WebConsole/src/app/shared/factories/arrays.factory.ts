@@ -25,22 +25,22 @@
 
 import angular = require("angular");
 
-export interface IArraysFactory{
-    sortByKey<T>(array : T[], key : string) :T[];
+export interface IArraysFactory {
+	sortByKey<T>(array: T[], key: string): T[];
 }
 
-export default /*@ngInject*/ function () {
-    
-    let factory : IArraysFactory = {
-        sortByKey: sortByKey
-    };
-    return factory;
-    
-    function sortByKey<T>(array : T[], key : string) : T[] {
-        return array.sort((a, b) =>{
-            var x = (a as any)[key]; var y = (b as any)[key];
-            return ((x < y) ? -1 : ((x > y) ? 1 : 0));
-        });
-    }
-    
-};
+export default /*@ngInject*/ function() {
+
+	const factory: IArraysFactory = {
+		sortByKey
+	};
+	return factory;
+
+	function sortByKey<T>(array: T[], key: string): T[] {
+		return array.sort((a, b) => {
+			const x = (a as any)[key]; const y = (b as any)[key];
+			return ((x < y) ? -1 : ((x > y) ? 1 : 0));
+		});
+	}
+
+}

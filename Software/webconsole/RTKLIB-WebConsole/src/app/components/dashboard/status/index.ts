@@ -24,9 +24,9 @@
  */
 
 import angular = require("angular");
-import status_routes  from  "./status.routes";
+import status_routes from "./status.routes";
 
-console.log('Status');
+console.log("Status");
 
-export default angular.module('dashboard.status', [])
-  .config(status_routes).name;
+export default angular.module("dashboard.status", [])
+	.config(status_routes).name;

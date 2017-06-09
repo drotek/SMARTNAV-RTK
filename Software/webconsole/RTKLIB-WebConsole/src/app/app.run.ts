@@ -24,26 +24,28 @@
  */
 
 import angular = require("angular");
-export default /*@ngInject*/ function ($rootScope : angular.IRootScopeService, $document : angular.IDocumentService) {
+export default /*@ngInject*/ function($window: angular.IWindowService, $q: angular.IQService, $rootScope: angular.IRootScopeService, $document: angular.IDocumentService) {
 
-    console.log('app.run');
+	console.log("app.run");
 
-    $rootScope.host = "http://"+window.location.hostname;
-    
-    angular.element($document[0].body).addClass('platform-browser');
+	$rootScope.host = "http://" + window.location.hostname;
 
-    if (navigator.userAgent.match(/Android/i)){
-        angular.element($document[0].body).addClass('platform-android');
-    } else if (navigator.userAgent.match(/iPhone|iPad|iPod/i)){
-        angular.element($document[0].body).addClass('platform-iOS');
-        $rootScope.isOnIOS = true;
-    }
+	$window.Promise = $q;
 
-    if (navigator.userAgent.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|Tizen/i)){
-        angular.element($document[0].body).addClass('platform-mobile');
-    } else {
-        angular.element($document[0].body).addClass('platform-desktop');
-        $rootScope.isDesktop = true;
-    }
+	angular.element($document[0].body).addClass("platform-browser");
 
-};
+	if (navigator.userAgent.match(/Android/i)) {
+		angular.element($document[0].body).addClass("platform-android");
+	} else if (navigator.userAgent.match(/iPhone|iPad|iPod/i)) {
+		angular.element($document[0].body).addClass("platform-iOS");
+		$rootScope.isOnIOS = true;
+	}
+
+	if (navigator.userAgent.match(/Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|Tizen/i)) {
+		angular.element($document[0].body).addClass("platform-mobile");
+	} else {
+		angular.element($document[0].body).addClass("platform-desktop");
+		$rootScope.isDesktop = true;
+	}
+
+}

@@ -24,30 +24,26 @@
  */
 
 import angular = require("angular");
-import angular_ui_bootstrap  = require( 'angular-ui-bootstrap');
+import angular_ui_bootstrap = require("angular-ui-bootstrap");
 
-import {IAdminService} from "../../../../shared/services/admin.service";
+import { IAdminService } from "../../../../shared/services/admin.service";
 
-export default /*@ngInject*/ function ($scope : angular.IScope, $modalInstance : angular_ui_bootstrap.IModalInstanceService, admin : IAdminService) {
+export default /*@ngInject*/ function($scope: angular.IScope, $modalInstance: angular_ui_bootstrap.IModalInstanceService, admin: IAdminService) {
 
-    /**
-     * Function called to share log file
-     */
-    $scope.ok = function () {
-        admin.updatePlatform().then((response)=>{
-            if(response.error){
-                console.log(response.error);
-            }else{
-                $modalInstance.close();
-            }
-        });
-    };
+	// Function called to share log file
+	$scope.ok = async () => {
+		const response = await admin.updatePlatform();
+		if (response.error) {
+			console.log(response.error);
+		} else {
+			$modalInstance.close();
+		}
 
-    /**
-     * Function called to cancel the share.
-     */
-    $scope.cancel = function () {
-        $modalInstance.dismiss('cancel');
-    };
-    
+	};
+
+	// Function called to cancel the share.
+	$scope.cancel = () => {
+		$modalInstance.dismiss("cancel");
+	};
+
 }

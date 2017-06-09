@@ -24,83 +24,76 @@
  */
 
 import angular = require("angular");
-import angular_ui_bootstrap  = require( 'angular-ui-bootstrap');
-import {ILogService} from "../../../../shared/services/log.service";
+import angular_ui_bootstrap = require("angular-ui-bootstrap");
+import { ILogService } from "../../../../shared/services/log.service";
 
+export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogService, $modalInstance: angular_ui_bootstrap.IModalInstanceService) {
 
-export default /*@ngInject*/ function ($scope : angular.IScope, log : ILogService, $modalInstance : angular_ui_bootstrap.IModalInstanceService) {
-
-    /* Controller parameters */
-    $scope = angular.extend($scope, {
-        downloadFile: undefined,
+	/* Controller parameters */
+	$scope = angular.extend($scope, {
+		downloadFile: undefined,
 		ubxFiles: undefined
-    });
-    
-    log.getListUbxFiles().then((result)=>{
-        $scope.ubxFiles = result;
-        $scope.downloadFile = result[0];
-    });
+	});
 
-    function createDownloadLink(blob : Blob, fileName : string){
-      var url;
-      var downloadLink = document.createElement('a');
-      var downloadAttributeSupported = 'download' in downloadLink;
-      var urlCreator = (window as any).URL || (window as any).webkitURL || (window as any).mozURL || (window as any).msURL;
+	const ubx_files = await log.getListUbxFiles();
+	$scope.ubxFiles = ubx_files;
+	$scope.downloadFile = ubx_files[0];
 
-      if(urlCreator){
-          if (downloadAttributeSupported) {
-              url = urlCreator.createObjectURL(blob);
-              downloadLink.href = url;
-              downloadLink.download = fileName;
-              downloadLink.style.display = 'none';
-              downloadLink.click();
-          }else{
-              url = urlCreator.createObjectURL(blob);
-              window.open(url, '_blank', '');
-          }
-      }
-    }
+	function createDownloadLink(blob: Blob, fileName: string) {
+		let url;
+		const downloadLink = document.createElement("a");
+		const downloadAttributeSupported = "download" in downloadLink;
+		const urlCreator = (window as any).URL || (window as any).webkitURL || (window as any).mozURL || (window as any).msURL;
 
-    function saveBlob(blob : Blob, fileName : string){
-      (window as any).saveAs = (window as any).saveAs || (window as any).webkitSaveAs || (window as any).mozSaveAs || (window as any).msSaveAs;
-      if ((window as any).saveAs) {
-          (window as any).saveAs(blob, fileName);
-      }
-      else {
-          (navigator as any).saveBlob(blob, fileName);
-      }
-    }
+		if (urlCreator) {
+			if (downloadAttributeSupported) {
+				url = urlCreator.createObjectURL(blob);
+				downloadLink.href = url;
+				downloadLink.download = fileName;
+				downloadLink.style.display = "none";
+				downloadLink.click();
+			} else {
+				url = urlCreator.createObjectURL(blob);
+				window.open(url, "_blank", "");
+			}
+		}
+	}
 
-    function saveFile(blob : Blob, fileName : string){
+	function saveBlob(blob: Blob, fileName: string) {
+		(window as any).saveAs = (window as any).saveAs || (window as any).webkitSaveAs || (window as any).mozSaveAs || (window as any).msSaveAs;
+		if ((window as any).saveAs) {
+			(window as any).saveAs(blob, fileName);
+		} else {
+			(navigator as any).saveBlob(blob, fileName);
+		}
+	}
 
-      (navigator as any).saveBlob =  (navigator as any).saveBlob || (navigator as any).msSaveBlob ||
-                            (navigator as any).mozSaveBlob || (navigator as any).webkitSaveBlob;
+	function saveFile(blob: Blob, fileName: string) {
 
-      if((navigator as any).saveBlob){
-          saveBlob(blob,fileName);
-      }else {
-          createDownloadLink(blob,fileName);
-      }
-    }
-    
-    /**
-     * Function called to export ubx file
-     */
-    $scope.ok =  () =>{
-        log.getUbxFile($scope.downloadFile).then((result)=>{
-            
-            var blob = new Blob([result]);
-            saveFile(blob, $scope.downloadFile);
-            
-            $modalInstance.close();
-        });
-    };
+		(navigator as any).saveBlob = (navigator as any).saveBlob || (navigator as any).msSaveBlob ||
+			(navigator as any).mozSaveBlob || (navigator as any).webkitSaveBlob;
 
-    /**
-     * Function called to cancel the export.
-     */
-    $scope.cancel =  () =>{
-        $modalInstance.dismiss('cancel');
-    };
-    
+		if ((navigator as any).saveBlob) {
+			saveBlob(blob, fileName);
+		} else {
+			createDownloadLink(blob, fileName);
+		}
+	}
+
+	// Function called to export ubx file
+	$scope.ok = async () => {
+		const result = await log.getUbxFile($scope.downloadFile);
+
+		const blob = new Blob([result]);
+		saveFile(blob, $scope.downloadFile);
+
+		$modalInstance.close();
+
+	};
+
+	// Function called to cancel the export.
+	$scope.cancel = () => {
+		$modalInstance.dismiss("cancel");
+	};
+
 }

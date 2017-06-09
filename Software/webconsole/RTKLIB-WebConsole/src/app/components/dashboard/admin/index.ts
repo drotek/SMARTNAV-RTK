@@ -25,9 +25,9 @@
 
 import angular = require("angular");
 
-import admin_routes  from  './admin.routes';
+import admin_routes from "./admin.routes";
 
-console.log('dashboard.Admin');
+console.log("dashboard.Admin");
 
-export default angular.module('dashboard.admin', [])
-  .config(admin_routes).name;
+export default angular.module("dashboard.admin", [])
+	.config(admin_routes).name;

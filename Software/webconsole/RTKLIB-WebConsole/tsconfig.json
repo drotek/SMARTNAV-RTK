@@ -3,15 +3,19 @@
         "types": [
             "node"
         ],
-        "outDir": "dist",
+        "outDir": "dist/app",
+        "target": "es5",
+        "module": "commonjs",
         "removeComments": false,
         "sourceMap": true,
         "emitDecoratorMetadata": true,
         "experimentalDecorators": true,
         "noImplicitAny": true,
         "declaration": true,
+        //"importHelpers": true,
         "lib": [
             "es2015",
+            "es2015.promise",
             "dom"
         ],
         "typeRoots": [
@@ -19,8 +23,6 @@
         ]
     },
     "include": [
-        "src/**/*.ts",
-        "src/app/**/*.ts",
-        "src/app/**/**/*.ts"
+        "src/**/*.ts"
     ]
 }

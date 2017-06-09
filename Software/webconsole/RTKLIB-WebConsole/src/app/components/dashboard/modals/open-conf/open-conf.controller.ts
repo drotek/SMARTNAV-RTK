@@ -24,36 +24,31 @@
  */
 
 import angular = require("angular");
-import angular_ui_bootstrap  = require( 'angular-ui-bootstrap');
+import angular_ui_bootstrap = require("angular-ui-bootstrap");
 
-import {IConfigurationService} from "../../../../shared/services/configuration.service";
+import { IConfigurationService } from "../../../../shared/services/configuration.service";
 
-export default /*@ngInject*/ function ($scope : angular.IScope, configuration : IConfigurationService, $modalInstance : angular_ui_bootstrap.IModalServiceInstance) {
+export default /*@ngInject*/ async function($scope: angular.IScope, configuration: IConfigurationService, $modalInstance: angular_ui_bootstrap.IModalServiceInstance) {
 
-    /* Controller parameters */
-    $scope = angular.extend($scope, {
-        fileToOpen: 'rtkrcv_kinematic.conf',
+	/* Controller parameters */
+	$scope = angular.extend($scope, {
+		fileToOpen: "rtkrcv_kinematic.conf",
 		configurationFiles: undefined
-    });
-    
-    configuration.getListConfigFile().then((result)=>{
-        $scope.configurationFiles = result;
-    });
+	});
 
-    /**
-     * Function called to load config file
-     */
-    $scope.ok = function () {
-        configuration.getFile($scope.fileToOpen).then(()=>{
-            $modalInstance.close();
-        });
-    };
+	const result = await configuration.getListConfigFile();
+	$scope.configurationFiles = result;
 
-    /**
-     * Function called to cancel the load.
-     */
-    $scope.cancel = function () {
-        $modalInstance.dismiss('cancel');
-    };
-    
+	// Function called to load config file
+	$scope.ok = async () => {
+		await configuration.getFile($scope.fileToOpen);
+		$modalInstance.close();
+
+	};
+
+	// Function called to cancel the load.
+	$scope.cancel = () => {
+		$modalInstance.dismiss("cancel");
+	};
+
 }

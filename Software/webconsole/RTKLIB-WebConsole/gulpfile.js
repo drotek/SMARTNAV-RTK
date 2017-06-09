@@ -66,6 +66,8 @@ var watch  = require('gulp-watch');
 var minifyCSS  = require('gulp-cssnano');
 var typescript  = require('gulp-typescript');
 
+var tsProject = typescript.createProject("tsconfig.json");
+
 /**
  * Gulp Tasks config parameters.
  */
@@ -146,9 +148,7 @@ gulp.task('browserify:watch',['typescript','copy:index','copy:html'], function()
 
 gulp.task('typescript', function () {
     return gulp.src('src/app/**/*.ts')
-        .pipe(typescript({
-            target:'es5'
-        }))
+        .pipe(typescript(tsProject))
         .js
         .pipe(gulp.dest('dist/app'));
     });

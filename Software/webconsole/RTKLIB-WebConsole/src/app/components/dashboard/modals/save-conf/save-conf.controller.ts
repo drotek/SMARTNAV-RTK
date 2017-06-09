@@ -24,61 +24,58 @@
  */
 
 import angular = require("angular");
-import angular_ui_bootstrap  = require( 'angular-ui-bootstrap');
-import {IConfigurationService, IParameter} from "../../../../shared/services/configuration.service";
+import angular_ui_bootstrap = require("angular-ui-bootstrap");
+import { IConfigurationService, IParameter } from "../../../../shared/services/configuration.service";
 
-export default /*@ngInject*/ function ($scope : angular.IScope, configuration : IConfigurationService, $modalInstance : angular_ui_bootstrap.IModalServiceInstance,
-                                         requiredParams:IParameter, advancedParams:IParameter, otherParams:IParameter, cmdParams:IParameter) {
+export default /*@ngInject*/ function(
+	$scope: angular.IScope, configuration: IConfigurationService, $modalInstance: angular_ui_bootstrap.IModalServiceInstance,
+	requiredParams: IParameter, advancedParams: IParameter, otherParams: IParameter, cmdParams: IParameter) {
 
-    /* Controller parameters */
-    $scope = angular.extend($scope, {
-        requiredParameters: requiredParams,
-        advancedParameters: advancedParams,
+	/* Controller parameters */
+	$scope = angular.extend($scope, {
+		requiredParameters: requiredParams,
+		advancedParameters: advancedParams,
 		otherParameters: otherParams,
-        cmdParameters: cmdParams,
-        customExtension: '.user',
-        fileName: ''
-    });
-    
-    function formatDate(number : number) : string{
-		if(number < 10){
-			return '0' + number.toString();
+		cmdParameters: cmdParams,
+		customExtension: ".user",
+		fileName: ""
+	});
+
+	function formatDate(number: number): string {
+		if (number < 10) {
+			return "0" + number.toString();
 		}
-		
+
 		return number.toString();
 	}
-    
-    var date = new Date();
-    var defaultName = formatDate(date.getFullYear());
-    defaultName = defaultName + formatDate(date.getMonth()+1);
-    defaultName = defaultName + formatDate(date.getDate());
-    defaultName = defaultName + formatDate(date.getHours());
-    defaultName = defaultName + formatDate(date.getMinutes());
-    defaultName = defaultName + formatDate(date.getSeconds());
-    
-    $scope.fileName = defaultName
 
-    /**
-     * Function called to save config file
-     */
-    $scope.ok = function () {
-        configuration.saveFile({
-            'name': $scope.fileName + $scope.customExtension,
-			'requiredParameters': $scope.requiredParameters, 
-			'advancedParameters': $scope.advancedParameters,
-			'otherParameters': $scope.otherParameters,
-            'cmdParameters': $scope.cmdParameters
-		}).then((data)=>{
-            $modalInstance.close('');
-        });
-        
-    };
+	const date = new Date();
+	let defaultName = formatDate(date.getFullYear());
+	defaultName = defaultName + formatDate(date.getMonth() + 1);
+	defaultName = defaultName + formatDate(date.getDate());
+	defaultName = defaultName + formatDate(date.getHours());
+	defaultName = defaultName + formatDate(date.getMinutes());
+	defaultName = defaultName + formatDate(date.getSeconds());
 
-    /**
-     * Function called to cancel the save.
-     */
-    $scope.cancel = function () {
-        $modalInstance.dismiss('cancel');
-    };
-    
+	$scope.fileName = defaultName;
+
+	// Function called to save config file
+	$scope.ok = async () => {
+		const data = await configuration.saveFile({
+			name: $scope.fileName + $scope.customExtension,
+			requiredParameters: $scope.requiredParameters,
+			advancedParameters: $scope.advancedParameters,
+			otherParameters: $scope.otherParameters,
+			cmdParameters: $scope.cmdParameters
+		});
+
+		$modalInstance.close("");
+
+	};
+
+	// Function called to cancel the save.
+	$scope.cancel = () => {
+		$modalInstance.dismiss("cancel");
+	};
+
 }

@@ -24,121 +24,121 @@
  */
 
 import angular = require("angular");
-import {IStatusService,IRoverSatData} from "../../../shared/services/status.service";
-import {IMapService,} from "../../../shared/services/map.service";
-import {IArraysFactory} from "../../../shared/factories/arrays.factory";
-import {IGpsFactory} from "../../../shared/factories/gps.factory";
-export default /*@ngInject*/ function ($scope : angular.IScope, status : IStatusService, map : IMapService, arrays : IArraysFactory, gps : IGpsFactory) {
+import { IArraysFactory } from "../../../shared/factories/arrays.factory";
+import { IGpsFactory } from "../../../shared/factories/gps.factory";
+import { IMapService, } from "../../../shared/services/map.service";
+import { IRoverSatData, IStatusService } from "../../../shared/services/status.service";
+export default /*@ngInject*/ async function($scope: angular.IScope, status: IStatusService, map: IMapService, arrays: IArraysFactory, gps: IGpsFactory) {
 
-    /* Déclaration du logger */
-    console.log('dashboard.status');
-    
-    $scope.chartOptions = {
-        segementStrokeWidth: 20,
-		barStrokeColor: '#000'
-    };
-    
-    /* Screen Functionnalities*/
-    function getData(){
-        status.getRoverSatellites().then((result)=>{
-            //console.log(result);
+	/* Déclaration du logger */
+	console.log("dashboard.status");
 
-            var labels = [];
+	$scope.chartOptions = {
+		segementStrokeWidth: 20,
+		barStrokeColor: "#000"
+	};
 
-            var roverSat = [];
-            var baseSat= [];
+	/* Screen Functionnalities*/
+	async function getData() {
+		{
+			let result = await status.getRoverSatellites();
+			// console.log(result);
 
-            var nbSat = result.length;
-            
-            result = arrays.sortByKey<IRoverSatData>(result,'name');
-            
-            for(var i=0; i<nbSat; i++){
-                var currentSat = result[i];
-                //console.log(currentSat);
-                labels.push(currentSat.name);
-                roverSat.push(currentSat.snr);
-                baseSat.push(0);
-            }
+			const labels = [];
 
+			const roverSat = [];
+			const baseSat = [];
 
-            $scope.satRoverDatas = {
-                labels: labels,
-                datasets:[
-                    {
-                        label: 'rover',
-                        fillColor: 'lightgreen', //DROTEK Color
-                        data: roverSat
-                    }
-                ]
+			const nbSat = result.length;
 
-            };
-        });
-        
-        status.getBaseSatellites().then((result)=>{
-            //console.log(result);
+			result = arrays.sortByKey<IRoverSatData>(result, "name");
 
-            var labels = [];
+			for (let i = 0; i < nbSat; i++) {
+				const currentSat = result[i];
+				// console.log(currentSat);
+				labels.push(currentSat.name);
+				roverSat.push(currentSat.snr);
+				baseSat.push(0);
+			}
 
-            var baseSat= [];
+			$scope.satRoverDatas = {
+				labels,
+				datasets: [
+					{
+						label: "rover",
+						fillColor: "lightgreen", // DROTEK Color
+						data: roverSat
+					}
+				]
 
-            result = arrays.sortByKey(result,'name');
-            
-            var nbSat = result.length;
-            for(var i=0; i<nbSat; i++){
-                var currentSat = result[i];
-                //console.log(currentSat);
-                labels.push(currentSat.name);
-                baseSat.push(currentSat.cno);
-            }
+			};
+		}
+		{
+			let result = await status.getBaseSatellites();
+			// console.log(result);
 
+			const labels = [];
 
-            $scope.satBaseDatas = {
-                labels: labels,
-                datasets:[
-                    {
-                        label: 'rover',
-                        fillColor: 'lightgreen', //DROTEK Color
-                        data: baseSat
-                    }
-                ]
+			const baseSat = [];
 
-            };
-        });
-        
-        map.getLastPosition().then((result)=>{
-            if(result.length > 0){
-                var lastPostion = result[0];
-                if(lastPostion.status === '1'){
-                    $scope.lastStatus = 'FIX';
-                }else if(lastPostion.status === '2'){
-                    $scope.lastStatus = 'FLOAT';
-                }else if(lastPostion.status === '5'){
-                    $scope.lastStatus = 'SINGLE';
-                }
+			result = arrays.sortByKey(result, "name");
 
-                let parsedLastPosition = {
-                    status : lastPostion.status,
-                    'x': parseFloat(lastPostion.x),
-                    'y': parseFloat(lastPostion.x),
-                    'z': parseFloat(lastPostion.x)
-                };
-                
-                var currentLla = gps.eceftolla(parsedLastPosition);
-                console.log(currentLla);
-                $scope.lastLat = (currentLla.lat).toFixed(9);
-                $scope.lastLng = (currentLla.lng).toFixed(9);
-                $scope.lastAlt = (currentLla.alt).toFixed(3);
-            }       
-        });
-    }
-    
-    $scope.refresh = ($event : angular.IAngularEvent)=>{
+			const nbSat = result.length;
+			for (let i = 0; i < nbSat; i++) {
+				const currentSat = result[i];
+				// console.log(currentSat);
+				labels.push(currentSat.name);
+				baseSat.push(currentSat.cno);
+			}
+
+			$scope.satBaseDatas = {
+				labels,
+				datasets: [
+					{
+						label: "rover",
+						fillColor: "lightgreen", // DROTEK Color
+						data: baseSat
+					}
+				]
+
+			};
+		}
+
+		{
+			const result = await map.getLastPosition();
+			if (result.length > 0) {
+				const lastPostion = result[0];
+				if (lastPostion.status === "1") {
+					$scope.lastStatus = "FIX";
+				} else if (lastPostion.status === "2") {
+					$scope.lastStatus = "FLOAT";
+				} else if (lastPostion.status === "5") {
+					$scope.lastStatus = "SINGLE";
+				}
+
+				const parsedLastPosition = {
+					status: lastPostion.status,
+					x: parseFloat(lastPostion.x),
+					y: parseFloat(lastPostion.x),
+					z: parseFloat(lastPostion.x)
+				};
+
+				const currentLla = gps.eceftolla(parsedLastPosition);
+				console.log(currentLla);
+				$scope.lastLat = (currentLla.lat).toFixed(9);
+				$scope.lastLng = (currentLla.lng).toFixed(9);
+				$scope.lastAlt = (currentLla.alt).toFixed(3);
+			}
+		}
+	}
+
+	$scope.refresh = async ($event: angular.IAngularEvent) => {
 		$event.stopPropagation();
 
-        getData();
+		await getData();
 	};
-    
-    /* Loading Process*/
-    getData();
 
-};
+	/* Loading Process*/
+	await getData();
+
+}

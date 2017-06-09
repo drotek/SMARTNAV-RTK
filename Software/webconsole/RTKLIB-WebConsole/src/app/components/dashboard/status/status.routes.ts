@@ -24,19 +24,19 @@
  */
 
 import angular = require("angular");
-import angular_ui_router = require('angular-ui-router');
+import angular_ui_router = require("angular-ui-router");
 
-import status_controller  from  './status.controller';
+import status_controller from "./status.controller";
 
-export default /*@ngInject*/ function ($stateProvider : angular_ui_router.StateProvider) {
-  $stateProvider
-    .state('global.dashboard.status', {
-      url: '/status',
-      views: {
-        '@global.dashboard': {
-          template:require( './status.html'),
-          controller: status_controller
-        }
-      }
-    });
-};
+export default /*@ngInject*/ function($stateProvider: angular_ui_router.StateProvider) {
+	$stateProvider
+		.state("global.dashboard.status", {
+			url: "/status",
+			views: {
+				"@global.dashboard": {
+					template: require("./status.html"),
+					controller: status_controller
+				}
+			}
+		});
+}

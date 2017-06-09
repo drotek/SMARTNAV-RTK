@@ -24,126 +24,117 @@
  */
 
 import angular = require("angular");
-import _ = require('lodash');
+import _ = require("lodash");
 
 export interface IBasePosition {
-    pos1: string;
-    pos2: string;
-    pos3: string;
-    postype: string;
+	pos1: string;
+	pos2: string;
+	pos3: string;
+	postype: string;
 }
 
 export interface IPosition {
-    fileName: string;
-    nbLine: number;
-    listPosData: string[];
+	fileName: string;
+	nbLine: number;
+	listPosData: string[];
 }
 
 export interface IFilteredPositions {
-    'status': string;
-    'x': string;
-    'y': string;
-    'z': string;
+	"status": string;
+	"x": string;
+	"y": string;
+	"z": string;
 }
 
 export interface IMapService {
-    getBasePosition(): angular.IPromise<IBasePosition>;
-    getPositions(): angular.IPromise<IFilteredPositions[]>;
-    getLastPosition(): angular.IPromise<IFilteredPositions[]>;
+	getBasePosition(): Promise<IBasePosition>;
+	getPositions(): Promise<IFilteredPositions[]>;
+	getLastPosition(): Promise<IFilteredPositions[]>;
 }
 
-export default function () {
-    return {
-        $get: /*@ngInject*/ function ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
+export default function() {
+	return {
+		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
 
-            /* Déclaration des variables utilisées dans le service */
+			/* Déclaration des variables utilisées dans le service */
 
-            /**
-            * Opérations disponibles pour le service map.
-            */
-            var service: IMapService = {
-                getLastPosition: getLastPosition,
-                getPositions: getPositions,
-                getBasePosition: getBasePosition
-            };
+			// Opérations disponibles pour le service map.
+			const service: IMapService = {
+				getLastPosition,
+				getPositions,
+				getBasePosition
+			};
 
-            return service;
+			return service;
 
-            /* Définition des fonctions du service de map */
+			/* Définition des fonctions du service de map */
 
-            function getBasePosition() {
+			async function getBasePosition(): Promise<IBasePosition> {
 
-                return $http({
-                    method: 'GET',
-                    url: $rootScope.host + ':3000/basePosition'
-                }).then(function (response) {
-                    return response.data as IBasePosition;
-                }).then(function (position) {
-                    return position;
-                });
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/basePosition"
+				});
+				const position = response.data as IBasePosition;
+				return position;
 
-            }
+			}
 
-            function getPositions() {
+			async function getPositions(): Promise<IFilteredPositions[]> {
 
-                return $http({
-                    method: 'GET',
-                    url: $rootScope.host + ':3000/positions'
-                }).then(function (response) {
-                    return response.data as IPosition;
-                }).then(function (listPositions) {
-                    return filter(listPositions.listPosData);
-                });
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/positions"
+				});
+				const listPositions = response.data as IPosition;
+				return filter(listPositions.listPosData);
 
-            }
+			}
 
-            function getLastPosition() {
+			async function getLastPosition(): Promise<IFilteredPositions[]> {
 
-                return $http({
-                    method: 'GET',
-                    url: $rootScope.host + ':3000/positions?nbPos=1'
-                }).then(function (response) {
-                    return response.data as IPosition;
-                }).then(function (listPositions) {
-                    return filter(listPositions.listPosData);
-                });
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/positions?nbPos=1"
+				});
+				const listPositions = response.data as IPosition;
+				return filter(listPositions.listPosData);
 
-            }
+			}
 
-            function filter(listData: string[]): IFilteredPositions[] {
-                var result = [];
+			function filter(listData: string[]): IFilteredPositions[] {
+				const result = [];
 
-                //$POS,week,tow,stat,posx,posy,posz,posxf,posyf,poszf
+				// $POS,week,tow,stat,posx,posy,posz,posxf,posyf,poszf
 
-                var nbPosition = listData.length;
-                for (var i = 0; i < nbPosition; i++) {
-                    var currentLine = listData[i].split(",");
-                    var status = currentLine[3];
+				const nbPosition = listData.length;
+				for (let i = 0; i < nbPosition; i++) {
+					const currentLine = listData[i].split(",");
+					const status = currentLine[3];
 
-                    var decal = 0;
-                    if (status === "1" || status === "5") { // is Fix
-                        result.push({
-                            'status': status,
-                            'x': currentLine[7],
-                            'y': currentLine[8],
-                            'z': currentLine[9]
-                        });
-                    } else if (status === "2") { // is Float
-                        result.push({
-                            'status': status,
-                            'x': currentLine[4],
-                            'y': currentLine[5],
-                            'z': currentLine[6]
-                        });
-                    }
-                }
+					const decal = 0;
+					if (status === "1" || status === "5") { // is Fix
+						result.push({
+							status,
+							x: currentLine[7],
+							y: currentLine[8],
+							z: currentLine[9]
+						});
+					} else if (status === "2") { // is Float
+						result.push({
+							status,
+							x: currentLine[4],
+							y: currentLine[5],
+							z: currentLine[6]
+						});
+					}
+				}
 
-                return result;
-            }
+				return result;
+			}
 
-            // fin - Définition des fonctions du service
+			// fin - Définition des fonctions du service
 
-
-        }
-    };
-};
+		}
+	};
+}

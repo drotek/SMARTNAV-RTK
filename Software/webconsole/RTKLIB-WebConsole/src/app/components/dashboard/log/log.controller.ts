@@ -24,47 +24,46 @@
  */
 
 import angular = require("angular");
-import angular_ui_bootstrap  = require( 'angular-ui-bootstrap');
+import angular_ui_bootstrap = require("angular-ui-bootstrap");
 
-import {ILogService} from "../../../shared/services/log.service";
+import { ILogService } from "../../../shared/services/log.service";
 
-export default/*@ngInject*/ function ($scope : angular.IScope, log : ILogService, $modal : angular_ui_bootstrap.IModalInstanceService) {
+export default/*@ngInject*/ async function($scope: angular.IScope, log: ILogService, $modal: angular_ui_bootstrap.IModalInstanceService) {
 
-    /* Déclaration du logger */
-    console.log('dashboard.log');
-    
-    /* Déclaration des variables utilisées dans le controlleur */
-    $scope = angular.extend($scope, {
-        logFiles: [],
-        selectedLog: undefined,
-        logContent: '',
-        loading: true
-    });
-  
-    /* Watch Expressions */
-    $scope.$watch( () =>{
+	/* Déclaration du logger */
+	console.log("dashboard.log");
+
+	/* Déclaration des variables utilisées dans le controlleur */
+	$scope = angular.extend($scope, {
+		logFiles: [],
+		selectedLog: undefined,
+		logContent: "",
+		loading: true
+	});
+
+	/* Watch Expressions */
+	$scope.$watch(() => {
 		return $scope.selectedLog;
-    },  (newVal) =>{
-		if (typeof newVal !== 'undefined') {
-            $scope.loading = true;
-            log.getLogFile(newVal).then((result)=>{
-                $scope.logContent = result;
-                $scope.loading = false;
-            });
-            
-		}
-    });
-    
-    /* Screen Functionnalities */
-    function refreshLogs(){
-        
-        log.getListLogFiles().then((result)=>{
-            $scope.logFiles = result;
-            $scope.selectedLog = result[0];
-        });
-    }
-    
-    /* Loading Process */
-    refreshLogs();
+	}, async (newVal) => {
+		if (typeof newVal !== "undefined") {
+			$scope.loading = true;
+			const result = await log.getLogFile(newVal);
+			$scope.logContent = result;
+			$scope.loading = false;
 
-};
+		}
+	});
+
+	/* Screen Functionnalities */
+	async function refreshLogs() {
+
+		const result = await log.getListLogFiles();
+		$scope.logFiles = result;
+		$scope.selectedLog = result[0];
+
+	}
+
+	/* Loading Process */
+	await refreshLogs();
+
+}

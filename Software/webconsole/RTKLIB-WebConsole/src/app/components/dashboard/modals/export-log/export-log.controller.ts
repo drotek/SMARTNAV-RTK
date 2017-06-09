@@ -24,83 +24,77 @@
  */
 
 import angular = require("angular");
-import angular_ui_bootstrap  = require( 'angular-ui-bootstrap');
-import {ILogService} from "../../../../shared/services/log.service";
+import angular_ui_bootstrap = require("angular-ui-bootstrap");
+import { ILogService } from "../../../../shared/services/log.service";
 
-export default /*@ngInject*/ function ($scope : angular.IScope, log : ILogService, $modalInstance : angular_ui_bootstrap.IModalInstanceService) {
+export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogService, $modalInstance: angular_ui_bootstrap.IModalInstanceService) {
 
-    /* Controller parameters */
-    $scope = angular.extend($scope, {
-        downloadFile: undefined,
+	/* Controller parameters */
+	$scope = angular.extend($scope, {
+		downloadFile: undefined,
 		logFiles: undefined
-    });
-    
-    log.getListLogFiles().then((result)=>{
-        $scope.logFiles = result;
-        $scope.downloadFile = result[0];
-    });
+	});
 
-    function createDownloadLink(blob : Blob, fileName : string){
-      var url;
-      var downloadLink = document.createElement('a');
-      var downloadAttributeSupported = 'download' in downloadLink;
-      var urlCreator = window.URL || (window as any).webkitURL || (window as any).mozURL || (window as any).msURL;
+	const log_files = await log.getListLogFiles();
+	$scope.logFiles = log_files;
+	$scope.downloadFile = log_files[0];
 
-      if(urlCreator){
-          if (downloadAttributeSupported) {
-              url = urlCreator.createObjectURL(blob);
-              downloadLink.href = url;
-              downloadLink.download = fileName;
-              downloadLink.style.display = 'none';
-              downloadLink.click();
-          }else{
-              url = urlCreator.createObjectURL(blob);
-              window.open(url, '_blank', '');
-          }
-      }
-    }
+	function createDownloadLink(blob: Blob, fileName: string) {
+		let url;
+		const downloadLink = document.createElement("a");
+		const downloadAttributeSupported = "download" in downloadLink;
+		const urlCreator = window.URL || (window as any).webkitURL || (window as any).mozURL || (window as any).msURL;
 
-    function saveBlob(blob : Blob, fileName : string){
-        
-      (window as any).saveAs = (window as any).saveAs || (window as any).webkitSaveAs || (window as any).mozSaveAs || (window as any).msSaveAs;
-      if ((window as any).saveAs) {
-          (window as any).saveAs(blob, fileName);
-      }
-      else {
-          (navigator as any).saveBlob(blob, fileName);
-      }
-    }
+		if (urlCreator) {
+			if (downloadAttributeSupported) {
+				url = urlCreator.createObjectURL(blob);
+				downloadLink.href = url;
+				downloadLink.download = fileName;
+				downloadLink.style.display = "none";
+				downloadLink.click();
+			} else {
+				url = urlCreator.createObjectURL(blob);
+				window.open(url, "_blank", "");
+			}
+		}
+	}
 
-    function saveFile(blob : Blob, fileName : string){
+	function saveBlob(blob: Blob, fileName: string) {
 
-      (navigator as any).saveBlob =  (navigator as any).saveBlob || navigator.msSaveBlob ||
-                            (navigator as any).mozSaveBlob || (navigator as any).webkitSaveBlob;
+		(window as any).saveAs = (window as any).saveAs || (window as any).webkitSaveAs || (window as any).mozSaveAs || (window as any).msSaveAs;
+		if ((window as any).saveAs) {
+			(window as any).saveAs(blob, fileName);
+		} else {
+			(navigator as any).saveBlob(blob, fileName);
+		}
+	}
 
-      if((navigator as any).saveBlob){
-          saveBlob(blob,fileName);
-      }else {
-          createDownloadLink(blob,fileName);
-      }
-    }
-    
-    /**
-     * Function called to export log file
-     */
-    $scope.ok = () =>{
-        log.getLogFile($scope.downloadFile).then((result)=>{
-            
-            var blob = new Blob([result], {type: 'text/plain;charset=utf-8'});
-            saveFile(blob, $scope.downloadFile);
-            
-            $modalInstance.close();
-        });
-    };
+	function saveFile(blob: Blob, fileName: string) {
 
-    /**
-     * Function called to cancel the export.
-     */
-    $scope.cancel =  () =>{
-        $modalInstance.dismiss('cancel');
-    };
-    
+		(navigator as any).saveBlob = (navigator as any).saveBlob || navigator.msSaveBlob ||
+			(navigator as any).mozSaveBlob || (navigator as any).webkitSaveBlob;
+
+		if ((navigator as any).saveBlob) {
+			saveBlob(blob, fileName);
+		} else {
+			createDownloadLink(blob, fileName);
+		}
+	}
+
+	// Function called to export log file
+	$scope.ok = async () => {
+		const result = await log.getLogFile($scope.downloadFile);
+
+		const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+		saveFile(blob, $scope.downloadFile);
+
+		$modalInstance.close();
+
+	};
+
+	// Function called to cancel the export.
+	$scope.cancel = () => {
+		$modalInstance.dismiss("cancel");
+	};
+
 }

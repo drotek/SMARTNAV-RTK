@@ -7,7 +7,9 @@
     "Dror Gluska"
   ],
   "scripts": {
-    "start": "gulp serve"
+    "start": "gulp serve",
+    "build": "tsc",
+    "tslint": "tslint -c tslint.json './*.ts' './src/**/*.ts'"
   },
   "keywords": [
     "GPS",
@@ -50,6 +52,7 @@
   "dependencies": {
     "@types/angular": "^1.6.18",
     "@types/angular-animate": "^1.5.6",
+    "@types/angular-sanitize": "^1.3.4",
     "@types/angular-toastr": "^1.6.31",
     "@types/angular-ui-bootstrap": "^0.13.42",
     "@types/angular-ui-router": "^1.1.36",
@@ -62,8 +65,10 @@
     "angular-sanitize": "^1.4.8",
     "angular-toastr": "^1.2.1",
     "angular-touch": "^1.4.8",
+    "angular-ui-bootstrap": "^2.5.0",
     "angular-ui-router": "^1.0.0-alpha0",
-    "bootstrap": "^3.3.6"
+    "bootstrap": "^3.3.6",
+    "tslint": "^5.4.3"
   },
   "browserify": {
     "transform": [

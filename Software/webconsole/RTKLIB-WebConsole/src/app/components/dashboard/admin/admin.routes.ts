@@ -24,20 +24,20 @@
  */
 
 import angular = require("angular");
-import angular_ui_router = require('angular-ui-router');
+import angular_ui_router = require("angular-ui-router");
 
-import admin_controller  from  './admin.controller';
+import admin_controller from "./admin.controller";
 
-export default /*@ngInject*/ function ($stateProvider : angular_ui_router.StateProvider) {
-  console.log("loading admin.routes", $stateProvider);
-  $stateProvider
-    .state('global.dashboard.admin', {
-      url: '/admin',
-      views: {
-        '@global.dashboard': {
-          template:require( './admin.html'),
-          controller: admin_controller
-        }
-      }
-    });
-};
+export default /*@ngInject*/ function($stateProvider: angular_ui_router.StateProvider) {
+	console.log("loading admin.routes", $stateProvider);
+	$stateProvider
+		.state("global.dashboard.admin", {
+			url: "/admin",
+			views: {
+				"@global.dashboard": {
+					template: require("./admin.html"),
+					controller: admin_controller
+				}
+			}
+		});
+}

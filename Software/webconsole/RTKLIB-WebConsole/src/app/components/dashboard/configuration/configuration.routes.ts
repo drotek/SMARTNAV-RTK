@@ -24,19 +24,19 @@
  */
 
 import angular = require("angular");
-import angular_ui_router = require('angular-ui-router');
+import angular_ui_router = require("angular-ui-router");
 
-import configuration_controller from './configuration.controller';
+import configuration_controller from "./configuration.controller";
 
-export default /*@ngInject*/ function ($stateProvider : angular_ui_router.StateProvider) {
-  $stateProvider
-    .state('global.dashboard.configuration', {
-      url: '/configuration',
-      views: {
-        '@global.dashboard': {
-          template: require('./configuration.html'),
-          controller: configuration_controller
-        }
-      }
-    });
-};
+export default /*@ngInject*/ function($stateProvider: angular_ui_router.StateProvider) {
+	$stateProvider
+		.state("global.dashboard.configuration", {
+			url: "/configuration",
+			views: {
+				"@global.dashboard": {
+					template: require("./configuration.html"),
+					controller: configuration_controller
+				}
+			}
+		});
+}

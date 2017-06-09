@@ -24,26 +24,25 @@
  */
 
 import angular = require("angular");
-import angular_ui_router = require('angular-ui-router');
-import dashboard_controller from './dashboard.controller';
+import angular_ui_router = require("angular-ui-router");
+import dashboard_controller from "./dashboard.controller";
 
-export default /*@ngInject*/ function ($stateProvider: angular_ui_router.StateProvider, $urlRouterProvider: angular_ui_router.UrlRouterProvider) {
+export default /*@ngInject*/ function($stateProvider: angular_ui_router.StateProvider, $urlRouterProvider: angular_ui_router.UrlRouterProvider) {
 
-  console.log('Global.dashboard');
+	console.log("Global.dashboard");
 
-  $stateProvider
-    .state('global.dashboard', {
-      url: '/dashboard',
-      abstract: true,
-      views: {
-        '@': {
-          template: require('./dashboard.html'),
-          controller: dashboard_controller
-        }
-      }
-    }
-    );
+	$stateProvider
+		.state("global.dashboard", {
+			url: "/dashboard",
+			abstract: true,
+			views: {
+				"@": {
+					template: require("./dashboard.html"),
+					controller: dashboard_controller
+				}
+			}
+		}
+		);
 
-
-  $urlRouterProvider.when('/dashboard', '/dashboard/admin');
-};
+	$urlRouterProvider.when("/dashboard", "/dashboard/admin");
+}
