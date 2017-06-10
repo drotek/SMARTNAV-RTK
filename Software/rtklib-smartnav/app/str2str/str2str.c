@@ -219,6 +219,13 @@ static void readcmd(const char *file, char *cmd, int type)
 /* str2str -------------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
+	setbuf(stdout, NULL);
+	setbuf(stderr, NULL);
+	setbuf(stdin, NULL);
+	setvbuf(stdin, NULL, _IONBF, 0);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+
     static char cmd_strs[MAXSTR][MAXRCVCMD]={"","","","",""};
     static char cmd_periodic_strs[MAXSTR][MAXRCVCMD]={"","","","",""};
     const char ss[]={'E','-','W','C','C'};

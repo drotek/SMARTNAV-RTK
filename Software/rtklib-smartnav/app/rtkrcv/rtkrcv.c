@@ -1606,6 +1606,13 @@ static void accept_sock(int ssock, con_t **con)
 *-----------------------------------------------------------------------------*/
 int main(int argc, char **argv)
 {
+	setbuf(stdout, NULL);
+	setbuf(stderr, NULL);
+	setbuf(stdin, NULL);
+	setvbuf(stdin, NULL, _IONBF, 0);
+	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stderr, NULL, _IONBF, 0);
+
     con_t *con[MAXCON]={0};
     int i,start=0,port=0,outstat=0,trace=0,sock=0;
     char *dev="",file[MAXSTR]="";
