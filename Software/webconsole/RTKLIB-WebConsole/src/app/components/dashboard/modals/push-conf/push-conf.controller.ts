@@ -46,7 +46,7 @@ export interface IPushConfScope extends angular.IScope {
 
 }
 
-export default /*@ngInject*/ function (
+export default /*@ngInject*/ function(
 	$q: ng.IQService, $scope: IPushConfScope, configuration: IConfigurationService, admin: IAdminService,
 	$modalInstance: angular_ui_bootstrap.IModalInstanceService, toastr: angular.toastr.IToastrService, mode: string,
 	requiredParams: IParameter[], advancedParams: IParameter[], otherParams: IParameter[], cmdParams: IParameter[],
@@ -128,7 +128,7 @@ export default /*@ngInject*/ function (
 
 			if ($scope.wasRoverStarted) {
 				console.log("starting ROVER service");
-				let response = await admin.adminService("start", "ROVER");
+				const response = await admin.adminService("start", "ROVER");
 			}
 
 			$modalInstance.close();
@@ -147,7 +147,7 @@ export default /*@ngInject*/ function (
 			});
 
 			if ($scope.wasBaseStated) {
-				let response = await admin.adminService("start", "BASE");
+				const response = await admin.adminService("start", "BASE");
 			}
 			$modalInstance.close();
 			return true;

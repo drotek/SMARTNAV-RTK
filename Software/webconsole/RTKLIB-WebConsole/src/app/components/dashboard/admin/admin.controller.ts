@@ -44,12 +44,11 @@ export interface IAdminScope extends angular.IScope {
 		isUpdateOpen: boolean,
 		isFirstDisabled: boolean
 	};
-	//isServiceActive: boolean;
 	logFiles: string[];
 	services: { [id: string]: IModuleResponse; };
 }
 
-export default /*@ngInject*/ async function (
+export default /*@ngInject*/ async function(
 	$scope: IAdminScope, log: ILogService, admin: IAdminService, configuration: IConfigurationService,
 	$modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
 
@@ -65,7 +64,6 @@ export default /*@ngInject*/ async function (
 			isUpdateOpen: true,
 			isFirstDisabled: false
 		},
-		//isServiceActive: false,
 		logFiles: [],
 		services: {} // ROVER/BASE
 	} as IAdminScope);
@@ -95,8 +93,8 @@ export default /*@ngInject*/ async function (
 	/* Screen Functionnalities */
 	async function refreshStatus() {
 		try {
-			let rover_status = await admin.adminService("status", "ROVER");
-			if (typeof rover_status !== 'undefined') {
+			const rover_status = await admin.adminService("status", "ROVER");
+			if (typeof rover_status !== "undefined") {
 				console.log('admin.adminService("status","ROVER") ', rover_status);
 				$scope.services["ROVER"] = rover_status;
 
@@ -110,8 +108,8 @@ export default /*@ngInject*/ async function (
 		}
 
 		try {
-			let base_status = await admin.adminService("status", "BASE");
-			if (typeof base_status !== 'undefined') {
+			const base_status = await admin.adminService("status", "BASE");
+			if (typeof base_status !== "undefined") {
 				console.log('admin.adminService("status","BASE") ' , base_status);
 				$scope.services["BASE"] = base_status;
 
@@ -125,11 +123,11 @@ export default /*@ngInject*/ async function (
 		}
 	}
 
-	$scope.start = async ($event: angular.IAngularEvent, service_name : string) => {
+	$scope.start = async ($event: angular.IAngularEvent, service_name: string) => {
 		$event.stopPropagation();
-		console.log("starting service",service_name, $event);
+		console.log("starting service", service_name, $event);
 
-		const response = await admin.adminService("start",service_name);
+		const response = await admin.adminService("start", service_name);
 		if (response && response.error) {
 			console.log(response);
 			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Starting Service");
@@ -137,11 +135,11 @@ export default /*@ngInject*/ async function (
 		await refreshStatus();
 	};
 
-	$scope.stop = async ($event: angular.IAngularEvent, service_name : string) => {
+	$scope.stop = async ($event: angular.IAngularEvent, service_name: string) => {
 		$event.stopPropagation();
-		console.log("stopping service",service_name, $event);
+		console.log("stopping service", service_name, $event);
 
-		const response = await admin.adminService("stop",service_name);
+		const response = await admin.adminService("stop", service_name);
 		if (response.error) {
 			console.log(response.error);
 			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Stopping Service");
@@ -149,11 +147,11 @@ export default /*@ngInject*/ async function (
 		await refreshStatus();
 	};
 
-	$scope.enable = async ($event: angular.IAngularEvent, service_name : string) => {
+	$scope.enable = async ($event: angular.IAngularEvent, service_name: string) => {
 		$event.stopPropagation();
-		console.log("enabling service",service_name, $event);
+		console.log("enabling service", service_name, $event);
 
-		const response = await admin.adminService("enable",service_name);
+		const response = await admin.adminService("enable", service_name);
 		if (response.error) {
 			console.log(response.error);
 			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Enabling Service");
@@ -161,11 +159,11 @@ export default /*@ngInject*/ async function (
 		await refreshStatus();
 	};
 
-	$scope.disable = async ($event: angular.IAngularEvent, service_name : string) => {
+	$scope.disable = async ($event: angular.IAngularEvent, service_name: string) => {
 		$event.stopPropagation();
-		console.log("disabling service",service_name, $event);
+		console.log("disabling service", service_name, $event);
 
-		const response = await admin.adminService("disable",service_name);
+		const response = await admin.adminService("disable", service_name);
 		if (response.error) {
 			console.log(response.error);
 			toastr.error((response.error) ? response.error.message : "" + response.stderr, "Error Disabling Service");
@@ -181,7 +179,6 @@ export default /*@ngInject*/ async function (
 			template: require("../modals/export-ubx/export-ubx.html"),
 			controller: export_ubx_controller,
 		});
-
 
 		try {
 			const result = await modalInstance.result; // returned input on ok
@@ -239,6 +236,11 @@ export default /*@ngInject*/ async function (
 		}
 	};
 
-	setInterval(refreshStatus, 5000);
+	let interval_id = setInterval(refreshStatus, 5000);
 
+	$scope.$on("$destroy", () => {
+		console.log("dashboard.admin.controller unloaded");
+		clearInterval(interval_id);
+		interval_id = null;
+	});
 }
