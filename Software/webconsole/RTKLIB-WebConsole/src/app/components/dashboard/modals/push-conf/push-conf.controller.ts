@@ -99,22 +99,22 @@ export default /*@ngInject*/ function(
 	async function pushAndStart() {
 		if ($scope.mode === "ROVER") {
 			// copy back input streams
-			console.log("update ROVER input streams");
+			console.log("update ROVER input streams", $scope.inputStreams);
 			if ($scope.inputStreams) {
 				for (let i = 0; i < $scope.inputStreams.length; i++) {
-					find_or_create_property($scope.otherParameters, `inpstr${i}-type`).value = $scope.inputStreams[i].streamType;
-					find_or_create_property($scope.otherParameters, `inpstr${i}-path`).value = $scope.inputStreams[i].streamPath;
-					find_or_create_property($scope.otherParameters, `inpstr${i}-format`).value = $scope.inputStreams[i].streamFormat;
+					find_or_create_property($scope.otherParameters, `inpstr${i + 1}-type`).value = $scope.inputStreams[i].streamType;
+					find_or_create_property($scope.otherParameters, `inpstr${i + 1}-path`).value = $scope.inputStreams[i].streamPath;
+					find_or_create_property($scope.otherParameters, `inpstr${i + 1}-format`).value = $scope.inputStreams[i].streamFormat;
 				}
 			}
 
-			console.log("update ROVER output streams");
+			console.log("update ROVER output streams", $scope.outputStreams);
 			// copy back output streams
 			if ($scope.outputStreams) {
 				for (let i = 0; i < $scope.outputStreams.length; i++) {
-					find_or_create_property($scope.otherParameters, `outstr${i}-type`).value = $scope.outputStreams[i].streamType;
-					find_or_create_property($scope.otherParameters, `outstr${i}-path`).value = $scope.outputStreams[i].streamPath;
-					find_or_create_property($scope.otherParameters, `outstr${i}-format`).value = $scope.outputStreams[i].streamFormat;
+					find_or_create_property($scope.otherParameters, `outstr${i + 1}-type`).value = $scope.outputStreams[i].streamType;
+					find_or_create_property($scope.otherParameters, `outstr${i + 1}-path`).value = $scope.outputStreams[i].streamPath;
+					find_or_create_property($scope.otherParameters, `outstr${i + 1}-format`).value = $scope.outputStreams[i].streamFormat;
 				}
 			}
 

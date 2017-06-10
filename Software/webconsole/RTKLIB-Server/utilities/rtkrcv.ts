@@ -27,12 +27,12 @@ export interface IRTKRCVConfig {
 	monitor_port: number;
 	login_password: string;
 	station_name: string;
-	enabled:boolean;
+	enabled: boolean;
 }
 
 export class rtkrcv extends execution_manager {
 	private static parse_config(rtkrcv_config: IRTKRCVConfig): string[] {
-		log.debug("rtkrcv parsing config",rtkrcv_config);
+		log.debug("rtkrcv parsing config", rtkrcv_config);
 		let ret: string[]; ret = [];
 
 		ret.push("-s"); // start RTK server

@@ -167,7 +167,7 @@ export default function configFileEditor(app: express.Express) {
 		"file-geexefile": [],
 		"file-solstatfile": [],
 		"file-tracefile": [],
-		
+
 		"inpstr1-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli", "ftp", "http"],
 		"inpstr1-path": [],
 		"inpstr1-format": ["rtcm2", "rtcm3", "oem4", "oem3", "ubx", "ss2", "hemis", "skytraq", "gw10", "javad", "sp3"],
@@ -179,7 +179,7 @@ export default function configFileEditor(app: express.Express) {
 		"inpstr3-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli", "ftp", "http"],
 		"inpstr3-path": [],
 		"inpstr3-format": ["rtcm2", "rtcm3", "oem4", "oem3", "ubx", "ss2", "hemis", "skytraq", "gw10", "javad", "sp3"],
-		
+
 		"outstr1-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli"],
 		"outstr1-format": ["llh", "xyz", "enu", "nmea", "ubx", "base"],
 		"outstr1-path": [],
@@ -320,7 +320,7 @@ export default function configFileEditor(app: express.Express) {
 				fileName = req.query.name;
 			}
 
-			let current_configuration_filename = path.join(config.configFilesPath, fileName);
+			const current_configuration_filename = path.join(config.configFilesPath, fileName);
 			log.debug("reading current configuration from", current_configuration_filename);
 			const data = await fs.readFile(current_configuration_filename, "utf-8");
 
@@ -680,12 +680,12 @@ export default function configFileEditor(app: express.Express) {
 
 			const nbCmdParam = cmdParameters.length;
 			// if (pathCmd && nbCmdParam > 0) {
-			
+
 			// 	return await modifyCmdFile(pathCmd, cmdParameters, res, req);
 
 			// } else {
-				return res.send(req.body);
-			//}
+			return res.send(req.body);
+			// }
 
 		} catch (e) {
 			log.error("error executing POST /configFile", e);
@@ -857,12 +857,12 @@ export default function configFileEditor(app: express.Express) {
 	// 	}
 	// });
 
-		app.get("/getSTR2STRConfig", async (req, res) => {
+	app.get("/getSTR2STRConfig", async (req, res) => {
 		log.info("GET /getSTR2STRConfig");
 		try {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 
-			let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+			const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 
 			return res.send(str2str_configuration);
 		} catch (e) {
@@ -876,7 +876,7 @@ export default function configFileEditor(app: express.Express) {
 		try {
 			res.setHeader("Access-Control-Allow-Origin", "*");
 
-			let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+			const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 
 			return res.send(rtkrcv_configuration);
 		} catch (e) {
@@ -885,15 +885,14 @@ export default function configFileEditor(app: express.Express) {
 		}
 	});
 
-
 	app.post("/saveSTR2STRConfig", async (req, res) => {
 		log.info("POST /saveSTR2STRConfig", req.body);
 		try {
 			res.setHeader("Access-Control-Allow-Origin", "*");
-			
+
 			await fs.serialize_file<str2str.ISTR2STRConfig>(config.str2str_config, req.body);
 
-			let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+			const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 			return res.send(str2str_configuration);
 		} catch (e) {
 			log.error("error executing POST /saveSTR2STRConfig", e);
@@ -908,7 +907,7 @@ export default function configFileEditor(app: express.Express) {
 
 			await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, req.body);
 
-			let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+			const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 			return res.send(rtkrcv_configuration);
 		} catch (e) {
 			log.error("error executing POST /saveRTKRCVConfig", e);

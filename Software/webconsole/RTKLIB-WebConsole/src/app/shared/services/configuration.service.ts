@@ -217,6 +217,7 @@ export default function() {
 			}
 
 			async function saveFile(fileContent: IParamResponse): Promise<IParamResponse> {
+				console.log("configuration.service.saveFile", fileContent);
 				const response = await $http({
 					method: "POST",
 					url: $rootScope.host + ":3000/configFile",
