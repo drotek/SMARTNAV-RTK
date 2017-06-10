@@ -340,7 +340,7 @@ static int confwrite(vt_t *vt, const char *file)
     
     strcpy(buff,file);
     if ((p=strstr(buff,"::"))) *p='\0'; /* omit options in path */
-    if (!vt->state||!(fp=fopen(buff,"r"))) return 1; /* no existing file */
+    if (!vt||!vt->state||!(fp=fopen(buff,"r"))) return 1; /* no existing file */
     fclose(fp);
     vt_printf(vt,"overwrite %-16s ? (y/n): ",buff);
     if (!vt_gets(vt,buff,sizeof(buff))||vt->brk) return 0;
