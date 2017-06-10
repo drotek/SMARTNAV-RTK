@@ -5,6 +5,10 @@ const log = logger.getLogger("admin");
 
 import * as config from "../config";
 
+import path = require("path");
+
+import {FileMonitor} from "./file_monitor";
+
 //  -in  stream[#format] input  stream path and format
 //  -out stream[#format] output stream path and format
 
@@ -85,17 +89,17 @@ export interface IStreamInfo {
 }
 
 export interface ISTR2STRConfig {
-	in_streams : IStreamInfo[];
-	out_streams : IStreamInfo[];
+	in_streams: IStreamInfo[];
+	out_streams: IStreamInfo[];
 	command: string;
 	station_id: string;
-	relay_messages_back : boolean;
-	enabled:boolean;
+	relay_messages_back: boolean;
+	enabled: boolean;
 }
 
 export class str2str extends execution_manager {
 	private static parse_config(str2str_config: ISTR2STRConfig): string[] {
-		log.debug("str2str parsing config",str2str_config);
+		log.debug("str2str parsing config", str2str_config);
 		let ret: string[]; ret = [];
 		if (str2str_config.command) {
 			ret.push("-c");
@@ -103,27 +107,27 @@ export class str2str extends execution_manager {
 
 		}
 		if (str2str_config.in_streams && str2str_config.in_streams.length) {
-			for (let in_stream of str2str_config.in_streams){
+			for (const in_stream of str2str_config.in_streams) {
 				// if (in_stream.streamFormat && STREAM_FORMATS.indexOf(in_stream.streamFormat) === -1) {
 				// 	throw new Error("in stream format is invalid:" + in_stream.streamFormat);
 				// }
 
-				if (in_stream.streamPath){
+				if (in_stream.streamPath) {
 					ret.push("-in");
-					ret.push(((in_stream.streamType) ? in_stream.streamType + "://" : "") + in_stream.streamPath);// + ((in_stream.streamFormat) ? "#" + in_stream.streamFormat : ""));
+					ret.push(((in_stream.streamType) ? in_stream.streamType + "://" : "") + in_stream.streamPath); // + ((in_stream.streamFormat) ? "#" + in_stream.streamFormat : ""));
 				}
 			}
 		}
 
 		if (str2str_config.out_streams && str2str_config.out_streams.length) {
-			for (let out_stream of str2str_config.out_streams){
+			for (const out_stream of str2str_config.out_streams) {
 				// if (out_stream.streamFormat && STREAM_FORMATS.indexOf(out_stream.streamFormat) === -1) {
 				// 	throw new Error("out stream format is invalid:" + out_stream.streamFormat);
 				// }
 
-				if (out_stream.streamPath){
+				if (out_stream.streamPath) {
 					ret.push("-out");
-					ret.push(((out_stream.streamType)?  out_stream.streamType + "://" : "") + out_stream.streamPath);// + ((out_stream.streamFormat) ? "#" + out_stream.streamFormat : ""));
+					ret.push(((out_stream.streamType) ? out_stream.streamType + "://" : "") + out_stream.streamPath); // + ((out_stream.streamFormat) ? "#" + out_stream.streamFormat : ""));
 				}
 			}
 		}
@@ -133,20 +137,28 @@ export class str2str extends execution_manager {
 			ret.push(str2str_config.station_id);
 		}
 
-		if (str2str_config.relay_messages_back != undefined ){
-			if (str2str_config.relay_messages_back){
+		if (str2str_config.relay_messages_back !== undefined) {
+			if (str2str_config.relay_messages_back) {
 				ret.push("-b");
 				ret.push("yes");
 			}
 		}
 
 		ret.push("-t");
-		ret.push("5");
+		ret.push("2");
 
 		return ret;
 	}
+
+	private _file_monitor: FileMonitor;
+
 	constructor(public str2str_config: ISTR2STRConfig) {
 		super(config.str2str, str2str.parse_config(str2str_config));
-	}
 
+		this._file_monitor = new FileMonitor(path.join(path.dirname( config.str2str), path.basename(config.str2str) + ".trace" ));
+
+		this.on("close", () => {
+			this._file_monitor.close();
+		});
+	}
 }

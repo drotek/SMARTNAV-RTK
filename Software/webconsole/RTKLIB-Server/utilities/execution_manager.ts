@@ -5,6 +5,7 @@ import child_process = require("child_process");
 const spawn = child_process.spawn;
 
 import events = require("events");
+import path = require("path");
 
 export class execution_manager extends events.EventEmitter {
 	private _process: child_process.ChildProcess = null;
@@ -29,7 +30,13 @@ export class execution_manager extends events.EventEmitter {
 		this._stderr = "";
 		this._stdout = "";
 
-		this._process = spawn(this.command, this.args, { shell: true });
+		const start_options: child_process.SpawnOptions = {detached: true, cwd: path.dirname(this.command), stdio: ["pipe", "pipe", "pipe", "ipc"]} ;
+
+		log.info("starting", this.command, this.args, start_options );
+
+		this._process = spawn(this.command, this.args, start_options );
+		this._process.stdout.setEncoding("utf8");
+		this._process.stderr.setEncoding("utf8");
 
 		this._process.stdout.on("data", (data) => {
 			log.info("stdout", this.command, this.args, data);
@@ -38,9 +45,9 @@ export class execution_manager extends events.EventEmitter {
 		});
 
 		this._process.stderr.on("data", (data) => {
-			log.error("stderr", 
-				(this.command && this.command.toString) ? this.command.toString() : this.command, 
-				(this.args && this.args.toString ) ? this.args.toString() : this.args, 
+			log.error("stderr",
+				(this.command && this.command.toString) ? this.command.toString() : this.command,
+				(this.args && this.args.toString ) ? this.args.toString() : this.args,
 				(data && data.toString) ? data.toString() : data);
 			this.emit("stderr", data);
 			this._stderr += data;
@@ -59,6 +66,9 @@ export class execution_manager extends events.EventEmitter {
 		if (this._process) {
 			log.debug("killing", this.command, this.args);
 			this._process.kill();
+			this._process.kill("SIGINT");
+			this._process.kill("SIGTERM");
+
 			this._process = null;
 		}
 	}

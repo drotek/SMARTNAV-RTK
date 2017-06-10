@@ -128,3 +128,5 @@ export async function serialize_file<T>(filename: string, obj: T): Promise<void>
 		});
 	});
 }
+
+export const watchFile = fs.watchFile;

@@ -85,7 +85,7 @@ export default function adminModule(app: express.Express) {
 								if (!await fs.exists(config.rtkrcv_config)) {
 									throw new Error("rtkrcv configuration is missing: " + config.rtkrcv_config);
 								}
-								let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+								const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 								rtkrcv_instance = new rtkrcv.rtkrcv(rtkrcv_configuration);
 								rtkrcv_instance.start();
 								rtkrcv_configuration.enabled = true;
@@ -98,33 +98,32 @@ export default function adminModule(app: express.Express) {
 							if (rtkrcv_instance) {
 								rtkrcv_instance.stop();
 								rtkrcv_instance = null;
-								let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+								const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 								rtkrcv_configuration.enabled = false;
 								await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
 							}
 							break;
 						case "status":
-							let rtkrcv_config = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+							const rtkrcv_config = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 							response.isActive = rtkrcv_instance && rtkrcv_instance.status();
 							response.isEnabled = rtkrcv_config.enabled;
-							if (!response.isActive){
+							if (!response.isActive) {
 								rtkrcv_instance = null;
 							}
 							break;
 						case "enable": {
-							let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+							const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 							rtkrcv_configuration.enabled = true;
 							await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
-						}
-							break;
+						}              break;
 						case "disable": {
-							let rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+							const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
 							rtkrcv_configuration.enabled = false;
 							await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
 						}
 					}
 				} catch (e) {
-					log.error("error",configType, commandType, e);
+					log.error("error", configType, commandType, e);
 					error = e;
 				}
 				response.stdout = (rtkrcv_instance) ? rtkrcv_instance.stdout() : null;
@@ -140,7 +139,7 @@ export default function adminModule(app: express.Express) {
 								if (!await fs.exists(config.str2str_config)) {
 									throw new Error("str2str configuration is missing: " + config.str2str_config);
 								}
-								let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+								const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 								str2str_instance = new str2str.str2str(str2str_configuration);
 								str2str_instance.start();
 								str2str_configuration.enabled = true;
@@ -153,34 +152,32 @@ export default function adminModule(app: express.Express) {
 							if (str2str_instance) {
 								str2str_instance.stop();
 								str2str_instance = null;
-								let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+								const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 								str2str_configuration.enabled = false;
 								await fs.serialize_file<str2str.ISTR2STRConfig>(config.str2str_config, str2str_configuration);
 							}
 							break;
 						case "status": {
-							let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+							const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 							response.isActive = str2str_instance && str2str_instance.status();
 							response.isEnabled = str2str_configuration.enabled;
-							if (!response.isActive){
+							if (!response.isActive) {
 								str2str_instance = null;
 							}
-						}
-							break;
+						}              break;
 						case "enable": {
-							let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+							const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 							str2str_configuration.enabled = true;
 							await fs.serialize_file<str2str.ISTR2STRConfig>(config.str2str_config, str2str_configuration);
-						}
-							break;
+						}              break;
 						case "disable": {
-							let str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+							const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
 							str2str_configuration.enabled = false;
 							await fs.serialize_file<str2str.ISTR2STRConfig>(config.str2str_config, str2str_configuration);
 						}
 					}
 				} catch (e) {
-					log.error("error",configType, commandType, e);
+					log.error("error", configType, commandType, e);
 					error = e;
 				}
 				response.stdout = (str2str_instance) ? str2str_instance.stdout() : null;
