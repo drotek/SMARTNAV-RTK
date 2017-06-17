@@ -108,11 +108,12 @@
 				}]
 			],
 			'conditions': [
-			  ['OS=="solaris"', {
+			  ['OS in "solaris"', {
 				'cflags': [ '-pthreads' ],
 			  }],
 			  ['OS not in "solaris android"', {
 				'cflags': [ '-pthread' ],
+				'ldflags': ['-pthread'],
 			  }],
 			],
 		}],
