@@ -162,6 +162,8 @@ static const char *usage[]={
     "  -w pwd     login password for remote console (\"\": no password)",
     "  -r level   output solution status file (0:off,1:states,2:residuals)",
     "  -t level   debug trace level (0:off,1-5:on)",
+	"  -fl file   log file [rtkrcv_%Y%m%d%h%M.trace]",
+	"  -fs file   stat file [rtkrcv_%Y%m%d%h%M.stat]",
     "  -sta sta   station name for receiver dcb"
 };
 static const char *helptxt[]={
@@ -1525,6 +1527,8 @@ static void accept_sock(int ssock, con_t **con)
 *     -w pwd     login password for remote console ("": no password)
 *     -r level   output solution status file (0:off,1:states,2:residuals)
 *     -t level   debug trace level (0:off,1-5:on)
+*     -fl file   log file [rtkrcv_%Y%m%d%h%M.trace]",
+*     -fs file   stat file [rtkrcv_%Y%m%d%h%M.stat]",
 *     -sta sta   station name for receiver dcb
 *
 * command
@@ -1615,8 +1619,7 @@ int main(int argc, char **argv)
 
     con_t *con[MAXCON]={0};
     int i,start=0,port=0,outstat=0,trace=0,sock=0;
-    char *dev="",file[MAXSTR]="";
-    
+    char *dev="",file[MAXSTR]="", *logfile = "", *statfile = "";
 	
 	    /* Edison GPIO operation */
 #ifdef __ARDUINO_X86__
@@ -1687,11 +1690,13 @@ int main(int argc, char **argv)
         else if (!strcmp(argv[i],"-w")&&i+1<argc) strcpy(passwd,argv[++i]);
         else if (!strcmp(argv[i],"-r")&&i+1<argc) outstat=atoi(argv[++i]);
         else if (!strcmp(argv[i],"-t")&&i+1<argc) trace=atoi(argv[++i]);
+		else if (!strcmp(argv[i], "-fl") && i + 1<argc) logfile = argv[++i];
+		else if (!strcmp(argv[i], "-fs") && i + 1<argc) statfile = argv[++i];
         else if (!strcmp(argv[i],"-sta")&&i+1<argc) strcpy(sta_name,argv[++i]);
         else printusage();
     }
     if (trace>0) {
-        traceopen(TRACEFILE);
+		traceopen(*logfile ? logfile : TRACEFILE);
         tracelevel(trace);
     }
     /* initialize rtk server and monitor port */
@@ -1712,7 +1717,7 @@ int main(int argc, char **argv)
         fprintf(stderr,"no navigation data: %s\n",NAVIFILE);
     }
     if (outstat>0) {
-        rtkopenstat(STATFILE,outstat);
+        rtkopenstat(*statfile?statfile:STATFILE,outstat);
     }
     /* open monitor port */
     if (moniport>0&&!openmoni(moniport)) {
