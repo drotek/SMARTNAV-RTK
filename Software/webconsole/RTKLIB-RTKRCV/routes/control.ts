@@ -11,132 +11,168 @@ import * as rtkrcv from "../utilities/rtkrcv";
 let rtkrcv_instance: rtkrcv.rtkrcv = null;
 
 import * as config from "../config";
+import path = require("path");
 
-
+import { IRTKRCVConfig } from "../models/rtkrcv_config";
 
 import { execution_manager } from "../utilities/execution_manager";
 
+import { FileMonitor } from "../utilities/file_monitor";
+
 interface IServiceCommands {
-    [id: string]: string;
+	[id: string]: string;
 }
 
 interface IModuleResponse {
-    error?: Error;
-    stdout?: string;
-    stderr?: string;
-    isActive?: boolean;
-    isEnabled?: boolean;
+	error?: Error;
+	stdout?: string;
+	stderr?: string;
+	isActive?: boolean;
+	isEnabled?: boolean;
 }
 
 import { Application } from "../app";
 
 export default function controlModule(application: Application) {
-    const app = application.app;
+	const app = application.app;
 
-    app.post("/control", async (req, res) => {
-        log.info("POST /control", req.body);
-        res.setHeader("Access-Control-Allow-Origin", "*");
+	app.post("/control", async (req, res) => {
+		log.info("POST /control", req.body);
+		res.setHeader("Access-Control-Allow-Origin", "*");
 
-        const commandType: string = req.body.commandType;
-        const configType: string = req.body.configType;
+		const commandType: string = req.body.commandType;
+		const configType: string = req.body.configType;
 
-        const response: IModuleResponse = {};
+		const response: IModuleResponse = {};
 
-        let error: Error = null;
+		let error: Error = null;
 
-        try {
-            switch (commandType) {
-                case "start":
-                    if (!rtkrcv_instance) {
-                        if (!await fs.exists(config.rtkrcv_config)) {
-                            throw new Error("rtkrcv configuration is missing: " + config.rtkrcv_config);
-                        }
-                        const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
-                        rtkrcv_instance = new rtkrcv.rtkrcv(rtkrcv_configuration);
-                        rtkrcv_instance.start();
-                        rtkrcv_configuration.enabled = true;
-                        await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
-                    } else {
-                        throw new Error("can't start an already stated service");
-                    }
-                    break;
-                case "stop":
-                    if (rtkrcv_instance) {
-                        rtkrcv_instance.stop();
-                        rtkrcv_instance = null;
-                        const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
-                        rtkrcv_configuration.enabled = false;
-                        await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
-                    }
-                    break;
-                case "status":
-                    const rtkrcv_config = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
-                    response.isActive = rtkrcv_instance && rtkrcv_instance.status();
-                    response.isEnabled = rtkrcv_config.enabled;
-                    if (!response.isActive) {
-                        rtkrcv_instance = null;
-                    }
-                    break;
-                case "enable": {
-                    const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
-                    rtkrcv_configuration.enabled = true;
-                    await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
-                } break;
-                case "disable": {
-                    const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
-                    rtkrcv_configuration.enabled = false;
-                    await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
-                }
-            }
-        } catch (e) {
-            log.error("error", configType, commandType, e);
-            error = e;
-        }
-        response.stdout = (rtkrcv_instance) ? rtkrcv_instance.stdout() : null;
-        response.stderr = (rtkrcv_instance) ? rtkrcv_instance.stderr() : null;
-        response.error = error;
+		try {
+			switch (commandType) {
+				case "start":
+					if (!rtkrcv_instance) {
+						if (!await fs.exists(config.rtkrcv_config)) {
+							throw new Error("rtkrcv configuration is missing: " + config.rtkrcv_config);
+						}
+						const rtkrcv_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+						rtkrcv_instance = new rtkrcv.rtkrcv(rtkrcv_configuration);
+						rtkrcv_instance.start();
+						rtkrcv_configuration.enabled = true;
+						await fs.serialize_file<IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
 
-        return res.send(response);
+						let log_filename: string = null;
+						if (rtkrcv_configuration.log_file) {
+							log_filename = path.resolve(path.join(config.rtkrcv_path, rtkrcv_configuration.log_file));
+						}
+						//  else {
+						//     log_filename = path.resolve(config.rtkrcv_default_tracefile);
+						// }
+						application.rtkrcv_log_monitor = new FileMonitor(log_filename);
 
+						application.rtkrcv_instance.on("close", (code) => {
+							application.monitor_events.emit("close", code);
+						});
 
-    });
+						application.rtkrcv_instance.on("stderr", (data) => {
+							application.monitor_events.emit("stderr", data);
+						});
 
-    app.get("/configuration", async (req, res) => {
-        log.info("GET /configuration", req.body);
+						application.rtkrcv_instance.on("stdout", (data) => {
+							application.monitor_events.emit("stdout", data);
+						});
 
-        const str2str_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
-        res.send(str2str_configuration);
-    });
+						application.rtkrcv_log_monitor.on("line", (line: string) => {
+							application.monitor_events.emit("line", line);
+						});
 
-    app.post("/configuration", async (req, res) => {
-        log.info("POST /configuration", req.body);
+					} else {
+						throw new Error("can't start an already stated service");
+					}
+					break;
+				case "stop":
+					if (rtkrcv_instance) {
+						rtkrcv_instance.stop();
+						rtkrcv_instance = null;
+						const rtkrcv_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+						rtkrcv_configuration.enabled = false;
+						await fs.serialize_file<IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
 
-        await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, req.body);
+						if (application.rtkrcv_log_monitor) {
+							application.rtkrcv_log_monitor.close();
+							application.rtkrcv_log_monitor = null;
+						}
+					}
 
-        const str2str_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
-        res.send(str2str_configuration);
-    });
+					break;
+				case "status":
+					const rtkrcv_config = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+					response.isActive = rtkrcv_instance && rtkrcv_instance.status();
+					response.isEnabled = rtkrcv_config.enabled;
+					if (!response.isActive) {
+						rtkrcv_instance = null;
+					}
+					break;
+				case "enable": {
+					const rtkrcv_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+					rtkrcv_configuration.enabled = true;
+					await fs.serialize_file<IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
+				} break;
+				case "disable": {
+					const rtkrcv_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+					rtkrcv_configuration.enabled = false;
+					await fs.serialize_file<IRTKRCVConfig>(config.rtkrcv_config, rtkrcv_configuration);
+				}
+				default:
+				log.error("command type unrecognized", commandType);
+				return res.status(500).send("command type unrecognized");
+			}
+		} catch (e) {
+			log.error("error", configType, commandType, e);
+			error = e;
+		}
+		response.stdout = (rtkrcv_instance) ? rtkrcv_instance.stdout() : null;
+		response.stderr = (rtkrcv_instance) ? rtkrcv_instance.stderr() : null;
+		response.error = error;
 
-    function execComandLine(res: express.Response, commandLine: string) {
-        exec(commandLine, (error, stdout, stderr) => {
+		return res.send(response);
+	});
 
-            const response: IModuleResponse = {};
+	app.get("/configuration", async (req, res) => {
+		log.info("GET /configuration", req.body);
 
-            if (error) {
-                response.error = error;
-            }
+		const str2str_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+		res.send(str2str_configuration);
+	});
 
-            if (stdout) {
-                response.stdout = stdout;
-            }
+	app.post("/configuration", async (req, res) => {
+		log.info("POST /configuration", req.body);
 
-            if (stderr) {
-                response.stderr = stderr;
-            }
+		await fs.serialize_file<IRTKRCVConfig>(config.rtkrcv_config, req.body);
 
-            return res.send(response);
+		const str2str_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+		res.send(str2str_configuration);
+	});
 
-        });
-    }
+	function execComandLine(res: express.Response, commandLine: string) {
+		exec(commandLine, (error, stdout, stderr) => {
+
+			const response: IModuleResponse = {};
+
+			if (error) {
+				response.error = error;
+			}
+
+			if (stdout) {
+				response.stdout = stdout;
+			}
+
+			if (stderr) {
+				response.stderr = stderr;
+			}
+
+			return res.send(response);
+
+		});
+	}
 
 }

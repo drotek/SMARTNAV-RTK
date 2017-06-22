@@ -4,31 +4,8 @@ import * as logger from "../utilities/logger";
 const log = logger.getLogger("admin");
 
 import * as config from "../config";
+import {IRTKRCVConfig,DEFAULT_CONSOLE_PORT} from "../models/rtkrcv_config";
 
-// usage: rtkrcv [-s][-p port][-d dev][-o file][-w pwd][-r level][-t level][-sta sta]
-// options
-//   -s         start RTK server on program startup
-//   -p port    port number for telnet console
-//   -m port    port number for monitor stream
-//   -d dev     terminal device for console
-//   -o file    processing options file
-//   -w pwd     login password for remote console ("": no password)
-//   -r level   output solution status file (0:off,1:states,2:residuals)
-//   -t level   debug trace level (0:off,1-5:on)
-//   -sta sta   station name for receiver dcb
-
-const DEFAULT_CONSOLE_PORT = 12000;
-
-export interface IRTKRCVConfig {
-	options_file: string;
-	trace_level: number;
-	output_solution_status_file_level: number;
-	console_port: number;
-	monitor_port: number;
-	login_password: string;
-	station_name: string;
-	enabled: boolean;
-}
 
 export class rtkrcv extends execution_manager {
 	private static parse_config(rtkrcv_config: IRTKRCVConfig): string[] {
@@ -64,9 +41,23 @@ export class rtkrcv extends execution_manager {
 			ret.push("-sta");
 			ret.push(rtkrcv_config.station_name);
 		}
-		// trace level
-		ret.push("-t");
-		ret.push("5");
+
+		if (rtkrcv_config.trace_level) {
+			ret.push("-t");
+			ret.push(rtkrcv_config.trace_level.toString());
+		}
+
+		if (rtkrcv_config.log_file) {
+			ret.push("-fl");
+			ret.push(rtkrcv_config.log_file);
+		}
+
+		if (rtkrcv_config.stat_file) {
+			ret.push("-fs");
+			ret.push(rtkrcv_config.stat_file);
+		}
+
+
 
 		return ret;
 	}

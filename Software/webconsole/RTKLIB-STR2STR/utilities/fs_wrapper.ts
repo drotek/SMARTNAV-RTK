@@ -119,7 +119,7 @@ export async function deserialize_file<T>(filename: string): Promise<T> {
 
 export async function serialize_file<T>(filename: string, obj: T): Promise<void> {
 	return new Promise<void>(async (resolve, reject) => {
-		fs.writeFile(filename, JSON.stringify(obj,null,"\t"), { encoding: "utf8" }, (err) => {
+		fs.writeFile(filename, JSON.stringify(obj, null, "\t"), { encoding: "utf8" }, (err) => {
 			if (err) {
 				reject(err);
 				return;
