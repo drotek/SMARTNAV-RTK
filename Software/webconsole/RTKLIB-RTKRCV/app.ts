@@ -25,31 +25,54 @@
 
 import express = require("express");
 import bodyParser = require("body-parser");
-const app = express();
 
 import * as logger from "./utilities/logger";
 const log = logger.getLogger("config_files");
 
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+import http = require("http");
 
-const allowCrossDomain = (req: express.Request, res: express.Response, next: express.NextFunction) => {
-	res.header("Access-Control-Allow-Origin", "*");
-	res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
-	res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+import * as file_monitor from "./utilities/file_monitor";
+import * as rtkrcv from "./utilities/rtkrcv";
 
-	// intercept OPTIONS method
-	if ("OPTIONS" === req.method) {
-		res.sendStatus(200);
-	} else {
-		next();
+import events = require("events");
+
+export class Application {
+	public app: express.Express;
+	public server: http.Server;
+	public rtkrcv_instance: rtkrcv.rtkrcv;
+	public rtkrcv_log_monitor: file_monitor.FileMonitor;
+	public monitor_events:	events.EventEmitter;
+
+	constructor() {
+		this.app = express();
+
+		this.app.use(bodyParser.json());
+		this.app.use(bodyParser.urlencoded({ extended: true }));
+
+		const allowCrossDomain = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+			res.header("Access-Control-Allow-Origin", "*");
+			res.header("Access-Control-Allow-Methods", "GET,PUT,POST,DELETE");
+			res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+
+			// intercept OPTIONS method
+			if ("OPTIONS" === req.method) {
+				res.sendStatus(200);
+			} else {
+				next();
+			}
+		};
+		this.app.use(allowCrossDomain);
+
+		this.rtkrcv_instance = null;
+		this.rtkrcv_log_monitor = null;
+		this.monitor_events = new events.EventEmitter();
+
+		this.server = this.app.listen(3002, () => {
+			log.info("Listening on port %s...", this.server.address().port);
+		});
 	}
-};
-app.use(allowCrossDomain);
 
-import control_route from "./routes/control";
-control_route(app);
-
-const server = app.listen(3002, () => {
-	log.info("Listening on port %s...", server.address().port);
-});
+	public start() {
+		// nop
+	}
+}

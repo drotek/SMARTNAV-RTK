@@ -38,7 +38,6 @@ export default function controlModule(application: Application) {
 		log.info("POST /control", req.body);
 
 		const commandType: string = req.body.commandType;
-		const configType: string = req.body.configType;
 
 		const response: IModuleResponse = {};
 
@@ -118,7 +117,7 @@ export default function controlModule(application: Application) {
 				}
 			}
 		} catch (e) {
-			log.error("error", configType, commandType, e);
+			log.error("error", commandType, e);
 			error = e;
 		}
 		response.stdout = (application.str2str_instance) ? application.str2str_instance.stdout() : null;

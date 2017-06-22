@@ -28,8 +28,10 @@ interface IModuleResponse {
     isEnabled?: boolean;
 }
 
-export default function controlModule(app: express.Express) {
+import { Application } from "../app";
 
+export default function controlModule(application: Application) {
+    const app = application.app;
 
     app.post("/control", async (req, res) => {
         log.info("POST /control", req.body);
@@ -97,6 +99,22 @@ export default function controlModule(app: express.Express) {
         return res.send(response);
 
 
+    });
+
+    app.get("/configuration", async (req, res) => {
+        log.info("GET /configuration", req.body);
+
+        const str2str_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+        res.send(str2str_configuration);
+    });
+
+    app.post("/configuration", async (req, res) => {
+        log.info("POST /configuration", req.body);
+
+        await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, req.body);
+
+        const str2str_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+        res.send(str2str_configuration);
     });
 
     function execComandLine(res: express.Response, commandLine: string) {

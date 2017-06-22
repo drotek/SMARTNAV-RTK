@@ -31,3 +31,6 @@ export const str2str_config = path.join(rootFilePath, "binary", "str2str.json");
 export const str2str =  path.join(rootFilePath, "binary", "str2str");
 export const rtkrcv_config = path.join(rootFilePath, "binary", "rtkrcv.json");
 export const rtkrcv =  path.join(rootFilePath, "binary", "rtkrcv");
+
+export const str2str_serviceUrl = "http://localhost:3001";
+export const rtkrcv_serviceUrl = "http://localhost:3002";
