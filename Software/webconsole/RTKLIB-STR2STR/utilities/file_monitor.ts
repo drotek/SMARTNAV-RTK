@@ -26,7 +26,7 @@ export class FileMonitor extends events.EventEmitter {
 		});
 
 		this._readline.on("line", (input) => {
-			console.log(`line: ${input}`);
+			log.debug(`line: ${input}`);
 			this.emit("line", input);
 		});
 
@@ -44,9 +44,17 @@ export class FileMonitor extends events.EventEmitter {
 	}
 
 	private async init() {
-		this._fileid = await fs.open(this.filename, fs.constants.O_RDONLY, fs.constants.S_IROTH);
 
 		const read_interval = async () => {
+			if (this._fileid === 0) {
+				try {
+					this._fileid = await fs.open(this.filename, fs.constants.O_RDONLY, fs.constants.S_IROTH);
+				} catch (e) {
+					log.debug("cannot open file", this.filename, e);
+					this._fileid = 0;
+				}
+			}
+
 			if (this._fileid === 0) {
 				return;
 			}

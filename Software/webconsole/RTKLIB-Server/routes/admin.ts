@@ -37,7 +37,8 @@ const log = logger.getLogger("admin");
 
 import { execution_manager } from "../utilities/execution_manager";
 
-import superagent = require("superagent");
+import * as rtkrcv_service from "../services/rtkrcv_service";
+import * as str2str_service from "../services/str2str_service";
 
 interface IServiceCommands {
 	[id: string]: string;
@@ -66,7 +67,7 @@ export default function adminModule(app: express.Express) {
 		switch (configType) {
 			case "ROVER":
 				try {
-					const result = await superagent.post(config.str2str_serviceUrl).send({ commandType });
+					const result = await rtkrcv_service.control(commandType);
 					res.json(result);
 				} catch (e) {
 					log.error("error", configType, commandType, e);
@@ -75,7 +76,7 @@ export default function adminModule(app: express.Express) {
 				break;
 			case "BASE":
 				try {
-					const result = await superagent.post(config.rtkrcv_serviceUrl).send({ commandType });
+					const result = await str2str_service.control(commandType);
 					res.json(result);
 				} catch (e) {
 					log.error("error", configType, commandType, e);

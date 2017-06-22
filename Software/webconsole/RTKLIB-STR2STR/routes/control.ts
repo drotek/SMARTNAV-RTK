@@ -19,6 +19,8 @@ import path = require("path");
 
 import { FileMonitor } from "../utilities/file_monitor";
 
+import * as str2str_data from "../utilities/str2str_data";
+
 interface IServiceCommands {
 	[id: string]: string;
 }
@@ -69,6 +71,11 @@ export default function controlModule(application: Application) {
 						});
 
 						application.str2str_instance.on("stderr", (data) => {
+							const parsed_status = str2str_data.parse_status(data);
+							if (parsed_status) {
+								application.monitor_events.emit("status", parsed_status);
+								return;
+							}
 							application.monitor_events.emit("stderr", data);
 						});
 

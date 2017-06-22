@@ -31,8 +31,8 @@ import path = require("path");
 import * as logger from "../utilities/logger";
 const log = logger.getLogger("config_files");
 
-import * as rtkrcv from "../utilities/rtkrcv";
-import * as str2str from "../utilities/str2str";
+import * as rtkrcv_service from "../services/rtkrcv_service";
+import * as str2str_service from "../services/str2str_service";
 
 interface IParams {
 	[id: string]: string[];
@@ -284,7 +284,6 @@ export default function configFileEditor(app: express.Express) {
 	app.get("/listConfigFile", async (req, res) => {
 		log.info("GET /listConfigFile");
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
 
 			const toReturn = {
 				listConfigFiles: [] as string[]
@@ -313,7 +312,6 @@ export default function configFileEditor(app: express.Express) {
 	app.get("/configFile", async (req, res) => {
 		log.info("GET /configFile");
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
 
 			let fileName = config.configFiles["current_conf"];
 			if (req.query.name) {
@@ -495,7 +493,6 @@ export default function configFileEditor(app: express.Express) {
 	app.get("/basePosition", async (req, res) => {
 		log.info("GET /basePosition");
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
 
 			const data = await fs.readFile(path.join(config.configFilesPath, config.configFiles["current_conf"]), "utf-8");
 
@@ -592,7 +589,6 @@ export default function configFileEditor(app: express.Express) {
 	app.post("/configFile", async (req, res) => {
 		log.info("POST /configFile", req.body);
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
 
 			const requiredParameters = req.body.requiredParameters || [];
 			const advancedParameters = req.body.advancedParameters || [];
@@ -696,7 +692,7 @@ export default function configFileEditor(app: express.Express) {
 	// app.post("/baseCMD", async (req, res) => {
 	// 	log.info("POST /baseCMD", req.body);
 	// 	try {
-	// 		res.setHeader("Access-Control-Allow-Origin", "*");
+	//
 
 	// 		const cmdParameters = req.body.cmdParameters;
 
@@ -790,7 +786,7 @@ export default function configFileEditor(app: express.Express) {
 	// app.get("/runBase", async (req, res) => {
 	// 	log.info("GET /runBase");
 	// 	try {
-	// 		res.setHeader("Access-Control-Allow-Origin", "*");
+	//
 
 	// 		const data = await fs.readFile(config.str2str_config, "utf-8");
 
@@ -833,7 +829,7 @@ export default function configFileEditor(app: express.Express) {
 	// app.post("/runBase", async (req, res) => {
 	// 	log.info("POST /runBase", req.body);
 	// 	try {
-	// 		res.setHeader("Access-Control-Allow-Origin", "*");
+	//
 
 	// 		let runBaseFileAsString = "#!/bin/bash\n";
 	// 		runBaseFileAsString = runBaseFileAsString + "# Drotek SMARTNAV-RTK\n\n";
@@ -860,10 +856,7 @@ export default function configFileEditor(app: express.Express) {
 	app.get("/getSTR2STRConfig", async (req, res) => {
 		log.info("GET /getSTR2STRConfig");
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
-
-			const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
-
+			const str2str_configuration = await str2str_service.getConfiguration();
 			return res.send(str2str_configuration);
 		} catch (e) {
 			log.error("error executing GET /getSTR2STRConfig", e);
@@ -874,9 +867,7 @@ export default function configFileEditor(app: express.Express) {
 	app.get("/getRTKRCVConfig", async (req, res) => {
 		log.info("GET /getRTKRCVConfig", req.body);
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
-
-			const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+			const rtkrcv_configuration = await rtkrcv_service.getConfiguration();
 
 			return res.send(rtkrcv_configuration);
 		} catch (e) {
@@ -888,11 +879,9 @@ export default function configFileEditor(app: express.Express) {
 	app.post("/saveSTR2STRConfig", async (req, res) => {
 		log.info("POST /saveSTR2STRConfig", req.body);
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
+			await str2str_service.setConfiguration(req.body);
 
-			await fs.serialize_file<str2str.ISTR2STRConfig>(config.str2str_config, req.body);
-
-			const str2str_configuration = await fs.deserialize_file<str2str.ISTR2STRConfig>(config.str2str_config);
+			const str2str_configuration = await str2str_service.getConfiguration();
 			return res.send(str2str_configuration);
 		} catch (e) {
 			log.error("error executing POST /saveSTR2STRConfig", e);
@@ -903,11 +892,9 @@ export default function configFileEditor(app: express.Express) {
 	app.post("/saveRTKRCVConfig", async (req, res) => {
 		log.info("POST /saveRTKRCVConfig", req.body);
 		try {
-			res.setHeader("Access-Control-Allow-Origin", "*");
+			await rtkrcv_service.setConfiguration(req.body);
 
-			await fs.serialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config, req.body);
-
-			const rtkrcv_configuration = await fs.deserialize_file<rtkrcv.IRTKRCVConfig>(config.rtkrcv_config);
+			const rtkrcv_configuration = await rtkrcv_service.getConfiguration();
 			return res.send(rtkrcv_configuration);
 		} catch (e) {
 			log.error("error executing POST /saveRTKRCVConfig", e);
