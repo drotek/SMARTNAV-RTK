@@ -100,7 +100,6 @@ export default function controlModule(application: Application) {
 						application.str2str_instance.stop();
 						application.str2str_instance = null;
 						const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
-						str2str_configuration.enabled = false;
 						await fs.serialize_file<ISTR2STRConfig>(config.str2str_config, str2str_configuration);
 
 						if (application.str2str_log_monitor) {
