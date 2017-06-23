@@ -853,6 +853,17 @@ export default function configFileEditor(app: express.Express) {
 	// 	}
 	// });
 
+	app.get("/listSTR2STRCommands", async (req, res) => {
+		log.info("GET /listSTR2STRCommands");
+		try {
+			const str2str_command_files = await str2str_service.listCommandFiles();
+			return res.send(str2str_command_files);
+		} catch (e) {
+			log.error("error executing GET /listSTR2STRCommands", e);
+			res.status(500).send("error executing GET /listSTR2STRCommands");
+		}
+	});
+
 	app.get("/getSTR2STRConfig", async (req, res) => {
 		log.info("GET /getSTR2STRConfig");
 		try {

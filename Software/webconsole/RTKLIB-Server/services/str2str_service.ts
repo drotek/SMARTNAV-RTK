@@ -72,3 +72,13 @@ export async function getConfiguration(): Promise<ISTR2STRConfig> {
 export async function setConfiguration(configuration: ISTR2STRConfig): Promise<ISTR2STRConfig> {
 	return (await superagent.post(config.str2str_serviceUrl + "/configuration").send(configuration)).body;
 }
+
+export interface IFileInfo {
+	name: string;
+	filename: string;
+	full_path: string;
+}
+
+export async function listCommandFiles(): Promise<IFileInfo[]> {
+	return (await superagent.get(config.str2str_serviceUrl + "/listCommands").send()).body;
+}
