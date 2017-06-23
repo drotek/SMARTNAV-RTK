@@ -77,6 +77,32 @@ export default function() {
 			console.log("initalizing live-logs service");
 
 			const socket = io_client("http://localhost:3001");
+
+			socket.on("connect_error", (err: any) => {
+				console.log("str2str:connect_error", err);
+				$rootScope.$emit("str2str:error", err);
+			});
+
+			socket.on("connect_timeout", (err: any) => {
+				console.log("str2str:connect_timeout", err);
+				$rootScope.$emit("str2str:error", err);
+			});
+
+			socket.on("error", (err: any) => {
+				console.log("str2str:error", err);
+				$rootScope.$emit("str2str:error", err);
+			});
+
+			socket.on("reconnect_error", (err: any) => {
+				console.log("str2str:reconnect_error", err);
+				$rootScope.$emit("str2str:error", err);
+			});
+
+			socket.on("reconnect_failed", (err: any) => {
+				console.log("str2str:reconnect_failed", err);
+				$rootScope.$emit("str2str:error", err);
+			});
+
 			socket.on("connect", () => {
 				console.log("str2str:connect");
 				$rootScope.$emit("str2str:connect");

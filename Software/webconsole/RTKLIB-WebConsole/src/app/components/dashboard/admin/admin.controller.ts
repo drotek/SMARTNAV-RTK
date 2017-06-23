@@ -36,7 +36,7 @@ import export_ubx_controller from "../modals/export-ubx/export-ubx.controller";
 import share_log_controller from "../modals/share-log/share-log.controller";
 import update_platform_controller from "../modals/update-platform/update-platform.controller";
 
-import {ILiveLogsService} from "../../../shared/services/live-logs.service";
+import {ILiveLogsService, IStatusMessage} from "../../../shared/services/live-logs.service";
 
 export interface IAdminScope extends angular.IScope {
 	oneAtATime: boolean;
@@ -48,6 +48,7 @@ export interface IAdminScope extends angular.IScope {
 	};
 	logFiles: string[];
 	services: { [id: string]: IModuleResponse; };
+	services_status: { [id: string]: string; };
 }
 
 export default /*@ngInject*/ async function(
@@ -69,8 +70,13 @@ export default /*@ngInject*/ async function(
 			isFirstDisabled: false
 		},
 		logFiles: [],
-		services: {} // ROVER/BASE
+		services: {}, // ROVER/BASE
+		services_status: {}
 	} as IAdminScope);
+
+	$rootScope.$on("str2str:status", (e, msg: IStatusMessage) => {
+		$scope.services_status["BASE"] = `${(new Date(msg.data.timestamp)).toLocaleString()} ${msg.data.unknown} Total: ${msg.data.received.toLocaleString()} bytes, ${msg.data.bps.toLocaleString()}bps - ${msg.data.msg}`;
+	});
 
 	/* Watch Expressions */
 	await refreshStatus();

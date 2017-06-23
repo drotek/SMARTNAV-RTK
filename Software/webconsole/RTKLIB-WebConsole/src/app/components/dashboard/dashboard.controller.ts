@@ -60,6 +60,10 @@ export default /*@ngInject*/ function($scope: angular.IScope, admin: IAdminServi
 	/* Loading Process */
 	// admin.getConfigType();
 
+	$rootScope.$on("str2str:error", (e, err: any) => {
+		toastr.error("Connection Error, No Live Updates", "BASE/str2str Connection");
+	});
+
 	$rootScope.$on("str2str:close", (e, msg: livelogs.ICloseMessage) => {
 		toastr.error(`Stopped, error code: ${msg.code}`, "BASE/str2str");
 	});
