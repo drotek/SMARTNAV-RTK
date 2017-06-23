@@ -11,7 +11,7 @@ export interface IModuleResponse {
 }
 
 export async function control(commandType: string): Promise<IModuleResponse> {
-	return (await superagent.post(config.str2str_serviceUrl + "/control").send({ commandType })).body;
+	return (await superagent.post(config.rtkrcv_serviceUrl + "/control").send({ commandType })).body;
 }
 
 export interface IRTKRCVConfig {
@@ -30,9 +30,9 @@ export interface IRTKRCVConfig {
 }
 
 export async function getConfiguration(): Promise<IRTKRCVConfig> {
-	return (await superagent.get(config.str2str_serviceUrl + "/configuration").send()).body;
+	return (await superagent.get(config.rtkrcv_serviceUrl + "/configuration").send()).body;
 }
 
 export async function setConfiguration(configuration: IRTKRCVConfig): Promise<IRTKRCVConfig> {
-	return (await superagent.post(config.str2str_serviceUrl + "/configuration").send(configuration)).body;
+	return (await superagent.post(config.rtkrcv_serviceUrl + "/configuration").send(configuration)).body;
 }

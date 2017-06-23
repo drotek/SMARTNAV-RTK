@@ -68,6 +68,7 @@ export default function adminModule(app: express.Express) {
 			case "ROVER":
 				try {
 					const result = await rtkrcv_service.control(commandType);
+					log.debug("POST /service results", result);
 					res.json(result);
 				} catch (e) {
 					log.error("error", configType, commandType, e);
@@ -77,6 +78,7 @@ export default function adminModule(app: express.Express) {
 			case "BASE":
 				try {
 					const result = await str2str_service.control(commandType);
+					log.debug("POST /service results", result);
 					res.json(result);
 				} catch (e) {
 					log.error("error", configType, commandType, e);
