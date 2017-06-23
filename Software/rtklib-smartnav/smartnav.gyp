@@ -85,7 +85,12 @@
 				'defines':[
 					'DELAYIMP_INSECURE_WRITABLE_HOOKS',
 					"WIN32"
-				]
+				],
+				'msvs_settings': {		
+					'VCLinkerTool' : {
+						'StackReserveSize': 5242880
+					}
+				}
 			}],
 		  ['OS != "win"', {
 			'defines': [
