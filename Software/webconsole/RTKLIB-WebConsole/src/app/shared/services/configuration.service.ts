@@ -26,12 +26,6 @@
 import angular = require("angular");
 import _ = require("lodash");
 
-export interface IStreamInfo {
-	streamType: string | "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
-	streamFormat: string | "" | "rtcm2" | "rtcm3" | "nov" | "oem3" | "ubx" | "ss2" | "hemis" | "stq" | "gw10" | "javad" | "nvs" | "binex" | "rt17" | "sbf" | "cmr";
-	streamPath: string;
-}
-
 export interface IParameter {
 	key: string;
 	value?: string | number;
@@ -52,24 +46,77 @@ export interface IParamResponse {
 // 	out: string;
 // }
 
+export interface IStreamInfo {
+	streamType: string | "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
+	streamFormat: string | "" | "rtcm2" | "rtcm3" | "nov" | "oem3" | "ubx" | "ss2" | "hemis" | "stq" | "gw10" | "javad" | "nvs" | "binex" | "rt17" | "sbf" | "cmr";
+	streamPath: string;
+}
+
+export interface IStationPositionDegrees {
+	lat: number;
+	lon: number;
+	height: number;
+}
+
+export interface IStationPositionMeters {
+	x: number;
+	y: number;
+	z: number;
+}
+
+export interface IAntennaOffset {
+	e: number;
+	n: number;
+	u: number;
+}
+
 export interface ISTR2STRConfig {
 	in_streams: IStreamInfo[];
 	out_streams: IStreamInfo[];
-	command: string;
-	station_id: string;
+	input_command_file: string;
+	output_command_files: string[];
+
+	station_id: number;
 	relay_messages_back: boolean;
+
+	timeout: number;
+	reconnect_interval: number;
+	nmea_request_cycle: number;
+	file_swap_margin: number;
+	station_position: IStationPositionDegrees | IStationPositionMeters;
+	antenna_info: string[];
+	receiver_info: string[];
+	antenna_offset: IAntennaOffset;
+
+	ftp_http_local_directory: string;
+	http_ntrip_proxy_address: string;
+	ntrip_souce_table_file: string;
+
+	trace_level: number; // 0-5
+	log_file: string;
+
 	enabled: boolean;
 }
 
 export interface IRTKRCVConfig {
 	options_file: string;
-	trace_level: number;
+
+	trace_level: number; // 0-5
+	log_file: string;
+	stat_file: string;
+
 	output_solution_status_file_level: number;
 	console_port: number;
 	monitor_port: number;
 	login_password: string;
 	station_name: string;
 	enabled: boolean;
+}
+
+export interface IFileInfo {
+	name: string;
+	filename: string;
+	full_path: string;
 }
 
 export interface IConfigurationService {
@@ -90,6 +137,7 @@ export interface IConfigurationService {
 	// switchMode(): void;
 	// setMode(modeToSet: string): void;
 
+	listSTR2STRCommandFiles(): Promise<IFileInfo[]>;
 	saveSTR2STRConfig(config: ISTR2STRConfig): Promise<ISTR2STRConfig>;
 	saveRTKRCVConfig(config: IRTKRCVConfig): Promise<IRTKRCVConfig>;
 	getSTR2STRConfig(): Promise<ISTR2STRConfig>;
@@ -100,7 +148,7 @@ export interface IConfigurationService {
 export default function() {
 	return {
 		$get($http: angular.IHttpService, $rootScope: angular.IRootScopeService) {
-
+			console.log("initializing configuration service");
 			/* Déclaration des variables utilisées dans le service */
 
 			// let mode = '';
@@ -133,7 +181,8 @@ export default function() {
 				saveSTR2STRConfig,
 				saveRTKRCVConfig,
 				getSTR2STRConfig,
-				getRTKRCVConfig
+				getRTKRCVConfig,
+				listSTR2STRCommandFiles
 
 			};
 
@@ -313,6 +362,14 @@ export default function() {
 					url: $rootScope.host + ":3000/getRTKRCVConfig",
 				});
 				return response.data as IRTKRCVConfig;
+			}
+
+			async function listSTR2STRCommandFiles(): Promise<IFileInfo[]> {
+				const response = await $http({
+					method: "GET",
+					url: $rootScope.host + ":3000/listSTR2STRCommands",
+				});
+				return response.data as IFileInfo[];
 			}
 
 			// fin - Définition des fonctions du service

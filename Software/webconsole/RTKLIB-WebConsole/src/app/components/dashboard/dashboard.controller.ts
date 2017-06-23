@@ -27,6 +27,8 @@ import angular = require("angular");
 import angular_toastr = require("angular-toastr");
 import { IAdminService } from "../../shared/services/admin.service";
 
+import * as livelogs from "../../shared/services/live-logs.service";
+
 export default /*@ngInject*/ function($scope: angular.IScope, admin: IAdminService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
 
 	/* Déclaration du logger */
@@ -57,6 +59,20 @@ export default /*@ngInject*/ function($scope: angular.IScope, admin: IAdminServi
 
 	/* Loading Process */
 	// admin.getConfigType();
+
+	$rootScope.$on("str2str:close", (e, msg: livelogs.ICloseMessage) => {
+		toastr.error(`Stopped, error code: ${msg.code}`, "BASE/str2str");
+	});
+
+	$rootScope.$on("str2str:stderr", (e, msg: livelogs.IStdErrMessage) => {
+		toastr.error(`Error: ${msg.data}`, "BASE/str2str");
+	});
+
+	$rootScope.$on("str2str:log_line", (e, msg: livelogs.ILogLineMessage) => {
+		if (msg.line.level === 1) {
+			toastr.error(`Error: ${msg.line.message} (${msg.line.module})`, "BASE/str2str");
+		}
+	});
 
 	$rootScope.$on("unhandledException", (e, err: string, cause) => {
 		if (err) {

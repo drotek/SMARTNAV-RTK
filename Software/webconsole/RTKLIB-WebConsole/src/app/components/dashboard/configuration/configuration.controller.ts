@@ -27,7 +27,7 @@ import angular = require("angular");
 import angular_ui_bootstrap = require("angular-ui-bootstrap");
 import angular_toastr = require("angular-toastr");
 import { IAdminService, portConfig } from "../../../shared/services/admin.service";
-import { IConfigurationService, IParameter, IRTKRCVConfig, ISTR2STRConfig, IStreamInfo } from "../../../shared/services/configuration.service";
+import { IConfigurationService, IFileInfo, IParameter, IRTKRCVConfig, ISTR2STRConfig, IStreamInfo } from "../../../shared/services/configuration.service";
 
 import open_conf_controller from "../modals/open-conf/open-conf.controller";
 import push_conf_controller from "../modals/push-conf/push-conf.controller";
@@ -106,6 +106,7 @@ export interface IConfigurationScope extends angular.IScope {
 	isRover: boolean;
 	rtkrcv_config: IRTKRCVConfig;
 	str2str_config: ISTR2STRConfig;
+	str2str_command_files: IFileInfo[];
 	inputStreams: IStreamInfo[];
 	outputStreams: IStreamInfo[];
 	streamTypes: IRTKStreamTypes;
@@ -116,7 +117,7 @@ export interface IConfigurationScope extends angular.IScope {
 	// navSysParameter: INavSys;
 }
 
-export default/*@ngInject*/ async function (
+export default/*@ngInject*/ async function(
 	$scope: IConfigurationScope, configuration: IConfigurationService, $modal: angular_ui_bootstrap.IModalService,
 	$rootScope: angular.IRootScopeService, admin: IAdminService, toastr: angular.toastr.IToastrService) {
 
@@ -144,6 +145,7 @@ export default/*@ngInject*/ async function (
 
 		rtkrcv_config: null,
 		str2str_config: null,
+		str2str_command_files: null,
 		streamTypes: rtkStreamTypes,
 		streamFormats: rtkStreamFormats,
 		currentMode: null,
@@ -299,6 +301,10 @@ export default/*@ngInject*/ async function (
 	$scope.str2str_config = str2str_config;
 	update_streams();
 	console.log("loaded str2str config", str2str_config);
+
+	const str2str_command_files = await configuration.listSTR2STRCommandFiles();
+	$scope.str2str_command_files = str2str_command_files;
+	console.log("loaded str2str command files", str2str_command_files);
 
 	$scope.$watch(() => {
 		return configuration.getOutputType();

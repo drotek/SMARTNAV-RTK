@@ -36,6 +36,8 @@ import export_ubx_controller from "../modals/export-ubx/export-ubx.controller";
 import share_log_controller from "../modals/share-log/share-log.controller";
 import update_platform_controller from "../modals/update-platform/update-platform.controller";
 
+import {ILiveLogsService} from "../../../shared/services/live-logs.service";
+
 export interface IAdminScope extends angular.IScope {
 	oneAtATime: boolean;
 	status: {
@@ -50,10 +52,12 @@ export interface IAdminScope extends angular.IScope {
 
 export default /*@ngInject*/ async function(
 	$scope: IAdminScope, log: ILogService, admin: IAdminService, configuration: IConfigurationService,
-	$modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService) {
+	$modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService, livelog: ILiveLogsService) {
 
 	/* Déclaration du logger */
 	console.log("dashboard.admin.controller");
+
+	console.log("dashboard livelog instance", livelog);
 
 	/* Déclaration des variables utilisées dans le controlleur */
 	$scope = angular.extend($scope, {

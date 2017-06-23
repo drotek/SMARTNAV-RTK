@@ -234,8 +234,6 @@
         </accordion>
 
         <accordion close-others="false" ng-if="!isRover">
-            
-
             <accordion-group heading="CMD File" is-open="status.isBaseCmdOpen">
                 <div ng-if="cmdParams.length">
                     <div ng-repeat="item in cmdParams | orderBy:'key'" style="margin:5px">
@@ -246,6 +244,13 @@
                             <input type="text" name="input" ng-model="item.value" /> {{item.unit}}
                         </div>
                     </div>
+                </div>
+
+                <div class="label-size parameter-label" title="Select Command File to Execute on Startup">
+                    Command File
+                </div>
+                <div class="parameter-restriction">
+                     <select ng-model="str2str_config.input_command_file" ng-options="item.filename as item.name for item in str2str_command_files" ></select>
                 </div>
             </accordion-group>
         </accordion>

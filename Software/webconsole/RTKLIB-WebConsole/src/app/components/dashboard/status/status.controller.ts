@@ -26,6 +26,7 @@
 import angular = require("angular");
 import { IArraysFactory } from "../../../shared/factories/arrays.factory";
 import { IGpsFactory } from "../../../shared/factories/gps.factory";
+
 import { IMapService, } from "../../../shared/services/map.service";
 import { IRoverSatData, IStatusService } from "../../../shared/services/status.service";
 export default /*@ngInject*/ async function($scope: angular.IScope, status: IStatusService, map: IMapService, arrays: IArraysFactory, gps: IGpsFactory) {

@@ -36,7 +36,7 @@ export interface ILogService {
 export default function() {
 	return {
 		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
-
+			console.log("initializing log service");
 			/* Déclaration des variables utilisées dans le service */
 
 			// Opérations disponibles pour le service configuration.

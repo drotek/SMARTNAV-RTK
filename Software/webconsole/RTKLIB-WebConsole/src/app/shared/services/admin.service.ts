@@ -57,6 +57,7 @@ export interface IAdminService {
 export default function() {
 	return {
 		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
+			console.log("initializing admin service");
 
 			/* Déclaration des variables utilisées dans le service */
 			const activeMode = "BASE";

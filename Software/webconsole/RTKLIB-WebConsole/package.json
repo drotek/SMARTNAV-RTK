@@ -58,6 +58,7 @@
     "@types/angular-ui-router": "^1.1.36",
     "@types/lodash": "^4.14.65",
     "@types/node": "^7.0.27",
+    "@types/socket.io-client": "^1.4.29",
     "angular": "^1.4.8",
     "angular-animate": "^1.4.8",
     "angular-bootstrap": "^0.12.2",
@@ -68,6 +69,7 @@
     "angular-ui-bootstrap": "^2.5.0",
     "angular-ui-router": "^1.0.0-alpha0",
     "bootstrap": "^3.3.6",
+    "socket.io-client": "^2.0.3",
     "tslint": "^5.4.3"
   },
   "browserify": {

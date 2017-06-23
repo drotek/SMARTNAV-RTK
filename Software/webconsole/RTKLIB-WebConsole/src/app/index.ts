@@ -66,6 +66,7 @@ import arrays_factory from "./shared/factories/arrays.factory";
 import gps_factory from "./shared/factories/gps.factory";
 import admin_service from "./shared/services/admin.service";
 import configuration_service from "./shared/services/configuration.service";
+import livelog_service from "./shared/services/live-logs.service";
 import log_service from "./shared/services/log.service";
 import map_service from "./shared/services/map.service";
 import status_service from "./shared/services/status.service";
@@ -84,6 +85,7 @@ angular.module("rtklib-web-console", dependencies)
 	.provider("admin", admin_service)
 	.provider("configuration", configuration_service)
 	.provider("log", log_service)
+	.provider("livelog", livelog_service)
 	.provider("map", map_service)
 	.provider("status", status_service)
 

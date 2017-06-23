@@ -55,7 +55,7 @@ export interface IMapService {
 export default function() {
 	return {
 		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
-
+			console.log("initializing map service");
 			/* Déclaration des variables utilisées dans le service */
 
 			// Opérations disponibles pour le service map.

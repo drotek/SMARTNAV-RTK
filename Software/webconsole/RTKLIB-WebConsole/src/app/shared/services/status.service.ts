@@ -47,7 +47,7 @@ export interface IStatusService {
 export default function() {
 	return {
 		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
-
+			console.log("initializing status service");
 			/* Déclaration des variables utilisées dans le service */
 
 			// Opérations disponibles pour le service status.
