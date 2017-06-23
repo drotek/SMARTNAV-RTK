@@ -76,7 +76,7 @@ export default function() {
 		$get: /*@ngInject*/  ($http: angular.IHttpService, $rootScope: angular.IRootScopeService) => {
 			console.log("initalizing live-logs service");
 
-			const socket = io_client("http://localhost:3001");
+			const socket = io_client( $rootScope.host + ":3001");
 
 			socket.on("connect_error", (err: any) => {
 				console.log("str2str:connect_error", err);
