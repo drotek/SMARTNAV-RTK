@@ -134,7 +134,7 @@ export default function controlModule(application: Application) {
 		response.stderr = (application.str2str_instance) ? application.str2str_instance.getStderr() : null;
 		response.error = error;
 
-		if (!response.isActive) {
+		if (application.str2str_instance == null || (!application.str2str_instance.status())) {
 			application.str2str_instance = null;
 		}
 
