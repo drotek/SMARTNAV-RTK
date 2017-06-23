@@ -13,6 +13,8 @@ import socketio = require("socket.io");
 
 import { Application } from "../app";
 
+import * as log_parser from "../models/log_parser";
+
 export default function monitorModule(application: Application) {
 	const app = application.app;
 	const io = socketio();
@@ -85,6 +87,21 @@ export default function monitorModule(application: Application) {
 		}
 	});
 
+	application.monitor_events.on("log_line", (line: log_parser.ILogLine) => {
+		log.debug("sending log line", line);
+		for (let i = 0; i < sockets.length; i++) {
+			if (sockets[i] && !sockets[i].connected) {
+				sockets[i] = null;
+			}
+			if (sockets[i]) {
+				sockets[i].send({
+					type: "log_line",
+					line
+				});
+			}
+		}
+	});
+
 	application.monitor_events.on("line", (line: string) => {
 		log.debug("sending line", line);
 		for (let i = 0; i < sockets.length; i++) {
@@ -107,7 +124,7 @@ export default function monitorModule(application: Application) {
 		socket.on("disconnect", () => {
 			log.info("monitor disconnected");
 			const socketIndex = sockets.indexOf(socket);
-			if (socketIndex !== -1){
+			if (socketIndex !== -1) {
 				log.debug("monitor removed from collection successfully");
 				sockets.splice(socketIndex, 1);
 			}

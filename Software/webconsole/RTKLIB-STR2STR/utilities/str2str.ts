@@ -7,9 +7,14 @@ import * as config from "../config";
 
 import path = require("path");
 
-import {IStationPositionDegrees, IStationPositionMeters, ISTR2STRConfig} from "../models/str2str_config";
+import { IStationPositionDegrees, IStationPositionMeters, ISTR2STRConfig } from "../models/str2str_config";
 
-import { FileMonitor } from "./file_monitor";
+// import { FileMonitor } from "./file_monitor";
+
+import readline = require("readline");
+import * as str2str_data from "../utilities/str2str_data";
+
+import os = require("os");
 
 export class str2str extends execution_manager {
 	private static parse_config(str2str_config: ISTR2STRConfig): string[] {
@@ -157,15 +162,70 @@ export class str2str extends execution_manager {
 		return ret;
 	}
 
-	private _file_monitor: FileMonitor;
+	// private _file_monitor: FileMonitor;
+	private _stderr_readline: readline.ReadLine;
 
 	constructor(public str2str_config: ISTR2STRConfig) {
 		super(config.str2str, str2str.parse_config(str2str_config));
 
-		this._file_monitor = new FileMonitor(path.join(path.dirname(config.str2str), path.basename(config.str2str) + ".trace"));
+		// this.on("close", async () => {
+		// 	if (this._file_monitor){
+		// 		await this._file_monitor.close();
+		// 	}
+		// });
+	}
 
-		this.on("close", () => {
-			this._file_monitor.close();
+	public start(): void {
+		super.start();
+		// this._file_monitor = new FileMonitor(path.join(path.dirname(config.str2str), path.basename(config.str2str) + ".trace"));
+
+		this._stderr_readline = readline.createInterface({
+			input: this.stderr
 		});
+
+		this._stderr_readline.on("line", (line) => {
+			const parsed_status = str2str_data.parse_status(line);
+			if (parsed_status) {
+				this.emit("status", parsed_status);
+				return;
+			}
+
+			if (line === "stream server start") {
+				this.emit("status", {
+
+					timestamp: null,
+					unknown: null,
+					received: 0,
+					bps: 0,
+					unknown1: null,
+					msg: line
+				} as str2str_data.IParsedStatus);
+				return;
+			}
+
+			this.emit("stderr", line);
+			this._stderr += (line + os.EOL);
+		});
+	}
+
+	public on(event: "status", listener: (status: str2str_data.IParsedStatus) => void): this;
+	public on(event: "stdout" | "stderr", listener: (data: string) => void): this;
+	public on(event: "close", listener: (code: number) => void): this;
+	public on(event: string | symbol, listener: () => void): this {
+		return super.on(event as any, listener);
+	}
+
+	protected preprocess(output_type: "stdout" | "stderr", data: string) {
+		switch (output_type) {
+			case "stdout":
+				this.emit("stdout", data);
+				this._stdout += data;
+				break;
+			case "stderr":
+				// nop, taken care of by stderr_readline
+				break;
+			default:
+				log.error("unable to preprocess, output type does not exist", output_type, data, "discarding message");
+		}
 	}
 }

@@ -7,18 +7,26 @@ const spawn = child_process.spawn;
 import events = require("events");
 import path = require("path");
 
+import stream = require("stream");
+
 export class execution_manager extends events.EventEmitter {
+	public stdout: stream.Readable;
+	public stderr: stream.Readable;
+
+	protected _stdout: string;
+	protected _stderr: string;
+
 	private _process: child_process.ChildProcess = null;
-
-	private _stdout: string;
-	private _stderr: string;
-
 	private _active: boolean;
 
 	constructor(private command: string, private args?: string[]) {
 		super();
 		this._active = false;
 		log.debug("initializing ", command, args);
+
+		process.on("exit", () => {
+			this.stop();
+		});
 	}
 
 	public start(): void {
@@ -30,27 +38,28 @@ export class execution_manager extends events.EventEmitter {
 		this._stderr = "";
 		this._stdout = "";
 
-		const start_options: child_process.SpawnOptions = {detached: true, cwd: path.dirname(this.command), stdio: ["pipe", "pipe", "pipe", "ipc"]} ;
+		const start_options: child_process.SpawnOptions = { detached: true, cwd: path.dirname(this.command), stdio: ["pipe", "pipe", "pipe", "ipc"] };
 
-		log.info("starting", this.command, this.args, start_options );
+		log.info("starting", this.command, this.args, start_options);
 
-		this._process = spawn(this.command, this.args, start_options );
+		this._process = spawn(this.command, this.args, start_options);
 		this._process.stdout.setEncoding("utf8");
 		this._process.stderr.setEncoding("utf8");
 
+		this.stdout = this._process.stdout;
+		this.stderr = this._process.stderr;
+
 		this._process.stdout.on("data", (data) => {
 			log.info("stdout", this.command, this.args, data);
-			this.emit("stdout", data);
-			this._stdout += data;
+			this.preprocess("stdout", data.toString());
 		});
 
 		this._process.stderr.on("data", (data) => {
 			log.error("stderr",
 				(this.command && this.command.toString) ? this.command.toString() : this.command,
-				(this.args && this.args.toString ) ? this.args.toString() : this.args,
+				(this.args && this.args.toString) ? this.args.toString() : this.args,
 				(data && data.toString) ? data.toString() : data);
-			this.emit("stderr", data);
-			this._stderr += data;
+			this.preprocess("stderr", data.toString());
 		});
 
 		this._process.on("close", (code) => {
@@ -60,6 +69,7 @@ export class execution_manager extends events.EventEmitter {
 			this._process = null;
 		});
 		this._active = true;
+
 	}
 
 	public stop(): void {
@@ -77,11 +87,11 @@ export class execution_manager extends events.EventEmitter {
 		return this._active;
 	}
 
-	public stdout(): string {
+	public getStdout(): string {
 		return this._stdout;
 	}
 
-	public stderr(): string {
+	public getStderr(): string {
 		return this._stderr;
 	}
 
@@ -89,5 +99,20 @@ export class execution_manager extends events.EventEmitter {
 	public on(event: "close", listener: (code: number) => void): this;
 	public on(event: string | symbol, listener: () => void): this {
 		return super.on(event, listener);
+	}
+
+	protected preprocess(output_type: "stdout" | "stderr", data: string) {
+		switch (output_type) {
+			case "stdout":
+				this.emit("stdout", data);
+				this._stdout += data;
+				break;
+			case "stderr":
+				this.emit("stderr", data);
+				this._stderr += data;
+				break;
+			default:
+				log.error("unable to preprocess, output type does not exist", output_type, data, "discarding message");
+		}
 	}
 }

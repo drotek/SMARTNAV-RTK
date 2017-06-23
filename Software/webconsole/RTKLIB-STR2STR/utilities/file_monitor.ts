@@ -39,7 +39,11 @@ export class FileMonitor extends events.EventEmitter {
 		if (this._fileid === 0) {
 			return;
 		}
-		await fs.close(this._fileid);
+		try {
+			await fs.close(this._fileid);
+		} catch (e) {
+			log.warn("unable to close file", this._fileid, e);
+		}
 		this._fileid = 0;
 	}
 
@@ -65,7 +69,16 @@ export class FileMonitor extends events.EventEmitter {
 			}, 100);
 		};
 
-		fs.watchFile(this.filename, (curr, prev) => {
+		fs.watchFile(this.filename, async (curr, prev) => {
+			if (!await fs.exists(this.filename)) {
+				this._last_location = 0;
+			}
+			try {
+				this._fileid = await fs.open(this.filename, fs.constants.O_RDONLY, fs.constants.S_IROTH);
+			} catch (e) {
+				log.debug("cannot open file", this.filename, e);
+				this._fileid = 0;
+			}
 			read_interval();
 		});
 

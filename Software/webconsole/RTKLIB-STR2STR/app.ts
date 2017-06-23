@@ -36,6 +36,8 @@ import * as str2str from "./utilities/str2str";
 
 import events = require("events");
 
+import * as config from "./config";
+
 export class Application {
 	public app: express.Express;
 	public server: http.Server;
@@ -67,7 +69,7 @@ export class Application {
 		this.str2str_log_monitor = null;
 		this.monitor_events = new events.EventEmitter();
 
-		this.server = this.app.listen(3001, () => {
+		this.server = this.app.listen(config.service_port, () => {
 			log.info("Listening on port %s...", this.server.address().port);
 		});
 	}

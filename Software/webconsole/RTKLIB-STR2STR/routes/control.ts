@@ -4,7 +4,7 @@ import child_process = require("child_process");
 const exec = child_process.exec;
 
 import * as logger from "../utilities/logger";
-const log = logger.getLogger("admin");
+const log = logger.getLogger("control");
 
 import * as str2str from "../utilities/str2str";
 
@@ -19,7 +19,7 @@ import path = require("path");
 
 import { FileMonitor } from "../utilities/file_monitor";
 
-import * as str2str_data from "../utilities/str2str_data";
+import * as log_parser from "../models/log_parser";
 
 interface IServiceCommands {
 	[id: string]: string;
@@ -70,12 +70,11 @@ export default function controlModule(application: Application) {
 							application.monitor_events.emit("close", code);
 						});
 
+						application.str2str_instance.on("status", (status) => {
+							application.monitor_events.emit("status", status);
+						});
+
 						application.str2str_instance.on("stderr", (data) => {
-							const parsed_status = str2str_data.parse_status(data);
-							if (parsed_status) {
-								application.monitor_events.emit("status", parsed_status);
-								return;
-							}
 							application.monitor_events.emit("stderr", data);
 						});
 
@@ -84,7 +83,13 @@ export default function controlModule(application: Application) {
 						});
 
 						application.str2str_log_monitor.on("line", (line: string) => {
-							application.monitor_events.emit("line", line);
+							const log_line = log_parser.parse(line);
+							if (log_line != null) {
+								application.monitor_events.emit("log_line", log_line);
+							} else {
+								log.warn("unable to parse log", line);
+								application.monitor_events.emit("line", line);
+							}
 						});
 					} else {
 						throw new Error("can't start an already stated service");
@@ -99,7 +104,7 @@ export default function controlModule(application: Application) {
 						await fs.serialize_file<ISTR2STRConfig>(config.str2str_config, str2str_configuration);
 
 						if (application.str2str_log_monitor) {
-							application.str2str_log_monitor.close();
+							await application.str2str_log_monitor.close();
 							application.str2str_log_monitor = null;
 						}
 					}
@@ -108,9 +113,7 @@ export default function controlModule(application: Application) {
 					const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
 					response.isActive = application.str2str_instance && application.str2str_instance.status();
 					response.isEnabled = str2str_configuration.enabled;
-					if (!response.isActive) {
-						application.str2str_instance = null;
-					}
+
 				}              break;
 				case "enable": {
 					const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
@@ -127,50 +130,17 @@ export default function controlModule(application: Application) {
 			log.error("error", commandType, e);
 			error = e;
 		}
-		response.stdout = (application.str2str_instance) ? application.str2str_instance.stdout() : null;
-		response.stderr = (application.str2str_instance) ? application.str2str_instance.stderr() : null;
+		response.stdout = (application.str2str_instance) ? application.str2str_instance.getStdout() : null;
+		response.stderr = (application.str2str_instance) ? application.str2str_instance.getStderr() : null;
 		response.error = error;
 
+		if (!response.isActive) {
+			application.str2str_instance = null;
+		}
+
+		log.debug("POST /control result", response);
 		return res.send(response);
 
 	});
-
-	app.get("/configuration", async (req, res) => {
-		log.info("GET /configuration", req.body);
-
-		const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
-		res.send(str2str_configuration);
-	});
-
-	app.post("/configuration", async (req, res) => {
-		log.info("POST /configuration", req.body);
-
-		await fs.serialize_file<ISTR2STRConfig>(config.str2str_config, req.body);
-
-		const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
-		res.send(str2str_configuration);
-	});
-
-	function execComandLine(res: express.Response, commandLine: string) {
-		exec(commandLine, (error, stdout, stderr) => {
-
-			const response: IModuleResponse = {};
-
-			if (error) {
-				response.error = error;
-			}
-
-			if (stdout) {
-				response.stdout = stdout;
-			}
-
-			if (stderr) {
-				response.stderr = stderr;
-			}
-
-			return res.send(response);
-
-		});
-	}
 
 }
