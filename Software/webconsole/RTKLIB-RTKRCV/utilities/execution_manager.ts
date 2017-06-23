@@ -19,6 +19,10 @@ export class execution_manager extends events.EventEmitter {
 		super();
 		this._active = false;
 		log.debug("initializing ", command, args);
+
+		process.on("exit", () => {
+			this.stop();
+		});
 	}
 
 	public start(): void {
