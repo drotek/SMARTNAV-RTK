@@ -1339,15 +1339,14 @@ static void *con_thread(void *arg)
               PRGNAME,VER_RTKLIB,PATCH_LEVEL,ESC_RESET);
     
     if (!login(con->vt)) {
+
         vt_close(con->vt);
         con->state=0;
         return 0;
     }
     while (con->state) {
-        
         /* output prompt */
         if (!vt_puts(con->vt,CMDPROMPT)) break;
-        
         /* input command */
         if (!vt_gets(con->vt,buff,sizeof(buff))) break;
         
@@ -1399,6 +1398,8 @@ static void *con_thread(void *arg)
                 break;
         }
     }
+	
+	con->state = 0;
     vt_close(con->vt);
     return 0;
 }
@@ -1463,8 +1464,15 @@ static int open_sock(int port)
     
     if (bind(sock,(struct sockaddr *)&addr,sizeof(addr))<0) {
         fprintf(stderr,"bind error (%d)\n",errno);
-        close(sock);
-        return -1;
+
+#ifdef _WIN32
+		auto status = shutdown(sock, SD_BOTH);
+		if (status == 0) { status = closesocket(sock); }
+#else
+		auto status = shutdown(sock, SHUT_RDWR);
+		if (status == 0) { status = close(sock); }
+#endif
+		return -1;
     }
     listen(sock,5);
     return sock;
@@ -1504,8 +1512,16 @@ static void accept_sock(int ssock, con_t **con)
               inet_ntoa(addr.sin_addr));
         return;
     }
-    close(sock);
-    trace(2,"remote console connection refused. addr=%s\n",
+
+#ifdef _WIN32
+		auto status = shutdown(sock, SD_BOTH);
+		if (status == 0) { status = closesocket(sock); }
+#else
+		auto status = shutdown(sock, SHUT_RDWR);
+		if (status == 0) { status = close(sock); }
+#endif
+
+		trace(2,"remote console connection refused. addr=%s\n",
          inet_ntoa(addr.sin_addr));
 }
 /* rtkrcv main -----------------------------------------------------------------
