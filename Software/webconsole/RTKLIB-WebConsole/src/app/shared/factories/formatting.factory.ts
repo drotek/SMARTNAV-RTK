@@ -173,6 +173,3 @@ export function filesize(arg: string | number, descriptor?: IOptions) {
 // export function partial(opt) {
 // 	return filesize(arg, opt);
 // }
-
-
-

@@ -27,7 +27,7 @@ import angular = require("angular");
 import angular_ui_bootstrap = require("angular-ui-bootstrap");
 import { ILogService } from "../../../../shared/services/log.service";
 
-export default /*@ngInject*/ async function ($scope: angular.IScope, log: ILogService, $modalInstance: angular_ui_bootstrap.IModalInstanceService) {
+export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogService, $modalInstance: angular_ui_bootstrap.IModalInstanceService) {
 
 	/* Controller parameters */
 	$scope = angular.extend($scope, {

@@ -27,9 +27,12 @@ import angular = require("angular");
 import { IArraysFactory } from "../../../shared/factories/arrays.factory";
 import { IGpsFactory } from "../../../shared/factories/gps.factory";
 
-import { IMapService, } from "../../../shared/services/map.service";
 import { IRoverSatData, IStatusService } from "../../../shared/services/status.service";
-export default /*@ngInject*/ async function($scope: angular.IScope, status: IStatusService, map: IMapService, arrays: IArraysFactory, gps: IGpsFactory) {
+
+import { ILiveDataService, IPosition, IPositionMessage, QualityMap } from "../../../shared/services/live-data.service";
+
+export default /*@ngInject*/ async function(
+	$scope: angular.IScope, $rootScope: angular.IRootScopeService, status: IStatusService, arrays: IArraysFactory, gps: IGpsFactory, livedata: ILiveDataService) {
 
 	/* Déclaration du logger */
 	console.log("dashboard.status");
@@ -106,30 +109,25 @@ export default /*@ngInject*/ async function($scope: angular.IScope, status: ISta
 		}
 
 		{
-			const result = await map.getLastPosition();
-			if (result.length > 0) {
-				const lastPostion = result[0];
-				if (lastPostion.status === "1") {
-					$scope.lastStatus = "FIX";
-				} else if (lastPostion.status === "2") {
-					$scope.lastStatus = "FLOAT";
-				} else if (lastPostion.status === "5") {
-					$scope.lastStatus = "SINGLE";
+			$rootScope.$on("rtkrcv:position", (e, msg: IPositionMessage) => {
+				console.log("updating last position", msg);
+
+				const lastPosition = msg.position;
+				if (lastPosition) {
+					if (lastPosition.quality_flag === 1) {
+						$scope.lastStatus = "FIX";
+					} else if (lastPosition.quality_flag === 2) {
+						$scope.lastStatus = "FLOAT";
+					} else if (lastPosition.quality_flag === 5) {
+						$scope.lastStatus = "SINGLE";
+					}
+
+					$scope.lastLat = lastPosition.latitude;
+					$scope.lastLng = lastPosition.longitude;
+					$scope.lastAlt = lastPosition.height;
+					$scope.$apply();
 				}
-
-				const parsedLastPosition = {
-					status: lastPostion.status,
-					x: parseFloat(lastPostion.x),
-					y: parseFloat(lastPostion.x),
-					z: parseFloat(lastPostion.x)
-				};
-
-				const currentLla = gps.eceftolla(parsedLastPosition);
-				console.log(currentLla);
-				$scope.lastLat = (currentLla.lat).toFixed(9);
-				$scope.lastLng = (currentLla.lng).toFixed(9);
-				$scope.lastAlt = (currentLla.alt).toFixed(3);
-			}
+			});
 		}
 	}
 

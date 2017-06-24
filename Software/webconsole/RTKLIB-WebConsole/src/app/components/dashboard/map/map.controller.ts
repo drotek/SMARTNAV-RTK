@@ -26,7 +26,6 @@
 import angular = require("angular");
 import { IGpsFactory } from "../../../shared/factories/gps.factory";
 import { ILiveDataService, IPosition, IPositionMessage, QualityMap } from "../../../shared/services/live-data.service";
-import { IMapService } from "../../../shared/services/map.service";
 
 export interface IScaleMap {
 	[id: string]: number;
@@ -35,13 +34,13 @@ export interface IScaleMap {
 export interface IMapScope extends angular.IScope {
 	scale: IScaleMap;
 	selectedScale: number;
-	basePosition: any;
 	lastPosition: IPosition;
-	qualityMap: {[id: number]: string};
+	positions: IPosition[];
+	qualityMap: { [id: number]: string };
 }
 
 export default /*@ngInject*/ async function(
-	$scope: IMapScope, map: IMapService, $rootScope: angular.IRootScopeService, gps: IGpsFactory,
+	$scope: IMapScope, $rootScope: angular.IRootScopeService, gps: IGpsFactory,
 	$window: angular.IWindowService, livedata: ILiveDataService) {
 
 	/* Déclaration du logger */
@@ -49,6 +48,8 @@ export default /*@ngInject*/ async function(
 
 	$scope = angular.extend($scope, {
 		scale: {
+			"0.25 meter": 37 * 4,
+			"0.5 meter": 37 * 2,
 			"1 meter": 37,
 			"2 meters": 37 / 2,
 			"3 meters": 37 / 3,
@@ -60,16 +61,18 @@ export default /*@ngInject*/ async function(
 			"100 meters": 37 / 100,
 			"1000 meters": 37 / 1000,
 		} as IScaleMap,
-		qualityMap : QualityMap as {[id: number]: string},
+		qualityMap: QualityMap as { [id: number]: string },
 		selectedScale: undefined,
-		basePosition: undefined,
 		lastPosition: null,
+		positions: [],
 	} as IMapScope);
 
 	$rootScope.$on("rtkrcv:position", (e, msg: IPositionMessage) => {
 		console.log("updating last position", msg);
 		$scope.lastPosition = msg.position;
+		$scope.positions.push(msg.position);
 		$scope.$apply();
+		getData();
 	});
 
 	/* Watch Expressions */
@@ -143,17 +146,14 @@ export default /*@ngInject*/ async function(
 
 	const renderPoints = async () => {
 
-		const result = await map.getPositions();
+		const result = $scope.positions;
 
-		if ($scope.basePosition.postype === "llh") {
-
-			const llaBase = {
-				lat: parseFloat($scope.basePosition.pos1),
-				lng: parseFloat($scope.basePosition.pos2),
-				alt: parseFloat($scope.basePosition.pos3)
-			};
-
-			const baseEcef = gps.llatoecef(llaBase);
+		if ($scope.positions && $scope.positions.length > 0) {
+			const baseEcef = gps.llatoecef({
+				lat: $scope.lastPosition.latitude,
+				lng: $scope.lastPosition.longitude,
+				alt: $scope.lastPosition.height
+			});
 
 			const listPointsToRender = [];
 			let nbPoints = 0;
@@ -164,12 +164,11 @@ export default /*@ngInject*/ async function(
 			for (let i = 0; i < nbPosition; i++) {
 				const currentPosition = result[i];
 
-				const parsedPosition = {
-					status: currentPosition.status,
-					x: parseFloat(currentPosition.x),
-					y: parseFloat(currentPosition.y),
-					z: parseFloat(currentPosition.z),
-				};
+				const parsedPosition = gps.llatoecef({
+					lat: currentPosition.latitude,
+					lng: currentPosition.longitude,
+					alt: currentPosition.height
+				});
 
 				const currentLla = gps.eceftolla(parsedPosition);
 				const currentEnu = gps.eceftoenu(baseEcef, parsedPosition, currentLla);
@@ -178,7 +177,7 @@ export default /*@ngInject*/ async function(
 				const mapCoordY = 148 + currentEnu.east * $scope.selectedScale;
 
 				listPointsToRender.push({
-					status: currentPosition.status,
+					status: currentPosition.quality_flag,
 					x: currentEnu.north,
 					y: currentEnu.east
 				});
@@ -196,11 +195,11 @@ export default /*@ngInject*/ async function(
 			};
 
 			listPointsToRender.forEach((currentPoint) => {
-				if (currentPoint.status === "1") {
+				if (currentPoint.status === 1) {
 					ctx.fillStyle = "#00FF00";
-				} else if (currentPoint.status === "2") {
+				} else if (currentPoint.status === 2) {
 					ctx.fillStyle = "yellow";
-				} else if (currentPoint.status === "5") {
+				} else if (currentPoint.status === 5) {
 					ctx.fillStyle = "red";
 				}
 				const mapCoordX = 148 +
@@ -218,14 +217,12 @@ export default /*@ngInject*/ async function(
 
 	};
 
-	// ctx.clear = function(){
 	function clear() {
 		ctx.globalCompositeOperation = "destination-out";
 		ctx.fillStyle = "hsla( 0, 0%, 0%, 0.1 )";
 		ctx.fillRect(0, 0, diameter, diameter);
 	}
 
-	// ctx.draw = function(){
 	function draw() {
 		ctx.globalCompositeOperation = "lighter";
 		renderRings();
@@ -233,27 +230,16 @@ export default /*@ngInject*/ async function(
 		renderPoints();
 	}
 
-	/* Screen Functionnalities */
-	$scope.refresh = ($event: angular.IAngularEvent) => {
-		if ($event) {
-			$event.stopPropagation();
-		}
-		getData();
-	};
-
 	function getData() {
 		if (!scaleInitialized) {
 			ctx.scale(zoom, zoom);
 			scaleInitialized = true;
 		}
 		ctx.clearRect(0, 0, zoom * 300, zoom * 300);
-		// ctx.draw();
 		draw();
 	}
 
 	/* Loading Process */
-	const position = await map.getBasePosition();
-	$scope.basePosition = position;
 	$scope.selectedScale = $scope.scale["2 meters"];
 
 }

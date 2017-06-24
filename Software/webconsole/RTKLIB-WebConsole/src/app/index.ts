@@ -69,7 +69,6 @@ import configuration_service from "./shared/services/configuration.service";
 import livedata_service from "./shared/services/live-data.service";
 import livelog_service from "./shared/services/live-logs.service";
 import log_service from "./shared/services/log.service";
-import map_service from "./shared/services/map.service";
 import status_service from "./shared/services/status.service";
 
 angular.module("rtklib-web-console", dependencies)
@@ -88,7 +87,6 @@ angular.module("rtklib-web-console", dependencies)
 	.provider("log", log_service)
 	.provider("livelog", livelog_service)
 	.provider("livedata", livedata_service)
-	.provider("map", map_service)
 	.provider("status", status_service)
 
 	.factory("$exceptionHandler", ["$injector", ($injector: angular.auto.IInjectorService) => {
