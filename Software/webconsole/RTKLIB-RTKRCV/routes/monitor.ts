@@ -12,6 +12,8 @@ import socketio = require("socket.io");
 import { Application } from "../app";
 
 import * as log_parser from "../models/log_parser";
+import * as rtkrcv_config from "../models/rtkrcv_config";
+import * as rtkrcv_accessor from "../utilities/rtkrcv_accessor";
 import * as rtkrcv_monitor from "../utilities/rtkrcv_monitor";
 
 export default function monitorModule(application: Application) {
@@ -151,6 +153,65 @@ export default function monitorModule(application: Application) {
 	app.get("/lastPosition", async (req, res) => {
 		log.info("GET /lastPosition");
 
+		log.debug("GET /lastPosition result", application.last_position);
 		res.json(application.last_position);
+	});
+
+	app.get("/getSolution", async (req, res) => {
+		log.info("GET /getSolution");
+
+		const solution = await application.rtkrcv_instance_accessor.get_solution();
+
+		log.debug("GET /getSolution result", solution);
+		res.json(solution);
+	});
+	app.get("/getStatus", async (req, res) => {
+		log.info("GET /getStatus");
+
+		const status = await application.rtkrcv_instance_accessor.get_status();
+
+		log.debug("GET /getStatus result", status);
+		res.json(status);
+	});
+	app.get("/getSatellite", async (req, res) => {
+		log.info("GET /getSatellite");
+
+		const satellites = await application.rtkrcv_instance_accessor.get_satellite();
+
+		log.debug("GET /getSatellite result", satellites);
+		res.json(satellites);
+
+	});
+	app.get("/getObserv", async (req, res) => {
+		log.info("GET /getObserv");
+
+		const observs = await application.rtkrcv_instance_accessor.get_observ();
+
+		log.debug("GET /getObserv result", observs);
+		res.json(observs);
+
+	});
+	app.get("/getNavidata", async (req, res) => {
+		log.info("GET /getNavidata");
+
+		const navidata = await application.rtkrcv_instance_accessor.get_navidata();
+
+		log.debug("GET /getNavidata result", navidata);
+		res.json(navidata);
+
+	});
+	app.get("/getStream", async (req, res) => {
+		log.info("GET /getStream");
+		const config = await rtkrcv_config.get_configuration();
+		const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", config.console_port, config.login_password);
+		await accessor.start();
+
+		const streams = await accessor.get_stream();
+
+		accessor.stop();
+
+		log.debug("GET /getStream result", streams);
+		res.json(streams);
+
 	});
 }

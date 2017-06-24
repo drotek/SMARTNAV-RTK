@@ -11,4 +11,6 @@ control_route(app);
 monitor_route(app);
 config_route(app);
 
-app.start();
+process.nextTick(async () => {
+	await app.start();
+});

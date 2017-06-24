@@ -39,6 +39,8 @@ import * as rtkrcv_monitor from "./utilities/rtkrcv_monitor";
 
 import events = require("events");
 
+import * as rtkrcv_config from "./models/rtkrcv_config";
+
 export class Application {
 	public app: express.Express;
 	public server: http.Server;
@@ -78,7 +80,10 @@ export class Application {
 		});
 	}
 
-	public start() {
-		// nop
+	public async start() {
+		const config = await rtkrcv_config.get_configuration();
+		if (config.enabled) {
+			await rtkrcv_config.control(this, "start");
+		}
 	}
 }
