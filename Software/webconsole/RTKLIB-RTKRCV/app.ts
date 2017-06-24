@@ -46,6 +46,7 @@ export class Application {
 	public rtkrcv_log_monitor: file_monitor.FileMonitor;
 	public rtkrcv_instance_monitor: rtkrcv_monitor.RTKRCV_Monitor;
 	public rtkrcv_instance_accessor: rtkrcv_accessor.RTKRCV_Client;
+	public last_position: rtkrcv_monitor.IPosition;
 	public monitor_events: events.EventEmitter;
 
 	constructor() {

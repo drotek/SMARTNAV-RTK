@@ -12,6 +12,7 @@ import socketio = require("socket.io");
 import { Application } from "../app";
 
 import * as log_parser from "../models/log_parser";
+import * as rtkrcv_monitor from "../utilities/rtkrcv_monitor";
 
 export default function monitorModule(application: Application) {
 	const app = application.app;
@@ -35,6 +36,21 @@ export default function monitorModule(application: Application) {
 				sockets[i].send({
 					type: "close",
 					code
+				});
+			}
+		}
+	});
+
+	application.monitor_events.on("position", (position: rtkrcv_monitor.IPosition) => {
+		log.debug("sending position", position);
+		for (let i = 0; i < sockets.length; i++) {
+			if (sockets[i] && !sockets[i].connected) {
+				sockets[i] = null;
+			}
+			if (sockets[i]) {
+				sockets[i].send({
+					type: "position",
+					position
 				});
 			}
 		}
@@ -130,5 +146,11 @@ export default function monitorModule(application: Application) {
 		socket.on("messages", (data: any) => {
 			console.log("monitor message", (data));
 		});
+	});
+
+	app.get("/lastPosition", async (req, res) => {
+		log.info("GET /lastPosition");
+
+		res.json(application.last_position);
 	});
 }

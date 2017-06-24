@@ -96,6 +96,10 @@ export default function controlModule(application: Application) {
 
 						application.rtkrcv_instance_monitor = new rtkrcv_monitor.RTKRCV_Monitor("localhost", rtkrcv_configuration.monitor_port);
 						application.rtkrcv_instance_monitor.start();
+						application.rtkrcv_instance_monitor.on("position", (position) => {
+							application.last_position = position;
+							application.monitor_events.emit("position", position);
+						});
 
 						application.rtkrcv_instance_accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", rtkrcv_configuration.console_port, rtkrcv_configuration.login_password);
 						application.rtkrcv_instance_accessor.start();

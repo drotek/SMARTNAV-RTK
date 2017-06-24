@@ -72,7 +72,7 @@
 // the residuals with the second best integer vector to with the best
 // integer vector.
 
-interface IPosition {
+export interface IPosition {
 	timestamp: Date;
 	latitude: number; // (deg)
 	longitude: number; // (deg)
@@ -198,6 +198,12 @@ export class RTKRCV_Monitor extends events.EventEmitter {
 		this._client.end();
 		this._client = null;
 		// client.destroy(); // kill client after server's response
+	}
+
+	public on(event: "position", listener: (position: IPosition) => void): this;
+	public on(event: "line", listener: (line: string) => void): this;
+	public on(event: string | symbol, listener: () => void): this {
+		return super.on(event, listener);
 	}
 
 	protected connect() {
