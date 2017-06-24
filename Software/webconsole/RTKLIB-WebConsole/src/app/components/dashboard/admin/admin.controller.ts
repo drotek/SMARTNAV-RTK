@@ -114,7 +114,7 @@ export default /*@ngInject*/ async function(
 			}
 		} catch (e) {
 			console.log("error checking service status", "ROVER", e);
-			toastr.error(e, "Error Checking ROVER Status");
+			toastr.error("Error Checking ROVER Status");
 		}
 
 		try {
@@ -129,7 +129,7 @@ export default /*@ngInject*/ async function(
 			}
 		} catch (e) {
 			console.log("error checking service status", "BASE", e);
-			toastr.error(e, "Error Checking BASE Status");
+			toastr.error("Error Checking BASE Status");
 		}
 	}
 

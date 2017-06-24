@@ -103,7 +103,11 @@ export default function() {
 			}
 
 			function filter(listData: string[]): IFilteredPositions[] {
-				const result = [];
+				const result: IFilteredPositions[] = [];
+
+				if (!listData || listData.length === 0) {
+					return result;
+				}
 
 				// $POS,week,tow,stat,posx,posy,posz,posxf,posyf,poszf
 

@@ -83,7 +83,11 @@ export default function() {
 			}
 
 			function filter(listData: string[]) {
-				const result = [];
+				const result: IRoverSatData[] = [];
+
+				if (!listData || listData.length === 0) {
+					return result;
+				}
 
 				// $SAT,week,tow,sat,frq,az,el,resp,resc,vsat,snr,fix,slip,lock,outc,slipc,rejc
 				let index = 0;
