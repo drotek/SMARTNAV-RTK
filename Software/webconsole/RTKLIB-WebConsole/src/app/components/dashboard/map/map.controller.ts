@@ -25,9 +25,24 @@
 
 import angular = require("angular");
 import { IGpsFactory } from "../../../shared/factories/gps.factory";
+import { ILiveDataService, IPosition, IPositionMessage, QualityMap } from "../../../shared/services/live-data.service";
 import { IMapService } from "../../../shared/services/map.service";
 
-export default /*@ngInject*/ async function($scope: angular.IScope, map: IMapService, $rootScope: angular.IRootScopeService, gps: IGpsFactory, $window: angular.IWindowService) {
+export interface IScaleMap {
+	[id: string]: number;
+}
+
+export interface IMapScope extends angular.IScope {
+	scale: IScaleMap;
+	selectedScale: number;
+	basePosition: any;
+	lastPosition: IPosition;
+	qualityMap: {[id: number]: string};
+}
+
+export default /*@ngInject*/ async function(
+	$scope: IMapScope, map: IMapService, $rootScope: angular.IRootScopeService, gps: IGpsFactory,
+	$window: angular.IWindowService, livedata: ILiveDataService) {
 
 	/* Déclaration du logger */
 	console.log("dashboard.map");
@@ -44,9 +59,17 @@ export default /*@ngInject*/ async function($scope: angular.IScope, map: IMapSer
 			"50 meters": 37 / 50,
 			"100 meters": 37 / 100,
 			"1000 meters": 37 / 1000,
-		},
+		} as IScaleMap,
+		qualityMap : QualityMap as {[id: number]: string},
 		selectedScale: undefined,
-		basePosition: undefined
+		basePosition: undefined,
+		lastPosition: null,
+	} as IMapScope);
+
+	$rootScope.$on("rtkrcv:position", (e, msg: IPositionMessage) => {
+		console.log("updating last position", msg);
+		$scope.lastPosition = msg.position;
+		$scope.$apply();
 	});
 
 	/* Watch Expressions */
@@ -75,11 +98,11 @@ export default /*@ngInject*/ async function($scope: angular.IScope, map: IMapSer
 	canvas.height = zoom * diameter;
 
 	const radius = diameter / 2;
-	const	padding = 14;
-	const	rings = 4;
-	const	saturation = 50;
-	const	lightness = 400;
-	const	lineWidth = 2 / zoom;
+	const padding = 14;
+	const rings = 4;
+	const saturation = 50;
+	const lightness = 400;
+	const lineWidth = 2 / zoom;
 
 	radar.style.marginLeft = radar.style.marginTop = (-zoom * diameter / 2) - padding + "px";
 	radar.style.minWidth = (zoom * diameter) + "px";
