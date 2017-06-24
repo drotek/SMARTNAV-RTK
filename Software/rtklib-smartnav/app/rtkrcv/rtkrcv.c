@@ -88,9 +88,15 @@ static const char rcsid[]="$Id:$";
 #define TRACEFILE   "rtkrcv_%Y%m%d%h%M.trace" /* debug trace file */
 #define INTKEEPALIVE 1000               /* keep alive interval (ms) */
 
+#if 0
 #define ESC_CLEAR   "\033[H\033[2J"     /* ansi/vt100 escape: erase screen */
 #define ESC_RESET   "\033[0m"           /* ansi/vt100: reset attribute */
 #define ESC_BOLD    "\033[1m"           /* ansi/vt100: bold */
+#else
+#define ESC_CLEAR   ""     /* ansi/vt100 escape: erase screen */
+#define ESC_RESET   ""           /* ansi/vt100: reset attribute */
+#define ESC_BOLD    ""           /* ansi/vt100: bold */
+#endif
 
 #define SQRT(x)     ((x)<=0.0?0.0:sqrt(x))
 
