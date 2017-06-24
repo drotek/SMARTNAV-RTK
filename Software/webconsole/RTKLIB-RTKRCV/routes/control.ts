@@ -20,6 +20,8 @@ import { FileMonitor } from "../utilities/file_monitor";
 import * as rtkrcv_accessor from "../utilities/rtkrcv_accessor";
 import * as rtkrcv_monitor from "../utilities/rtkrcv_monitor";
 
+import moment = require("moment");
+
 interface IServiceCommands {
 	[id: string]: string;
 }
@@ -56,6 +58,12 @@ export default function controlModule(application: Application) {
 							throw new Error("rtkrcv configuration is missing: " + config.rtkrcv_config);
 						}
 						const rtkrcv_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+
+						const timestamp = moment(new Date()).format("YYYYMMDD-HHmmss.SSS");
+
+						rtkrcv_configuration.log_file = path.join(config.logs_path, `rtkrcv_${timestamp}.trace`);
+						rtkrcv_configuration.stat_file = path.join(config.logs_path, `rtkrcv_${timestamp}.stat`);
+
 						application.rtkrcv_instance = new rtkrcv.rtkrcv(rtkrcv_configuration);
 						application.rtkrcv_instance.start();
 
