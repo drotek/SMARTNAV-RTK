@@ -68,20 +68,17 @@ export default function logFilesReader(app: express.Express) {
 
 	app.get("/listLogFiles", async (req, res) => {
 		log.info("GET /listLogFiles");
-		res.setHeader("Access-Control-Allow-Origin", "*");
 		const listeLogs = await getListFile(config.logFilesPath, [".stat", ".trace"]);
 		res.send(listeLogs);
 	});
 
 	app.get("/listUbxFiles", (req, res) => {
 		log.info("GET /listUbxFiles");
-		res.setHeader("Access-Control-Allow-Origin", "*");
 		res.send(getListFile(config.logFilesPath, [".ubx"]));
 	});
 
 	app.post("/logFile", async (req, res) => {
 		log.info("POST /logFile", req.body);
-		res.setHeader("Access-Control-Allow-Origin", "*");
 
 		if (req.body.name) {
 			const fileName = req.body.name;
@@ -99,8 +96,6 @@ export default function logFilesReader(app: express.Express) {
 
 	app.post("/ubxFile", async (req, res) => {
 		log.info("POST /ubxFile", req.body);
-		res.setHeader("Access-Control-Allow-Origin", "*");
-
 		if (req.body.name) {
 			const fileName: string = req.body.name;
 
@@ -116,7 +111,6 @@ export default function logFilesReader(app: express.Express) {
 
 	app.get("/baseSatellites", async (req, res) => {
 		log.info("GET /baseSatellites");
-		res.setHeader("Access-Control-Allow-Origin", "*");
 
 		const ubxFiles = await getListFile(config.dataFilesPath, [".ubx"]);
 		const nbFile = ubxFiles.listFiles.length;

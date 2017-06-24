@@ -35,7 +35,7 @@ import * as serial from "../utilities/serial";
 import * as logger from "../utilities/logger";
 const log = logger.getLogger("admin");
 
-import { execution_manager } from "../utilities/execution_manager";
+// import { execution_manager } from "../utilities/execution_manager";
 
 import * as rtkrcv_service from "../services/rtkrcv_service";
 import * as str2str_service from "../services/str2str_service";
@@ -55,7 +55,6 @@ interface IModuleResponse {
 export default function adminModule(app: express.Express) {
 	app.post("/service", async (req, res) => {
 		log.info("POST /service", req.body);
-		res.setHeader("Access-Control-Allow-Origin", "*");
 
 		const commandType: string = req.body.commandType;
 		const configType: string = req.body.configType;
@@ -96,14 +95,12 @@ export default function adminModule(app: express.Express) {
 
 	app.get("/updatePlatform", (req, res) => {
 		log.info("GET /updatePlatform");
-		res.setHeader("Access-Control-Allow-Origin", "*");
 		execComandLine(res, config.updateCommandLine);
 
 	});
 
 	app.get("/syncTime", (req, res) => {
 		log.info("GET /syncTime");
-		res.setHeader("Access-Control-Allow-Origin", "*");
 		execComandLine(res, config.timeSyncCommandLine);
 
 	});

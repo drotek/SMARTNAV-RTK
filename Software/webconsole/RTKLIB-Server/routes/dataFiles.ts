@@ -31,11 +31,13 @@ import path = require("path");
 
 import * as logger from "../utilities/logger";
 const log = logger.getLogger("data_files");
+
+import * as rtkrcv_service from "../services/rtkrcv_service";
+
 export default function dataFilesReader(app: express.Express) {
 
 	app.get("/roverSatellites", async (req, res) => {
 		log.info("GET /roverSatellites");
-		res.setHeader("Access-Control-Allow-Origin", "*");
 
 		const files = (await fs.readdir(config.dataFilesPath)).reverse();
 
@@ -84,60 +86,10 @@ export default function dataFilesReader(app: express.Express) {
 
 	app.get("/positions", async (req, res) => {
 		log.info("GET /positions");
-		res.setHeader("Access-Control-Allow-Origin", "*");
 
-		const files = (await fs.readdir(config.dataFilesPath)).reverse();
-
-		let currentDataFile = files[0];
-		const nbFile = files.length;
-		let ii = 0;
-
-		while (ii < nbFile && currentDataFile.indexOf(".stat") < 0) {
-			ii++;
-			currentDataFile = files[ii];
-		}
-
-		if (!currentDataFile) {
-			res.send(null);
-			return;
-		}
-
-		const data = await fs.readFile(path.join(config.dataFilesPath, currentDataFile), "utf-8");
-
-		const lines = data.split("\n");
-		const nbLines = lines.length;
-
-		const listSatData = [];
-
-		let nbPos = 200;
-		if (req.query.nbPos && isInt(req.query.nbPos)) {
-			nbPos = req.query.nbPos;
-		}
-
-		for (let i = nbLines - 1; i >= 0 && listSatData.length < nbPos; i--) {
-			const currentLine = lines[i];
-
-			if (currentLine.indexOf("$POS") > -1) {
-
-				const status = currentLine.split(",")[3];
-
-				if (status === "1") { // is Fix
-					listSatData.push(currentLine);
-				} else if (status === "2") { // is Float
-					listSatData.push(currentLine);
-				} else if (status === "5") { // is Single
-					listSatData.push(currentLine);
-				}
-			}
-
-		}
-
-		res.send({
-			fileName: currentDataFile,
-			nbLine: nbLines,
-			listPosData: listSatData
-		});
-
+		const last_position = await rtkrcv_service.getLastPosition();
+		log.debug("GET /positions result", last_position);
+		res.json(last_position);
 	});
 
 }
