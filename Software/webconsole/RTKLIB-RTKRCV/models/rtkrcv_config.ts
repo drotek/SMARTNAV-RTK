@@ -18,7 +18,7 @@ export const DEFAULT_CONSOLE_PORT = 12000;
 export interface IRTKRCVConfig {
 	options_file: string;
 
-	trace_level: number; //0-5
+	trace_level: number; // 0-5
 	log_file: string;
 	stat_file: string;
 

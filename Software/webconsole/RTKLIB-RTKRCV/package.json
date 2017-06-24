@@ -23,6 +23,7 @@
     "socket.io": "^2.0.3",
     "ts-lint": "^4.5.1",
     "ts-node": "^3.0.6",
+    "tslint": "^5.4.3",
     "typescript": "^2.3.4",
     "winston": "^2.3.1"
   }

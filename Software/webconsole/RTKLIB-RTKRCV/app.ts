@@ -34,6 +34,9 @@ import http = require("http");
 import * as file_monitor from "./utilities/file_monitor";
 import * as rtkrcv from "./utilities/rtkrcv";
 
+import * as rtkrcv_accessor from "./utilities/rtkrcv_accessor";
+import * as rtkrcv_monitor from "./utilities/rtkrcv_monitor";
+
 import events = require("events");
 
 export class Application {
@@ -41,7 +44,9 @@ export class Application {
 	public server: http.Server;
 	public rtkrcv_instance: rtkrcv.rtkrcv;
 	public rtkrcv_log_monitor: file_monitor.FileMonitor;
-	public monitor_events:	events.EventEmitter;
+	public rtkrcv_instance_monitor: rtkrcv_monitor.RTKRCV_Monitor;
+	public rtkrcv_instance_accessor: rtkrcv_accessor.RTKRCV_Client;
+	public monitor_events: events.EventEmitter;
 
 	constructor() {
 		this.app = express();
