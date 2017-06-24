@@ -55,7 +55,7 @@ export default function controlModule(application: Application) {
 						const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
 						application.str2str_instance = new str2str.str2str(str2str_configuration);
 						application.str2str_instance.start();
-						str2str_configuration.enabled = true;
+
 						await fs.serialize_file<ISTR2STRConfig>(config.str2str_config, str2str_configuration);
 
 						let log_filename: string = null;
