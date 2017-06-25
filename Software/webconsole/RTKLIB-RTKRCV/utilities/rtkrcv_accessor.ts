@@ -62,7 +62,7 @@ const log = logger.getLogger("rtkrcv_client");
 // monitor port                : 12001
 
 export interface IStatus {
-	parameters: { [name: string]: string };
+	[name: string]: string;
 }
 
 // satellite
@@ -239,6 +239,7 @@ export class RTKRCV_Client extends events.EventEmitter {
 			throw new Error("client is already started");
 		}
 		this._client = new net.Socket();
+		this._client.setNoDelay(true);
 
 		return new Promise<boolean>(async (resolve, reject) => {
 
@@ -279,9 +280,12 @@ export class RTKRCV_Client extends events.EventEmitter {
 	}
 
 	public stop() {
-		this._client.end();
-		this._client = null;
-		// client.destroy(); // kill client after server's response
+		if (this._client) {
+			log.debug("closing client");
+			this._client.destroy();
+			this._client = null;
+			// client.destroy(); // kill client after server's response
+		}
 	}
 
 	public async send_command(command: string, timeout: number = 5000): Promise<string[]> {
@@ -293,13 +297,14 @@ export class RTKRCV_Client extends events.EventEmitter {
 			let timeout_instance: NodeJS.Timer = null;
 
 			const line_handler = (line: string) => {
-				if (line === undefined) {
+				if (line === undefined || line == null) {
 					reject("timeout");
+					return;
 				}
 
 				result.push(line);
 
-				if ((result.length === 1 ) && line.startsWith("rtkrcv>")){
+				if ((result.length === 1) && line.startsWith("rtkrcv>")) {
 					return;
 				}
 
@@ -308,7 +313,7 @@ export class RTKRCV_Client extends events.EventEmitter {
 					if (timeout_instance) {
 						clearTimeout(timeout_instance);
 					}
-					resolve(result.filter((fl) => !fl.startsWith("rtkrcv>")));
+					resolve(result.filter((fl) => !fl.startsWith("rtkrcv>") && fl !== ""));
 				}
 			};
 
@@ -319,40 +324,169 @@ export class RTKRCV_Client extends events.EventEmitter {
 	}
 
 	public async get_solution() {
+		const status = await this.send_command("solution");
+		log.debug("got solution", status);
+
 		throw new Error("not implemented");
 	}
 
 	public async get_status(): Promise<IStatus> {
-		const status = await this.send_command("status");
+		let status = await this.send_command("status");
 		log.debug("got status", status);
 
-		return null;
+		if (status && status.length > 0 && status[0].startsWith("Parameter")) {
+			status = status.slice(1);
+		}
+
+		const pv: IStatus = {};
+		status.forEach((v) => {
+			const fields = [v.substr(0, v.indexOf(":")), v.substr(v.indexOf(":") + 1)].map((fv) => fv.trim());
+			pv[fields[0]] = fields[1];
+		});
+
+		return pv;
 	}
 
 	public async get_satellite(): Promise<ISatellite[]> {
-		const sats = await this.send_command("satellite");
+		let sats = await this.send_command("satellite");
 		log.debug("got satellites", sats);
 
-		return null;
+		if (sats && sats.length > 0 && sats[0].startsWith("SAT")) {
+			sats = sats.slice(1);
+		}
+
+		const satellites = sats.map((v) => {
+			const row = v.split(/\s+/);
+
+			if (row.length < 18) {
+				log.debug("too little fields for satellite fields", row);
+				return null;
+			}
+
+			const sat: ISatellite = {
+				SAT: row[0],
+				C1: row[1],
+				Az: parseFloat(row[2]),
+				El: parseFloat(row[3]),
+				L1: parseFloat(row[4]),
+				L2: parseFloat(row[5]),
+				Fix1: row[6],
+				Fix2: row[7],
+				P1Res: parseFloat(row[8]),
+				P2Res: parseFloat(row[9]),
+				L1Res: parseFloat(row[10]),
+				L2Res: parseFloat(row[11]),
+				Sl1: parseFloat(row[12]),
+				Sl2: parseFloat(row[13]),
+				Lock1: parseFloat(row[14]),
+				Lock2: parseFloat(row[15]),
+				Rj1: parseFloat(row[16]),
+				Rj2: parseFloat(row[17])
+			};
+			return sat;
+		});
+
+		return satellites;
 	}
 
 	public async get_observ(): Promise<IObserv[]> {
-		const observations = await this.send_command("observ");
+		let observations = await this.send_command("observ");
 		log.debug("got observations", observations);
 
-		return null;
+		if (observations && observations.length > 0 && observations[0].trim().startsWith("TIME(GPST)")) {
+			observations = observations.slice(1);
+		}
+
+		const parsed_observations = observations.map((v) => {
+			const row = v.split(/\s+/);
+
+			if (row.length < 14) {
+				log.debug("too little fields for observation fields", row);
+				return null;
+			}
+
+			const obs: IObserv = {
+				timestamp: new Date(row[0] + " " + row[1]),
+				SAT: row[2],
+				R: parseInt(row[3]),
+				P1: parseFloat(row[4]),
+				P2: parseFloat(row[5]),
+				L1: parseFloat(row[6]),
+				L2: parseFloat(row[7]),
+				D1: parseFloat(row[8]),
+				D2: parseFloat(row[9]),
+				S1: parseInt(row[10]),
+				S2: parseInt(row[11]),
+				LLI1: parseInt(row[12]),
+				LLI2: parseInt(row[13])
+			};
+			return obs;
+		});
+
+		return parsed_observations;
 	}
 
-	public async get_navidata(): Promise<INaviData[]> {
-		const navidata = await this.send_command("navidata");
+	public async get_navidata(): Promise<INaviData> {
+		let navidata = await this.send_command("navidata");
 		log.debug("got navidata", navidata);
 
-		return null;
+		if (navidata && navidata.length > 0 && navidata[0].trim().startsWith("SAT")) {
+			navidata = navidata.slice(1);
+		}
+
+		const parsed_navidata: INaviData = {
+			ION: [],
+			LEAPS: 0,
+			SAT: [],
+			UTC: []
+		};
+
+		navidata.forEach((element) => {
+			const row = element.split(/\s+/);
+
+			if (row[0] === "ION:") {
+				for (let i = 1; i < row.length; i++) {
+					parsed_navidata.ION.push(parseFloat(row[i]));
+				}
+			}
+
+			if (row[0] === "UTC:") {
+				for (let i = 1; i < row.length; i++) {
+					if (row[i] === "LEAPS:") {
+						parsed_navidata.LEAPS = parseInt(row[i + 1]);
+						break;
+					}
+					parsed_navidata.UTC.push(parseFloat(row[i]));
+				}
+			}
+
+			if (row.length < 14) {
+				log.debug("too little fields for navigation data fields", row);
+				return null;
+			}
+
+			const satdata: ISATData = {
+				SAT: row[0],
+				S: row[1],
+				IOD: parseFloat(row[2]),
+				IOC: parseFloat(row[3]),
+				FRQ: parseFloat(row[4]),
+				AA: parseFloat(row[5]),
+				SVH: row[6],
+				Toe: new Date(row[7] + " " + row[8]),
+				Toc: new Date(row[9] + " " + row[10]),
+				TtrTof: new Date(row[11] + " " + row[12]),
+				L2C: parseInt(row[13]),
+				L2P: parseInt(row[14])
+			};
+			parsed_navidata.SAT.push(satdata);
+		});
+
+		return parsed_navidata;
 	}
 
 	public async get_stream(): Promise<IStream[]> {
 		const streams = await this.send_command("stream");
-		console.log("STREAM!!!!!!!!!!!!!!!!!!!!!", streams);
 		log.debug("got streams", streams);
 		return streams as any;
 	}

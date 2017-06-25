@@ -111,8 +111,7 @@ export async function control(application: Application, commandType: string) {
 						application.monitor_events.emit("position", position);
 					});
 
-					application.rtkrcv_instance_accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", rtkrcv_configuration.console_port, rtkrcv_configuration.login_password);
-					application.rtkrcv_instance_accessor.start();
+					
 
 				} else {
 					throw new Error("can't start an already stated service");
