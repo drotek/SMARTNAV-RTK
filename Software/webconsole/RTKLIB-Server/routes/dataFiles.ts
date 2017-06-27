@@ -36,54 +36,6 @@ import * as rtkrcv_service from "../services/rtkrcv_service";
 
 export default function dataFilesReader(app: express.Express) {
 
-	app.get("/roverSatellites", async (req, res) => {
-		log.info("GET /roverSatellites");
-
-		const files = (await fs.readdir(config.dataFilesPath)).reverse();
-
-		let currentDataFile = files[0];
-		const nbFile = files.length;
-		let ii = 0;
-
-		while (ii < nbFile && currentDataFile.indexOf(".stat") < 0) {
-			ii++;
-			currentDataFile = files[ii];
-		}
-
-		if (!currentDataFile) {
-			res.send(null);
-			return;
-		}
-
-		const data = await fs.readFile(path.join(config.dataFilesPath, currentDataFile), "utf-8");
-
-		const lines = data.split("\n");
-		const nbLines = lines.length;
-
-		const listSatData = [];
-
-		for (let i = nbLines - 1; i >= 0 && listSatData.length < 100; i--) {
-			const currentLine = lines[i];
-
-			if (currentLine.indexOf("$SAT") > -1) {
-				listSatData.push(currentLine);
-			}
-		}
-
-		res.send({
-			fileName: currentDataFile,
-			nbLine: nbLines,
-			listSatData
-		});
-
-	});
-
-	function isInt(value: string | number) {
-		return !isNaN(value as number) &&
-			parseInt(value as string) === value &&
-			!isNaN(parseInt(value.toString(), 10));
-	}
-
 	app.get("/positions", async (req, res) => {
 		log.info("GET /positions");
 
