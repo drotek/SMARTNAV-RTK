@@ -73,6 +73,7 @@ export class Application {
 
 		this.rtkrcv_instance = null;
 		this.rtkrcv_log_monitor = null;
+		this.last_position = null;
 		this.monitor_events = new events.EventEmitter();
 
 		this.server = this.app.listen(3002, () => {

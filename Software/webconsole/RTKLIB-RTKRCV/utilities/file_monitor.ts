@@ -26,7 +26,7 @@ export class FileMonitor extends events.EventEmitter {
 		});
 
 		this._readline.on("line", (input) => {
-			log.debug(`line: ${input}`);
+			log.silly(`line: ${input}`);
 			this.emit("line", input);
 		});
 

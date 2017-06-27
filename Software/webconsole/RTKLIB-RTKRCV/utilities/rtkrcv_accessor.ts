@@ -225,7 +225,7 @@ export class RTKRCV_Client extends events.EventEmitter {
 		});
 
 		this._readline.on("line", (input) => {
-			log.debug(`line: ${input}`);
+			log.silly(`line: ${input}`);
 			this.emit("line", input);
 		});
 
@@ -253,7 +253,7 @@ export class RTKRCV_Client extends events.EventEmitter {
 			});
 
 			this._client.on("data", (data) => {
-				log.debug("received: " + data);
+				log.silly("received: " + data);
 				this._passthrough_stream.push(data);
 			});
 
@@ -284,7 +284,6 @@ export class RTKRCV_Client extends events.EventEmitter {
 			log.debug("closing client");
 			this._client.destroy();
 			this._client = null;
-			// client.destroy(); // kill client after server's response
 		}
 	}
 
@@ -486,9 +485,34 @@ export class RTKRCV_Client extends events.EventEmitter {
 	}
 
 	public async get_stream(): Promise<IStream[]> {
-		const streams = await this.send_command("stream");
+		let streams = await this.send_command("stream");
 		log.debug("got streams", streams);
-		return streams as any;
+
+		if (streams && streams.length > 0 && streams[0].trim().startsWith("Stream")) {
+			streams = streams.slice(1);
+		}
+
+		const colsRegex = new RegExp(/^(.{0,13})(.{0,9})(.{0,6})(.{0,1})(.{0,11})(.{0,8})(.{0,11})(.{0,8})(.{0,26})(.{0,99})$/gm);
+
+		const results: IStream[] = [];
+		streams.forEach((v) => {
+			colsRegex.lastIndex = 0;
+			const parsed = colsRegex.exec(v);
+			results.push({
+				stream: parsed[1].trim(),
+				type: parsed[2].trim(),
+				fmt: parsed[3].trim(),
+				S: parsed[4].trim(),
+				in_byte: parseInt(parsed[5]),
+				in_bps: parseInt(parsed[6]),
+				out_byte: parseInt(parsed[7]),
+				out_bps: parseInt(parsed[8]),
+				path: parsed[9].trim(),
+				message: parsed[10].trim()
+			}as IStream);
+		});
+
+		return results;
 	}
 
 	protected async connect() {

@@ -116,10 +116,10 @@ export class RTKRCV_Monitor extends events.EventEmitter {
 
 		this._readline.on("line", (input: string) => {
 			if (!input || input.length === 0) {
-				log.debug("empty line");
+				log.silly("empty line");
 				return;
 			}
-			log.debug(`line: ${input}`);
+			log.silly(`line: ${input}`);
 			this.emit("line", input);
 
 			const posdata = input.split(/\s+/);
@@ -168,7 +168,7 @@ export class RTKRCV_Monitor extends events.EventEmitter {
 
 		this._client.on("data", (data) => {
 			if (data && data.length > 0) {
-				log.debug("received: ", data, data.length);
+				log.silly("received: ", data, data.length);
 				this._passthrough_stream.push(data);
 			}
 		});
