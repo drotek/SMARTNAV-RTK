@@ -54,7 +54,40 @@
                         </div>
                     </div>
 
-                    <div>
+                     <div ng-if="key == 'ROVER' && streams">
+                        <div class="same-line">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <td>stream</td>
+                                        <td>type</td>
+                                        <td>fmt</td>
+                                        <td>S</td>
+                                        <td>in byte</td>
+                                        <td>in bps</td>
+                                        <td>out byte</td>
+                                        <td>out bps</td>
+                                        <td>path</td>
+                                        <td>message</td>
+                                    </tr>
+                                </thead>
+                                <tr ng-repeat="item in streams">
+                                    <td>{{item.stream}}</td>
+                                    <td>{{item.type}}</td>
+                                    <td>{{item.fmt}}</td>
+                                    <td>{{item.S}}</td>
+                                    <td>{{item.in_byte | number}}</td>
+                                    <td>{{item.in_bps | number}}</td>
+                                    <td>{{item.out_byte | number}}</td>
+                                    <td>{{item.out_bps | number}}</td>
+                                    <td>{{item.path}}</td>
+                                    <td>{{item.message}}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div ng-if="key == 'BASE'">
                         <div class="same-line">
                             {{services_status[key]}}
                         </div>

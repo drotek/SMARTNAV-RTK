@@ -32,7 +32,7 @@ import angular_animate = require("angular-animate");
 import angular_sanitize = require("angular-sanitize");
 import angular_ui_router = require("angular-ui-router");
 const angular_touch = require("angular-touch");
-const angular_chartjs = require("angular-chartjs");
+const angular_chartjs = require("angular-chart.js");
 import angular_toastr = require("angular-toastr");
 
 const force_load_typescript_quirk = {
@@ -53,7 +53,7 @@ const dependencies = [
 	"ngSanitize",
 	"ui.bootstrap",
 	"ngTouch",
-	"chartjs",
+	"chart.js",
 	"toastr",
 	dashboard
 ];

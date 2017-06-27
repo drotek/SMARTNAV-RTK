@@ -30,13 +30,14 @@ import angular_toastr = require("angular-toastr");
 import { IAdminService, IModuleResponse } from "../../../shared/services/admin.service";
 import { IConfigurationService } from "../../../shared/services/configuration.service";
 import { ILogService } from "../../../shared/services/log.service";
+import { IStatusService, IStream } from "../../../shared/services/status.service";
 
 import export_log_controller from "../modals/export-log/export-log.controller";
 import export_ubx_controller from "../modals/export-ubx/export-ubx.controller";
 import share_log_controller from "../modals/share-log/share-log.controller";
 import update_platform_controller from "../modals/update-platform/update-platform.controller";
 
-import {ILiveLogsService, IStatusMessage} from "../../../shared/services/live-logs.service";
+import { ILiveLogsService, IStatusMessage } from "../../../shared/services/live-logs.service";
 
 export interface IAdminScope extends angular.IScope {
 	oneAtATime: boolean;
@@ -49,11 +50,13 @@ export interface IAdminScope extends angular.IScope {
 	logFiles: string[];
 	services: { [id: string]: IModuleResponse; };
 	services_status: { [id: string]: string; };
+	streams: IStream[];
 }
 
 export default /*@ngInject*/ async function(
 	$scope: IAdminScope, log: ILogService, admin: IAdminService, configuration: IConfigurationService,
-	$modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService, livelog: ILiveLogsService) {
+	$modal: angular_ui_bootstrap.IModalService, $rootScope: angular.IRootScopeService, toastr: angular.toastr.IToastrService,
+	livelog: ILiveLogsService, status: IStatusService) {
 
 	/* Déclaration du logger */
 	console.log("dashboard.admin.controller");
@@ -71,11 +74,17 @@ export default /*@ngInject*/ async function(
 		},
 		logFiles: [],
 		services: {}, // ROVER/BASE
-		services_status: {}
+		services_status: {},
+		streams: [],
 	} as IAdminScope);
 
-	$rootScope.$on("str2str:status", (e, msg: IStatusMessage) => {
+	const registered_str2str_status = $rootScope.$on("str2str:status", (e, msg: IStatusMessage) => {
 		$scope.services_status["BASE"] = `${(new Date(msg.data.timestamp)).toLocaleString()} ${msg.data.unknown} Total: ${msg.data.received.toLocaleString()} bytes, ${msg.data.bps.toLocaleString()}bps - ${msg.data.msg}`;
+	});
+
+	$scope.$on("$destroy", () => {
+		console.log("destroy dashboard.admin.controller");
+		registered_str2str_status();
 	});
 
 	/* Watch Expressions */
@@ -120,7 +129,7 @@ export default /*@ngInject*/ async function(
 		try {
 			const base_status = await admin.adminService("status", "BASE");
 			if (typeof base_status !== "undefined") {
-				console.log('admin.adminService("status","BASE") ' , base_status);
+				console.log('admin.adminService("status","BASE") ', base_status);
 				$scope.services["BASE"] = base_status;
 
 				if (base_status.error || base_status.stderr) {
@@ -130,6 +139,12 @@ export default /*@ngInject*/ async function(
 		} catch (e) {
 			console.log("error checking service status", "BASE", e);
 			toastr.error("Error Checking BASE Status");
+		}
+
+		if ($scope.services["ROVER"].isActive) {
+			$scope.streams = await status.get_stream();
+		} else {
+			$scope.streams = null;
 		}
 	}
 

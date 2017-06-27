@@ -27,12 +27,21 @@ import angular = require("angular");
 import { IArraysFactory } from "../../../shared/factories/arrays.factory";
 import { IGpsFactory } from "../../../shared/factories/gps.factory";
 
-import { IRoverSatData, IStatusService } from "../../../shared/services/status.service";
+import { INaviData, IObserv, IRoverSatData, ISatellite, IStatus, IStatusService, IStream } from "../../../shared/services/status.service";
 
 import { ILiveDataService, IPosition, IPositionMessage, QualityMap } from "../../../shared/services/live-data.service";
 
+export interface IStatusScope extends angular.IScope {
+	chartOptions: { segementStrokeWidth: number; barStrokeColor: string };
+	status: IStatus;
+	satellites: ISatellite[];
+	observ: IObserv[];
+	navidata: INaviData;
+	stream: IStream[];
+}
+
 export default /*@ngInject*/ async function(
-	$scope: angular.IScope, $rootScope: angular.IRootScopeService, status: IStatusService, arrays: IArraysFactory, gps: IGpsFactory, livedata: ILiveDataService) {
+	$scope: IStatusScope, $rootScope: angular.IRootScopeService, status: IStatusService, arrays: IArraysFactory, gps: IGpsFactory, livedata: ILiveDataService) {
 
 	/* Déclaration du logger */
 	console.log("dashboard.status");
@@ -42,102 +51,178 @@ export default /*@ngInject*/ async function(
 		barStrokeColor: "#000"
 	};
 
-	/* Screen Functionnalities*/
-	async function getData() {
-		{
-			let result = await status.getRoverSatellites();
-			// console.log(result);
+	$scope.labels = ["1", "2", "3"];
+	$scope.series = ["Rover", "Base"];
+	$scope.data = [[5, 10, 15], [6, 11, 16]];
+	$scope.colors = ["lightgreen", "green"];
+	// $scope.colors = [
+	// 	{ // grey
+	// 		backgroundColor: "rgba(148,159,177,0.2)",
+	// 		pointBackgroundColor: "rgba(148,159,177,1)",
+	// 		pointHoverBackgroundColor: "rgba(148,159,177,1)",
+	// 		borderColor: "rgba(148,159,177,1)",
+	// 		pointBorderColor: "#fff",
+	// 		pointHoverBorderColor: "rgba(148,159,177,0.8)"
+	// 	},
+	// 	{ // dark grey
+	// 		backgroundColor: "rgba(77,83,96,0.2)",
+	// 		pointBackgroundColor: "rgba(77,83,96,1)",
+	// 		pointHoverBackgroundColor: "rgba(77,83,96,1)",
+	// 		borderColor: "rgba(77,83,96,1)",
+	// 		pointBorderColor: "#fff",
+	// 		pointHoverBorderColor: "rgba(77,83,96,0.8)"
+	// 	}
+	// ];
 
-			const labels = [];
+	// function getRandomColor() {
+	//     let letters = '0123456789ABCDEF'.split('');
+	//     let color = '#';
+	//     for (let i = 0; i < 6; i++) {
+	//         color += letters[Math.floor(Math.random() * 16)];
+	//     }
+	//     return color;
+	// }
 
-			const roverSat = [];
-			const baseSat = [];
+	// $scope.colors = Array.apply(null, Array(50)).map(getRandomColor) ;
 
-			const nbSat = result.length;
-
-			result = arrays.sortByKey<IRoverSatData>(result, "name");
-
-			for (let i = 0; i < nbSat; i++) {
-				const currentSat = result[i];
-				// console.log(currentSat);
-				labels.push(currentSat.name);
-				roverSat.push(currentSat.snr);
-				baseSat.push(0);
+	$scope.options = {
+		animation: {
+			duration: 100
+		},
+		responsive: true,
+		maintainAspectRatio: false,
+		// height: "200px",
+		elements: {
+			line: {
+				borderWidth: 0.5
+			},
+			point: {
+				radius: 0
 			}
-
-			$scope.satRoverDatas = {
-				labels,
-				datasets: [
-					{
-						label: "rover",
-						fillColor: "lightgreen", // DROTEK Color
-						data: roverSat
-					}
-				]
-
-			};
-		}
-		{
-			let result = await status.getBaseSatellites();
-			// console.log(result);
-
-			const labels = [];
-
-			const baseSat = [];
-
-			result = arrays.sortByKey(result, "name");
-
-			const nbSat = result.length;
-			for (let i = 0; i < nbSat; i++) {
-				const currentSat = result[i];
-				// console.log(currentSat);
-				labels.push(currentSat.name);
-				baseSat.push(currentSat.cno);
-			}
-
-			$scope.satBaseDatas = {
-				labels,
-				datasets: [
-					{
-						label: "rover",
-						fillColor: "lightgreen", // DROTEK Color
-						data: baseSat
-					}
-				]
-
-			};
-		}
-
-		{
-			$rootScope.$on("rtkrcv:position", (e, msg: IPositionMessage) => {
-				console.log("updating last position", msg);
-
-				const lastPosition = msg.position;
-				if (lastPosition) {
-					if (lastPosition.quality_flag === 1) {
-						$scope.lastStatus = "FIX";
-					} else if (lastPosition.quality_flag === 2) {
-						$scope.lastStatus = "FLOAT";
-					} else if (lastPosition.quality_flag === 5) {
-						$scope.lastStatus = "SINGLE";
-					}
-
-					$scope.lastLat = lastPosition.latitude;
-					$scope.lastLng = lastPosition.longitude;
-					$scope.lastAlt = lastPosition.height;
-					$scope.$apply();
+		},
+		legend: {
+			display: false
+		},
+		scales: {
+			xAxes: [{
+				display: true,
+				ticks: {
+					stepSize: 10
 				}
-			});
+			}],
+			yAxes: [{
+				display: true,
+				ticks: {
+					stepSize: 10
+				}
+			}],
+			gridLines: {
+				display: false
+			}
+		},
+		tooltips: {
+			enabled: true
 		}
-	}
-
-	$scope.refresh = async ($event: angular.IAngularEvent) => {
-		$event.stopPropagation();
-
-		await getData();
 	};
 
-	/* Loading Process*/
-	await getData();
+	async function refresh() {
 
+		$scope.status = await status.get_status();
+		// $scope.satellites = await status.get_satellite();
+		$scope.observ = await status.get_observ();
+
+		let base_labels: string[]; base_labels = [];
+		let base_snr: number[]; base_snr = [];
+
+		let rover_labels: string[]; rover_labels = [];
+		let rover_snr: number[]; rover_snr = [];
+
+		// console.log("SAT INFO", $scope.satellites);
+
+		$scope.observ.forEach((obs) => {
+			base_labels.push(obs.SAT);
+			rover_labels.push(obs.SAT);
+			rover_snr.push(obs.S1);
+			base_snr.push(obs.S2);
+		});
+
+		console.log("labels", rover_labels);
+		$scope.labels = rover_labels;
+		$scope.data = [rover_snr, base_snr];
+
+		// $scope.satRoverDatas = {
+		// 	labels: rover_labels,
+		// 	datasets: [
+		// 		{
+		// 			label: "rover",
+		// 			fillColor: "lightgreen", // DROTEK Color
+		// 			data: rover_snr
+		// 		}
+		// 	]
+
+		// };
+
+		// $scope.satBaseDatas = {
+		// 	labels: base_labels,
+		// 	datasets: [
+		// 		{
+		// 			label: "base",
+		// 			fillColor: "lightgreen", // DROTEK Color
+		// 			data: base_snr
+		// 		}
+		// 	]
+
+		// };
+
+		// $scope.navidata = await status.get_navidata();
+		// $scope.stream = await status.get_stream();
+	}
+
+	/* Screen Functionnalities*/
+	const registered_rtkrcv_position = $rootScope.$on("rtkrcv:position", async (e, msg: IPositionMessage) => {
+		console.log("updating last position", msg);
+
+		const lastPosition = msg.position;
+		if (lastPosition) {
+			if (lastPosition.quality_flag === 1) {
+				$scope.lastStatus = "FIX";
+			} else if (lastPosition.quality_flag === 2) {
+				$scope.lastStatus = "FLOAT";
+			} else if (lastPosition.quality_flag === 5) {
+				$scope.lastStatus = "SINGLE";
+			}
+
+			$scope.lastLat = lastPosition.latitude;
+			$scope.lastLng = lastPosition.longitude;
+			$scope.lastAlt = lastPosition.height;
+			$scope.$apply();
+
+			should_update = true;
+		}
+
+	});
+
+	await refresh();
+
+	// update interval
+
+	let should_update = false;
+	let updating = false;
+
+	const update_interval = setInterval(async () => {
+		if (updating === true) {
+			return;
+		}
+		updating = true;
+		if (should_update) {
+			await refresh();
+			should_update = false;
+		}
+		updating = false;
+	}, 1000);
+
+	$scope.$on("$destroy", () => {
+		console.log("destroy status.controller");
+		registered_rtkrcv_position();
+	});
 }

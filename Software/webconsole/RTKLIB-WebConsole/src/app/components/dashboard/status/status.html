@@ -43,17 +43,25 @@
             </div>
         </div>
         
-        <div class="barChart" ng-if="satRoverDatas">
+        <div class="barChart">
             <div class="barChartTitle">RTK Satellites (SNR)</div>
-            <div>
-                <cjs-bar dataset="satRoverDatas" options="chartOptions" responsive="true"></cjs-bar>
+            <div style="height: 200px">
+                <canvas class="chart chart-bar" chart-data="data" chart-series="series" chart-labels="labels" chart-colors="colors" chart-options="options"></canvas>
             </div>
         </div>
         
-        <div class="barChart" ng-if="satBaseDatas">
-            <div class="barChartTitle">Base's Satellites (CNO)</div>
+       
+
+        <div class="status">
+            <div class="barChartTitle">Status</div>
             <div>
-                <cjs-bar dataset="satBaseDatas" options="chartOptions" responsive="true"></cjs-bar>
+                <table>
+                    <tr ng-repeat="(key,value) in status">
+                        <td>{{key}}</td>
+                        <td>:</td>
+                        <td>{{value}}</td>
+                    </tr>
+                </table>
             </div>
             
         </div>

@@ -60,25 +60,25 @@ export default /*@ngInject*/ function($scope: angular.IScope, admin: IAdminServi
 	/* Loading Process */
 	// admin.getConfigType();
 
-	$rootScope.$on("str2str:error", (e, err: any) => {
+	const registered_str2str_error = $rootScope.$on("str2str:error", (e, err: any) => {
 		toastr.error("Connection Error, No Live Updates", "BASE/str2str Connection");
 	});
 
-	$rootScope.$on("str2str:close", (e, msg: livelogs.ICloseMessage) => {
+	const registered_str2str_close = $rootScope.$on("str2str:close", (e, msg: livelogs.ICloseMessage) => {
 		toastr.error(`Stopped, error code: ${msg.code}`, "BASE/str2str");
 	});
 
-	$rootScope.$on("str2str:stderr", (e, msg: livelogs.IStdErrMessage) => {
+	const registered_str2str_stderr = $rootScope.$on("str2str:stderr", (e, msg: livelogs.IStdErrMessage) => {
 		toastr.error(`Error: ${msg.data}`, "BASE/str2str");
 	});
 
-	$rootScope.$on("str2str:log_line", (e, msg: livelogs.ILogLineMessage) => {
+	const registered_str2str_log_line = $rootScope.$on("str2str:log_line", (e, msg: livelogs.ILogLineMessage) => {
 		if (msg.line.level === 1) {
 			toastr.error(`Error: ${msg.line.message} (${msg.line.module})`, "BASE/str2str");
 		}
 	});
 
-	$rootScope.$on("unhandledException", (e, err: string, cause) => {
+	const registered_str2str_unhandledException = $rootScope.$on("unhandledException", (e, err: string, cause) => {
 		if (err) {
 			if (err.indexOf) {
 				const error_column_index = err.indexOf(":");
@@ -89,6 +89,15 @@ export default /*@ngInject*/ function($scope: angular.IScope, admin: IAdminServi
 			}
 			toastr.error(err, "Error");
 		}
+	});
+
+	$scope.$on("$destroy", () => {
+		console.log("destroy dashboard.controller");
+		registered_str2str_error();
+		registered_str2str_close();
+		registered_str2str_log_line();
+		registered_str2str_stderr();
+		registered_str2str_unhandledException();
 	});
 
 }

@@ -67,7 +67,7 @@ export default /*@ngInject*/ async function(
 		positions: [],
 	} as IMapScope);
 
-	$rootScope.$on("rtkrcv:position", (e, msg: IPositionMessage) => {
+	const registered_rtkrcv_position = $rootScope.$on("rtkrcv:position", (e, msg: IPositionMessage) => {
 		console.log("updating last position", msg);
 		$scope.lastPosition = msg.position;
 		$scope.positions.push(msg.position);
@@ -241,5 +241,10 @@ export default /*@ngInject*/ async function(
 
 	/* Loading Process */
 	$scope.selectedScale = $scope.scale["2 meters"];
+
+	$scope.$on("$destroy", () => {
+		console.log("destroy map.controller");
+		registered_rtkrcv_position();
+	});
 
 }
