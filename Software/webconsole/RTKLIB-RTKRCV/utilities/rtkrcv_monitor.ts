@@ -202,7 +202,7 @@ export class RTKRCV_Monitor extends events.EventEmitter {
 
 	public on(event: "position", listener: (position: IPosition) => void): this;
 	public on(event: "line", listener: (line: string) => void): this;
-	public on(event: string | symbol, listener: () => void): this {
+	public on(event: string | symbol, listener: (() => void) | ((...p: any[]) => void)): this {
 		return super.on(event, listener);
 	}
 

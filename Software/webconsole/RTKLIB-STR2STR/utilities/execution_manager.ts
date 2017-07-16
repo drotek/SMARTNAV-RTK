@@ -97,7 +97,7 @@ export class execution_manager extends events.EventEmitter {
 
 	public on(event: "stdout" | "stderr", listener: (data: string) => void): this;
 	public on(event: "close", listener: (code: number) => void): this;
-	public on(event: string | symbol, listener: () => void): this {
+	public on(event: string | symbol, listener: (() => void) | ((...p: any[]) => void)): this {
 		return super.on(event, listener);
 	}
 

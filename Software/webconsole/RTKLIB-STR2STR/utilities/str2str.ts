@@ -211,7 +211,7 @@ export class str2str extends execution_manager {
 	public on(event: "status", listener: (status: str2str_data.IParsedStatus) => void): this;
 	public on(event: "stdout" | "stderr", listener: (data: string) => void): this;
 	public on(event: "close", listener: (code: number) => void): this;
-	public on(event: string | symbol, listener: () => void): this {
+	public on(event: string | symbol, listener: (() => void) | ((...p: any[]) => void)): this {
 		return super.on(event as any, listener);
 	}
 
