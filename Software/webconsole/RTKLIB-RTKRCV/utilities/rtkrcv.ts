@@ -4,8 +4,7 @@ import * as logger from "../utilities/logger";
 const log = logger.getLogger("admin");
 
 import * as config from "../config";
-import {IRTKRCVConfig,DEFAULT_CONSOLE_PORT} from "../models/rtkrcv_config";
-
+import {DEFAULT_CONSOLE_PORT, IRTKRCVConfig} from "../models/rtkrcv_config";
 
 export class rtkrcv extends execution_manager {
 	private static parse_config(rtkrcv_config: IRTKRCVConfig): string[] {
@@ -56,8 +55,6 @@ export class rtkrcv extends execution_manager {
 			ret.push("-fs");
 			ret.push(rtkrcv_config.stat_file);
 		}
-
-
 
 		return ret;
 	}

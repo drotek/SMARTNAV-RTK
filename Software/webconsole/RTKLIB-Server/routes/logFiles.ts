@@ -68,13 +68,24 @@ export default function logFilesReader(app: express.Express) {
 
 	app.get("/listLogFiles", async (req, res) => {
 		log.info("GET /listLogFiles");
+		try{
 		const listeLogs = await getListFile(config.logFilesPath, [".stat", ".trace"]);
 		res.send(listeLogs);
+		}catch (e){
+			log.error("unable to list log files", e);
+			res.status(500).send("unable to list log files");
+		}
+
 	});
 
 	app.get("/listUbxFiles", (req, res) => {
 		log.info("GET /listUbxFiles");
+		try{
 		res.send(getListFile(config.logFilesPath, [".ubx"]));
+		}catch (e){
+			log.error("unable to list ubx files", e);
+			res.status(500).send("unable to list ubx files");
+		}
 	});
 
 	app.post("/logFile", async (req, res) => {
@@ -91,6 +102,8 @@ export default function logFilesReader(app: express.Express) {
 			} catch (e) {
 				res.status(500).send("unable to save log");
 			}
+		}else{
+			res.status(500).send("no name specified");
 		}
 	});
 
@@ -106,6 +119,8 @@ export default function logFilesReader(app: express.Express) {
 			} catch (e) {
 				res.status(500).send("unable to save ubx file");
 			}
+		}else{
+			res.status(500).send("no name specified");
 		}
 	});
 

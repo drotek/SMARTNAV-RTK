@@ -39,9 +39,14 @@ export default function dataFilesReader(app: express.Express) {
 	app.get("/positions", async (req, res) => {
 		log.info("GET /positions");
 
-		const last_position = await rtkrcv_service.getLastPosition();
-		log.debug("GET /positions result", last_position);
-		res.json(last_position);
+		try {
+			const last_position = await rtkrcv_service.getLastPosition();
+			log.debug("GET /positions result", last_position);
+			res.json(last_position);
+		} catch (e) {
+			log.error("unable to get last position", e);
+			res.status(500).send("unable to get last position");
+		}
 	});
 
 }

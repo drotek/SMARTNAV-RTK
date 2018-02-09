@@ -11,10 +11,15 @@ export default function controlModule(application: Application) {
 	app.post("/control", async (req, res) => {
 		log.info("POST /control", req.body);
 
-		const commandType: string = req.body.commandType;
-		const response = await rtkrcv_config.control(application, commandType);
+		try {
+			const commandType: string = req.body.commandType;
+			const response = await rtkrcv_config.control(application, commandType);
 
-		log.debug("POST /control result", response);
-		return res.send(response);
+			log.debug("POST /control result", response);
+			res.send(response);
+		} catch (e) {
+			log.error("unable to control rtkrcv", e);
+			res.status(500).send("unable to control rtkrcv");
+		}
 	});
 }

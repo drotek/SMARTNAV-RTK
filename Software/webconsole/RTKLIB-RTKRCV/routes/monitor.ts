@@ -152,91 +152,121 @@ export default function monitorModule(application: Application) {
 
 	app.get("/lastPosition", async (req, res) => {
 		log.info("GET /lastPosition");
-
-		log.debug("GET /lastPosition result", application.last_position);
-		res.json(application.last_position);
+		try {
+			log.debug("GET /lastPosition result", application.last_position);
+			res.json(application.last_position);
+		} catch (e) {
+			log.error("unable to get last position", e);
+			res.status(500).send("unable to get last position");
+		}
 	});
 
 	app.get("/getSolution", async (req, res) => {
 		log.info("GET /getSolution");
-		const config = await rtkrcv_config.get_configuration();
-		const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", config.console_port, config.login_password);
-		await accessor.start();
+		try {
+			const conf = await rtkrcv_config.get_configuration();
+			const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", conf.console_port, conf.login_password);
+			await accessor.start();
 
-		const solution = await accessor.get_solution();
+			const solution = await accessor.get_solution();
 
-		accessor.stop();
+			accessor.stop();
 
-		log.debug("GET /getSolution result", solution);
-		res.json(solution);
+			log.debug("GET /getSolution result", solution);
+			res.json(solution);
+		} catch (e) {
+			log.error("unable to get solutions", e);
+			res.status(500).send("unable to get solutions");
+		}
 	});
 	app.get("/getStatus", async (req, res) => {
 		log.info("GET /getStatus");
-		const config = await rtkrcv_config.get_configuration();
-		const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", config.console_port, config.login_password);
-		await accessor.start();
+		try {
+			const conf = await rtkrcv_config.get_configuration();
+			const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", conf.console_port, conf.login_password);
+			await accessor.start();
 
-		const status = await accessor.get_status();
+			const status = await accessor.get_status();
 
-		accessor.stop();
+			accessor.stop();
 
-		log.debug("GET /getStatus result", status);
-		res.json(status);
+			log.debug("GET /getStatus result", status);
+			res.json(status);
+		} catch (e) {
+			log.error("unable to get status", e);
+			res.status(500).send("unable to get status");
+		}
 	});
 	app.get("/getSatellite", async (req, res) => {
 		log.info("GET /getSatellite");
-		const config = await rtkrcv_config.get_configuration();
-		const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", config.console_port, config.login_password);
-		await accessor.start();
+		try {
+			const conf = await rtkrcv_config.get_configuration();
+			const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", conf.console_port, conf.login_password);
+			await accessor.start();
 
-		const satellites = await accessor.get_satellite();
+			const satellites = await accessor.get_satellite();
 
-		accessor.stop();
+			accessor.stop();
 
-		log.debug("GET /getSatellite result", satellites);
-		res.json(satellites);
-
+			log.debug("GET /getSatellite result", satellites);
+			res.json(satellites);
+		} catch (e) {
+			log.error("unable to get satellites", e);
+			res.status(500).send("unable to get satellites");
+		}
 	});
 	app.get("/getObserv", async (req, res) => {
 		log.info("GET /getObserv");
-		const config = await rtkrcv_config.get_configuration();
-		const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", config.console_port, config.login_password);
-		await accessor.start();
+		try {
+			const conf = await rtkrcv_config.get_configuration();
+			const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", conf.console_port, conf.login_password);
+			await accessor.start();
 
-		const observ = await accessor.get_observ();
+			const observ = await accessor.get_observ();
 
-		accessor.stop();
+			accessor.stop();
 
-		log.debug("GET /getObserv result", observ);
-		res.json(observ);
-
+			log.debug("GET /getObserv result", observ);
+			res.json(observ);
+		} catch (e) {
+			log.error("unable to get observations", e);
+			res.status(500).send("unable to get observations");
+		}
 	});
 	app.get("/getNavidata", async (req, res) => {
 		log.info("GET /getNavidata");
-		const config = await rtkrcv_config.get_configuration();
-		const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", config.console_port, config.login_password);
-		await accessor.start();
+		try {
+			const conf = await rtkrcv_config.get_configuration();
+			const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", conf.console_port, conf.login_password);
+			await accessor.start();
 
-		const navidata = await accessor.get_navidata();
+			const navidata = await accessor.get_navidata();
 
-		accessor.stop();
+			accessor.stop();
 
-		log.debug("GET /getNavidata result", navidata);
-		res.json(navidata);
-
+			log.debug("GET /getNavidata result", navidata);
+			res.json(navidata);
+		} catch (e) {
+			log.error("unable to get navigation data");
+			res.status(500).send("unable to get navigation data");
+		}
 	});
 	app.get("/getStream", async (req, res) => {
 		log.info("GET /getStream");
-		const config = await rtkrcv_config.get_configuration();
-		const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", config.console_port, config.login_password);
-		await accessor.start();
+		try {
+			const conf = await rtkrcv_config.get_configuration();
+			const accessor = new rtkrcv_accessor.RTKRCV_Client("localhost", conf.console_port, conf.login_password);
+			await accessor.start();
 
-		const streams = await accessor.get_stream();
+			const streams = await accessor.get_stream();
 
-		accessor.stop();
+			accessor.stop();
 
-		log.debug("GET /getStream result", streams);
-		res.json(streams);
-
+			log.debug("GET /getStream result", streams);
+			res.json(streams);
+		} catch (e) {
+			log.error("unable to get stream", e);
+			res.status(500).send("unable to get stream");
+		}
 	});
 }

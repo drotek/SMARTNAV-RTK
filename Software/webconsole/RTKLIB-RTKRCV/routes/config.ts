@@ -36,18 +36,27 @@ export default function controlModule(application: Application) {
 
 	app.get("/configuration", async (req, res) => {
 		log.info("GET /configuration", req.body);
-
-		const str2str_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
-		res.send(str2str_configuration);
+		try {
+			const str2str_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+			res.send(str2str_configuration);
+		} catch (e) {
+			log.error("unable to get rtkrcv configuration", e);
+			res.status(500).send("unable to get rtkrcv configuration");
+		}
 	});
 
 	app.post("/configuration", async (req, res) => {
 		log.info("POST /configuration", req.body);
 
-		await fs.serialize_file<IRTKRCVConfig>(config.rtkrcv_config, req.body);
+		try {
+			await fs.serialize_file<IRTKRCVConfig>(config.rtkrcv_config, req.body);
 
-		const str2str_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
-		res.send(str2str_configuration);
+			const str2str_configuration = await fs.deserialize_file<IRTKRCVConfig>(config.rtkrcv_config);
+			res.send(str2str_configuration);
+		} catch (e) {
+			log.error("unable to save rtkrcv configuration", e);
+			res.status(500).send("unable to save rtkrcv configuration");
+		}
 	});
 
 	function execComandLine(res: express.Response, commandLine: string) {
