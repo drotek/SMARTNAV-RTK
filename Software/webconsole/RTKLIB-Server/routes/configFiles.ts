@@ -715,7 +715,7 @@ export default function configFileEditor(app: express.Express) {
 
 			await fs.writeFile(path.join(config.configFilesPath, fileName), configFileAsString);
 
-			console.log("Config file saved!");
+			log.info("config file saved", path.join(config.configFilesPath, fileName) );
 
 			const nbCmdParam = cmdParameters.length;
 			// if (pathCmd && nbCmdParam > 0) {
