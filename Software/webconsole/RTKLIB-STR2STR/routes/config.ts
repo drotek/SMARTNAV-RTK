@@ -21,24 +21,39 @@ export default function controlModule(application: Application) {
 	app.get("/configuration", async (req, res) => {
 		log.info("GET /configuration", req.body);
 
-		const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
-		res.send(str2str_configuration);
+		try {
+			const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
+			res.send(str2str_configuration);
+		} catch (e) {
+			log.error("error getting configuration", e);
+			res.status(500).send("error getting configuration");
+		}
 	});
 
 	app.post("/configuration", async (req, res) => {
 		log.info("POST /configuration", req.body);
 
-		await fs.serialize_file<ISTR2STRConfig>(config.str2str_config, req.body);
+		try {
+			await fs.serialize_file<ISTR2STRConfig>(config.str2str_config, req.body);
 
-		const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
-		res.send(str2str_configuration);
+			const str2str_configuration = await fs.deserialize_file<ISTR2STRConfig>(config.str2str_config);
+			res.send(str2str_configuration);
+		} catch (e) {
+			log.error("error saving configuration", e);
+			res.status(500).send("error saving configuration");
+		}
 	});
 
 	app.get("/listCommands", async (req, res) => {
 		log.info("GET /listCommands", req.body);
 
-		const config_files = await file_list.get_config_files();
-		res.send(config_files);
+		try {
+			const config_files = await file_list.get_config_files();
+			res.send(config_files);
+		} catch (e) {
+			log.error("error listing commands/configuration files");
+			res.status(500).send("error listing commands/configuration files");
+		}
 	});
 
 }

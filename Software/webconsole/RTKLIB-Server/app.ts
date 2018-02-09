@@ -30,6 +30,10 @@ const app = express();
 import * as logger from "./utilities/logger";
 const log = logger.getLogger("config_files");
 
+process.on("unhandledRejection", (error) => {
+	log.error("unhandledRejection", error);
+});
+
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
