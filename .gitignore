@@ -1,0 +1,12 @@
+npm-debug.log
+/Software/webconsole/RTKLIB-RTKRCV/node_modules
+/Software/webconsole/RTKLIB-RTKRCV/dist
+/Software/webconsole/RTKLIB-STR2STR/node_modules
+/Software/webconsole/RTKLIB-STR2STR/dist
+rtkrcv_*.stat
+rtkrcv_*.trace
+/Software/rtklib-smartnav/Debug
+/Software/data/*.ubx
+package-lock.json
+.vscode
+.vs

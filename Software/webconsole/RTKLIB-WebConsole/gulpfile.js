@@ -138,6 +138,13 @@ function bundle() {
  * Tasks
  */
 
+ gulp.task('browserify',['typescript','copy:index','copy:html'], function() {
+    x = browserify(opts);
+    initTransforms();
+    return bundle();
+});
+
+ 
 gulp.task('browserify:watch',['typescript','copy:index','copy:html'], function() {
     x = watchify(browserify(opts));
     initTransforms();
@@ -328,7 +335,9 @@ gulp.task('watch', function () {
 
 gulp.task('default', ['build']);
 
-gulp.task('build', ['clean','typescript','browserify:watch', 'style', 'copy']);
+gulp.task('build', ['clean'],function(){
+	return gulp.start('typescript','browserify', 'style', 'copy');
+});
 
 gulp.task('connect', function() {
   connect.server({
@@ -341,3 +350,5 @@ gulp.task('connect', function() {
 
 
 gulp.task('serve', ['connect','typescript', 'browserify:watch', 'style', 'copy', 'watch']);
+
+gulp.task('build_and_serve', ['build','connect']);
