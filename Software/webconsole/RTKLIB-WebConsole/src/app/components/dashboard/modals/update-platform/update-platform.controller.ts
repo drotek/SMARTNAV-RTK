@@ -28,15 +28,25 @@ import angular_ui_bootstrap = require("angular-ui-bootstrap");
 
 import { IAdminService } from "../../../../shared/services/admin.service";
 
-export default /*@ngInject*/ function($scope: angular.IScope, $modalInstance: angular_ui_bootstrap.IModalInstanceService, admin: IAdminService) {
+export default /*@ngInject*/ function(
+	$scope: angular.IScope,
+	$modalInstance: angular_ui_bootstrap.IModalInstanceService,
+	admin: IAdminService,
+	toastr: angular.toastr.IToastrService
+) {
 
 	// Function called to share log file
 	$scope.ok = async () => {
-		const response = await admin.updatePlatform();
-		if (response.error) {
-			console.log(response.error);
-		} else {
-			$modalInstance.close();
+		try {
+			const response = await admin.updatePlatform();
+			if (response.error) {
+				console.log(response.error);
+			} else {
+				$modalInstance.close();
+			}
+		} catch (e) {
+			console.log("error updating platform", e);
+			toastr.error("Error Updating Platform");
 		}
 
 	};

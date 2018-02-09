@@ -41,7 +41,14 @@ export interface IStatusScope extends angular.IScope {
 }
 
 export default /*@ngInject*/ async function(
-	$scope: IStatusScope, $rootScope: angular.IRootScopeService, status: IStatusService, arrays: IArraysFactory, gps: IGpsFactory, livedata: ILiveDataService) {
+	$scope: IStatusScope,
+	$rootScope: angular.IRootScopeService,
+	status: IStatusService,
+	arrays: IArraysFactory,
+	gps: IGpsFactory,
+	livedata: ILiveDataService,
+	toastr: angular.toastr.IToastrService
+) {
 
 	/* Déclaration du logger */
 	console.log("dashboard.status");
@@ -126,10 +133,19 @@ export default /*@ngInject*/ async function(
 	};
 
 	async function refresh() {
-
-		$scope.status = await status.get_status();
+		try {
+			$scope.status = await status.get_status();
+		} catch (e) {
+			console.log("error getting status", e);
+			toastr.error("Error Getting Status");
+		}
 		// $scope.satellites = await status.get_satellite();
-		$scope.observ = await status.get_observ();
+		try {
+			$scope.observ = await status.get_observ();
+		} catch (e) {
+			console.log("error getting observation", e);
+			toastr.error("Error Getting Observation");
+		}
 
 		let base_labels: string[]; base_labels = [];
 		let base_snr: number[]; base_snr = [];

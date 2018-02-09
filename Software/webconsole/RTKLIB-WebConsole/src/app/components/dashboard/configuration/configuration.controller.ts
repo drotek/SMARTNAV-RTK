@@ -292,19 +292,34 @@ export default/*@ngInject*/ async function(
 	//     }
 	// });
 
-	const rtkrcv_config = await configuration.getRTKRCVConfig();
-	$scope.rtkrcv_config = rtkrcv_config;
-	update_streams();
-	console.log("loaded rtkrcv config", rtkrcv_config);
+	try {
+		const rtkrcv_config = await configuration.getRTKRCVConfig();
+		$scope.rtkrcv_config = rtkrcv_config;
+		update_streams();
+		console.log("loaded rtkrcv config", rtkrcv_config);
+	} catch (e) {
+		console.log("error loading rtkrcv configuration", e);
+		toastr.error("Error Loading rtkrcv Configuration");
+	}
 
-	const str2str_config = await configuration.getSTR2STRConfig();
-	$scope.str2str_config = str2str_config;
-	update_streams();
-	console.log("loaded str2str config", str2str_config);
+	try {
+		const str2str_config = await configuration.getSTR2STRConfig();
+		$scope.str2str_config = str2str_config;
+		update_streams();
+		console.log("loaded str2str config", str2str_config);
+	} catch (e) {
+		console.log("error loading str2str configuration", e);
+		toastr.error("Error Loading str2str Configuration");
+	}
 
-	const str2str_command_files = await configuration.listSTR2STRCommandFiles();
-	$scope.str2str_command_files = str2str_command_files;
-	console.log("loaded str2str command files", str2str_command_files);
+	try {
+		const str2str_command_files = await configuration.listSTR2STRCommandFiles();
+		$scope.str2str_command_files = str2str_command_files;
+		console.log("loaded str2str command files", str2str_command_files);
+	} catch (e) {
+		console.log("error loading str2str command files");
+		toastr.error("Error Loading str2str Command Files");
+	}
 
 	$scope.$watch(() => {
 		return configuration.getOutputType();
@@ -354,8 +369,13 @@ export default/*@ngInject*/ async function(
 		}
 	});
 
-	$scope.inputPorts = await admin.listPorts();
-	rtkStreamTypes["serial"].available = $scope.inputPorts.map((v) => v.comName).join(", ");
+	try {
+		$scope.inputPorts = await admin.listPorts();
+		rtkStreamTypes["serial"].available = $scope.inputPorts.map((v) => v.comName).join(", ");
+	} catch (e) {
+		console.log("error loading available ports", e);
+		toastr.error("Error Loading Available Serial Ports");
+	}
 
 	/* Utility functions */
 	$scope.hasRestriction = (obj: string[]) => {
@@ -551,15 +571,19 @@ export default/*@ngInject*/ async function(
 	}
 
 	/* Loading Process */
-	const file_result = await configuration.getFile();
-	// if (configuration.getMode() === 'BASE') {
-	//     configuration.getBaseCmdFile();
-	// }
-	// configuration.getRunBase();
-	if (file_result) {
-		console.log("getFile");
-	} else {
-		console.log("getFile failed");
+	try {
+		const file_result = await configuration.getFile();
+		// if (configuration.getMode() === 'BASE') {
+		//     configuration.getBaseCmdFile();
+		// }
+		// configuration.getRunBase();
+		if (file_result) {
+			console.log("getFile");
+		} else {
+			console.log("getFile failed");
+		}
+	} catch (e) {
+		console.log("error getting configurationfile", e);
 	}
 
 }

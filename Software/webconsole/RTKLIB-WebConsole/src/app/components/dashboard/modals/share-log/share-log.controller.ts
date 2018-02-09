@@ -27,7 +27,12 @@ import angular = require("angular");
 import angular_ui_bootstrap = require("angular-ui-bootstrap");
 import { ILogService } from "../../../../shared/services/log.service";
 
-export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogService, $modalInstance: angular_ui_bootstrap.IModalServiceInstance) {
+export default /*@ngInject*/ async function(
+	$scope: angular.IScope,
+	log: ILogService,
+	$modalInstance: angular_ui_bootstrap.IModalServiceInstance,
+	toastr: angular.toastr.IToastrService
+) {
 
 	/* Controller parameters */
 	$scope = angular.extend($scope, {
@@ -36,21 +41,31 @@ export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogSer
 		logFiles: undefined
 	});
 
-	const log_files = await log.getListLogFiles();
-	$scope.logFiles = log_files;
-	$scope.downloadFile = log_files[0];
+	try {
+		const log_files = await log.getListLogFiles();
+		$scope.logFiles = log_files;
+		$scope.downloadFile = log_files[0];
+	} catch (e) {
+		console.log("error listing log files", e);
+		toastr.error("Error Listing Log Files");
+	}
 
 	// Function called to share log file
 	$scope.ok = async () => {
-		const result = await log.getLogFile($scope.downloadFile);
+		try {
+			const result = await log.getLogFile($scope.downloadFile);
 
-		const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
+			const blob = new Blob([result], { type: "text/plain;charset=utf-8" });
 
-		const formattedBody = result;
-		const mailToLink = "mailto:" + $scope.mailAdress + "?subject=[RTKLIB Web Console] " + $scope.downloadFile + "&body=" + encodeURIComponent(formattedBody);
-		window.location.href = mailToLink;
+			const formattedBody = result;
+			const mailToLink = "mailto:" + $scope.mailAdress + "?subject=[RTKLIB Web Console] " + $scope.downloadFile + "&body=" + encodeURIComponent(formattedBody);
+			window.location.href = mailToLink;
 
-		$modalInstance.close();
+			$modalInstance.close();
+		} catch (e) {
+			console.log("error downloading log file", $scope.downloadFile, e);
+			toastr.error("Error Downloading Log File");
+		}
 	};
 
 	// Function called to cancel the share.

@@ -25,9 +25,15 @@
 
 import angular = require("angular");
 import angular_ui_bootstrap = require("angular-ui-bootstrap");
+import { toASCII } from "punycode";
 import { ILogService } from "../../../../shared/services/log.service";
 
-export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogService, $modalInstance: angular_ui_bootstrap.IModalInstanceService) {
+export default /*@ngInject*/ async function(
+	$scope: angular.IScope,
+	log: ILogService,
+	$modalInstance: angular_ui_bootstrap.IModalInstanceService,
+	toastr: angular.toastr.IToastrService
+) {
 
 	/* Controller parameters */
 	$scope = angular.extend($scope, {
@@ -35,9 +41,14 @@ export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogSer
 		ubxFiles: undefined
 	});
 
-	const ubx_files = await log.getListUbxFiles();
-	$scope.ubxFiles = ubx_files;
-	$scope.downloadFile = ubx_files[0];
+	try {
+		const ubx_files = await log.getListUbxFiles();
+		$scope.ubxFiles = ubx_files;
+		$scope.downloadFile = ubx_files[0];
+	} catch (e) {
+		console.log("error listing ubx files", e);
+		toastr.error("Error Listing UBX Files");
+	}
 
 	function createDownloadLink(blob: Blob, fileName: string) {
 		let url;
@@ -82,13 +93,17 @@ export default /*@ngInject*/ async function($scope: angular.IScope, log: ILogSer
 
 	// Function called to export ubx file
 	$scope.ok = async () => {
+		try{
 		const result = await log.getUbxFile($scope.downloadFile);
 
 		const blob = new Blob([result]);
 		saveFile(blob, $scope.downloadFile);
 
 		$modalInstance.close();
-
+		}catch (e){
+			console.log("Error downloading UBX File", $scope.downloadFile, e);
+			toastr.error("Error Downloading UBX File");
+		}
 	};
 
 	// Function called to cancel the export.

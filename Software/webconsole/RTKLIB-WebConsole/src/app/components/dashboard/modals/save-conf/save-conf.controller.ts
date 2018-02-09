@@ -28,8 +28,15 @@ import angular_ui_bootstrap = require("angular-ui-bootstrap");
 import { IConfigurationService, IParameter } from "../../../../shared/services/configuration.service";
 
 export default /*@ngInject*/ function(
-	$scope: angular.IScope, configuration: IConfigurationService, $modalInstance: angular_ui_bootstrap.IModalServiceInstance,
-	requiredParams: IParameter, advancedParams: IParameter, otherParams: IParameter, cmdParams: IParameter) {
+	$scope: angular.IScope,
+	configuration: IConfigurationService,
+	$modalInstance: angular_ui_bootstrap.IModalServiceInstance,
+	requiredParams: IParameter,
+	advancedParams: IParameter,
+	otherParams: IParameter,
+	cmdParams: IParameter,
+	toastr: angular.toastr.IToastrService
+) {
 
 	/* Controller parameters */
 	$scope = angular.extend($scope, {
@@ -61,15 +68,20 @@ export default /*@ngInject*/ function(
 
 	// Function called to save config file
 	$scope.ok = async () => {
-		const data = await configuration.saveFile({
-			name: $scope.fileName + $scope.customExtension,
-			requiredParameters: $scope.requiredParameters,
-			advancedParameters: $scope.advancedParameters,
-			otherParameters: $scope.otherParameters,
-			cmdParameters: $scope.cmdParameters
-		});
+		try {
+			const data = await configuration.saveFile({
+				name: $scope.fileName + $scope.customExtension,
+				requiredParameters: $scope.requiredParameters,
+				advancedParameters: $scope.advancedParameters,
+				otherParameters: $scope.otherParameters,
+				cmdParameters: $scope.cmdParameters
+			});
 
-		$modalInstance.close("");
+			$modalInstance.close("");
+		} catch (e) {
+			console.log("error saving configuration parameters", e);
+			toastr.error("Error Saving Configuration Parameters");
+		}
 
 	};
 

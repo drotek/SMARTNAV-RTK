@@ -28,7 +28,12 @@ import angular_ui_bootstrap = require("angular-ui-bootstrap");
 
 import { IConfigurationService } from "../../../../shared/services/configuration.service";
 
-export default /*@ngInject*/ async function($scope: angular.IScope, configuration: IConfigurationService, $modalInstance: angular_ui_bootstrap.IModalServiceInstance) {
+export default /*@ngInject*/ async function(
+	$scope: angular.IScope,
+	configuration: IConfigurationService,
+	$modalInstance: angular_ui_bootstrap.IModalServiceInstance,
+	toastr: angular.toastr.IToastrService
+) {
 
 	/* Controller parameters */
 	$scope = angular.extend($scope, {
@@ -36,8 +41,13 @@ export default /*@ngInject*/ async function($scope: angular.IScope, configuratio
 		configurationFiles: undefined
 	});
 
-	const result = await configuration.getListConfigFile();
-	$scope.configurationFiles = result;
+	try {
+		const result = await configuration.getListConfigFile();
+		$scope.configurationFiles = result;
+	} catch (e) {
+		console.log("error listing configuration files", e);
+		toastr.error("Error Listing Configuration Files");
+	}
 
 	// Function called to load config file
 	$scope.ok = async () => {

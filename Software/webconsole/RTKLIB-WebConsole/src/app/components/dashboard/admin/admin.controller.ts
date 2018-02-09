@@ -142,7 +142,12 @@ export default /*@ngInject*/ async function(
 		}
 
 		if ($scope.services["ROVER"].isActive) {
-			$scope.streams = await status.get_stream();
+			try {
+				$scope.streams = await status.get_stream();
+			} catch (e) {
+				console.log("error loading streams", e);
+				toastr.error("Error Loading Streams");
+			}
 		} else {
 			$scope.streams = null;
 		}

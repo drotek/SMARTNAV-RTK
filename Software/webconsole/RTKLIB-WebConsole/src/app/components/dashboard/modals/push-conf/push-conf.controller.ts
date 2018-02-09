@@ -119,16 +119,26 @@ export default /*@ngInject*/ function(
 			}
 
 			console.log("saving configuration file");
-			await configuration.saveFile({
-				requiredParameters: $scope.requiredParameters,
-				advancedParameters: $scope.advancedParameters,
-				otherParameters: $scope.otherParameters,
-				cmdParameters: $scope.cmdParameters
-			});
+			try {
+				await configuration.saveFile({
+					requiredParameters: $scope.requiredParameters,
+					advancedParameters: $scope.advancedParameters,
+					otherParameters: $scope.otherParameters,
+					cmdParameters: $scope.cmdParameters
+				});
+			} catch (e) {
+				console.log("error saving configuration parameters", e);
+				toastr.error("Error Saving Configuration Parameters");
+			}
 
 			if ($scope.wasRoverStarted) {
 				console.log("starting ROVER service");
-				const response = await admin.adminService("start", "ROVER");
+				try {
+					const response = await admin.adminService("start", "ROVER");
+				} catch (e) {
+					console.log("error starting ROVER", e);
+					toastr.error("Error Starting ROVER");
+				}
 			}
 
 			$modalInstance.close();
