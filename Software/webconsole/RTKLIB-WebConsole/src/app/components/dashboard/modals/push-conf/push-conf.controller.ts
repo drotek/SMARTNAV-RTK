@@ -40,6 +40,7 @@ export interface IPushConfScope extends angular.IScope {
 	outputValue: string;
 	inputStreams: IStreamInfo[];
 	outputStreams: IStreamInfo[];
+	input_command_file: string;
 
 	wasRoverStarted: boolean;
 	wasBaseStated: boolean;
@@ -50,7 +51,9 @@ export default /*@ngInject*/ function(
 	$q: ng.IQService, $scope: IPushConfScope, configuration: IConfigurationService, admin: IAdminService,
 	$modalInstance: angular_ui_bootstrap.IModalInstanceService, toastr: angular.toastr.IToastrService, mode: string,
 	requiredParams: IParameter[], advancedParams: IParameter[], otherParams: IParameter[], cmdParams: IParameter[],
-	outputType: string, outputValue: string, inputStreams: IStreamInfo[], outputStreams: IStreamInfo[]) {
+	outputType: string, outputValue: string, inputStreams: IStreamInfo[], outputStreams: IStreamInfo[],
+	input_command_file: string
+) {
 
 	/* Controller parameters */
 	$scope.mode = mode;
@@ -62,6 +65,7 @@ export default /*@ngInject*/ function(
 	$scope.outputValue = outputValue;
 	$scope.inputStreams = inputStreams;
 	$scope.outputStreams = outputStreams;
+	$scope.input_command_file = input_command_file;
 
 	$scope.wasBaseStated = false;
 	$scope.wasRoverStarted = false;
@@ -148,6 +152,7 @@ export default /*@ngInject*/ function(
 			const config = await configuration.getSTR2STRConfig();
 			config.in_streams = $scope.inputStreams;
 			config.out_streams = $scope.outputStreams;
+			config.input_command_file = $scope.input_command_file;
 			const saved_config = await configuration.saveSTR2STRConfig(config);
 
 			console.log("saving BASE configuration file");

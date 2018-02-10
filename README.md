@@ -22,10 +22,12 @@ Have a look at our wiki for all the instructions! https://drotek.com/en/docs/
 
 ## running RTKLIB-Server and RTKLIB-WebConsole
 - install pm2: npm install pm2 -g
-- cd Software/webconsole/RTKLIB-Server
-- npm install
-- cd Software/webconsole/RTKLIB-WebConsole
-- npm install
+
+cd RTKLIB-RTKRCV     && npm install && cd ..
+cd RTKLIB-Server     && npm install && cd ..
+cd RTKLIB-STR2STR    && npm install && cd ..
+cd RTKLIB-WebConsole && npm install && cd ..
+
 - pm2 start pm2production.yaml
 
 It should start 4 services, str2str monitoring, rtkrcv monitoring, a server and the webserver.

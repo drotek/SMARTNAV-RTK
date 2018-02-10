@@ -305,6 +305,7 @@ export default/*@ngInject*/ async function(
 	try {
 		const str2str_config = await configuration.getSTR2STRConfig();
 		$scope.str2str_config = str2str_config;
+
 		update_streams();
 		console.log("loaded str2str config", str2str_config);
 	} catch (e) {
@@ -469,6 +470,9 @@ export default/*@ngInject*/ async function(
 				},
 				outputStreams: () => {
 					return $scope.outputStreams;
+				},
+				input_command_file:() => {
+					return $scope.str2str_config.input_command_file;
 				}
 			}
 		});

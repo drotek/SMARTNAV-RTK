@@ -22,7 +22,7 @@ export class str2str extends execution_manager {
 		let ret: string[]; ret = [];
 		if (str2str_config.input_command_file) {
 			ret.push("-c");
-			ret.push(str2str_config.input_command_file);
+			ret.push(path.join(config.config_path, str2str_config.input_command_file));
 		}
 
 		if (str2str_config.output_command_files && str2str_config.output_command_files.length) {

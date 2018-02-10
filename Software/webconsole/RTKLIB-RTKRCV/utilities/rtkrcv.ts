@@ -1,10 +1,10 @@
 import { execution_manager } from "./execution_manager";
-
+import path = require("path");
 import * as logger from "../utilities/logger";
 const log = logger.getLogger("admin");
 
 import * as config from "../config";
-import {DEFAULT_CONSOLE_PORT, IRTKRCVConfig} from "../models/rtkrcv_config";
+import { DEFAULT_CONSOLE_PORT, IRTKRCVConfig } from "../models/rtkrcv_config";
 
 export class rtkrcv extends execution_manager {
 	private static parse_config(rtkrcv_config: IRTKRCVConfig): string[] {
@@ -15,7 +15,7 @@ export class rtkrcv extends execution_manager {
 
 		if (rtkrcv_config.options_file) {
 			ret.push("-o");
-			ret.push(rtkrcv_config.options_file);
+			ret.push(path.join(config.config_path, rtkrcv_config.options_file));
 		}
 
 		ret.push("-p");
