@@ -188,6 +188,10 @@ export default function configFileEditor(app: express.Express) {
 		"outstr2-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli"],
 		"outstr2-format": ["llh", "xyz", "enu", "nmea", "ubx", "base"],
 
+		"outstr3-path": [],
+		"outstr3-type": ["off", "serial", "file", "tcpsvr", "tcpcli", "ntripcli"],
+		"outstr3-format": ["llh", "xyz", "enu", "nmea", "ubx", "base"],
+
 		"inpstr2-nmeareq": ["off", "latlon", "single"],
 		"inpstr2-nmealat": [],
 		"inpstr2-nmealon": [],

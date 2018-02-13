@@ -60,7 +60,10 @@ export interface IRTKStreamTypes {
 }
 
 const rtkStreamTypes: IRTKStreamTypes = {
-
+	off: {
+		default: "",
+		example: "",
+	},
 	serial: {
 		default: "ttyUSB0:57600:8:n:1:off",
 		example: "port[:bit_rate[:byte[:parity(n|o|e)[:stopb[:fctr(off|on)]]]]]"
@@ -471,7 +474,7 @@ export default/*@ngInject*/ async function(
 				outputStreams: () => {
 					return $scope.outputStreams;
 				},
-				input_command_file:() => {
+				input_command_file: () => {
 					return $scope.str2str_config.input_command_file;
 				}
 			}
