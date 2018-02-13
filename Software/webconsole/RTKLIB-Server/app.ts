@@ -25,7 +25,13 @@
 
 import express = require("express");
 import bodyParser = require("body-parser");
+import compression = require("compression");
+
 const app = express();
+app.use(compression({
+	level: 1,
+	memLevel: 1,
+}));
 
 import * as logger from "./utilities/logger";
 const log = logger.getLogger("config_files");

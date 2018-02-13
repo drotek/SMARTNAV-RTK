@@ -38,6 +38,8 @@ import events = require("events");
 
 import * as config from "./config";
 
+import compression = require("compression");
+
 export class Application {
 	public app: express.Express;
 	public server: http.Server;
@@ -47,6 +49,10 @@ export class Application {
 
 	constructor() {
 		this.app = express();
+		this.app.use(compression({
+			level: 1,
+			memLevel: 1,
+		}));
 
 		this.app.use(bodyParser.json());
 		this.app.use(bodyParser.urlencoded({ extended: true }));
