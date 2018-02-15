@@ -41,16 +41,14 @@ var gulp  = require('gulp');
 var yargs  = require('yargs');
 var connect  = require('gulp-connect');
 
-//gulp.connect = connect;
-
 var watchify  = require('watchify');
 var del  = require('del');
 var browserify  = require('browserify');
-var assign  = require('lodash').assign;
+var util = require('util');
+//var assign  = require('lodash').assign;
 var stringify  = require('stringify');
 var envify  = require('envify/custom');
-var ngannotate  = require('browserify-ngannotate');
-var minifyify  = require('minifyify');
+var uglify = require('gulp-uglify');
 var gutil  = require('gulp-util');
 var source  = require('vinyl-source-stream');
 var buffer  = require('vinyl-buffer');
@@ -63,10 +61,9 @@ var autoprefixer  = require('gulp-autoprefixer');
 var gulpFilter  = require('gulp-filter');
 var svgmin  = require('gulp-svgmin');
 var watch  = require('gulp-watch');
-var minifyCSS  = require('gulp-cssnano');
-var typescript  = require('gulp-typescript');
-
-var tsProject = typescript.createProject("tsconfig.json");
+//var typescript  = require('gulp-typescript');
+var streamify = require('gulp-streamify');
+var compression = require('compression');
 
 /**
  * Gulp Tasks config parameters.
@@ -105,60 +102,38 @@ var customOpts = {
     debug: true
 };
 
-var opts = assign({}, watchify.args, customOpts);
-
-/*
- * Functions.
- */
-
-function initTransforms() {
-    x.transform(stringify(gulp.stringifyFileTypes || ['.html']));
-    x.transform(envify(gulp.environmentVariables || {NODE_ENV_TARGET: !!yargs.argv.production ? 'production' : 'development'}), {global:true});
-    x.transform(ngannotate);
-
-    x.plugin(minifyify, {
-        map: false,
-        output: gulp.paths.dist + '/bundle.map.js',
-        uglify: !!yargs.argv.production,
-        minify: !!yargs.argv.production,
-        global: true
-    });
-}
-
-function bundle() {
-    return x.bundle()
-        .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-        .pipe(source('bundle.js'))
-        .pipe(buffer())
-        .pipe(gulp.dest(gulp.paths.dist))
-        .pipe(connect.reload());
-}
+var opts = Object.assign({}, watchify.args);opts = Object.assign(opts, customOpts);
 
 /**
  * Tasks
  */
 
- gulp.task('browserify',['typescript','copy:index','copy:html'], function() {
-    x = browserify(opts);
-    initTransforms();
-    return bundle();
+ gulp.task('browserify',['typescript','copy:index','copy:html','copy:chartjs','copy:toastr'], function() {
+    var bundler = browserify(opts);
+   
+    bundler.transform(stringify(gulp.stringifyFileTypes || ['.html']));
+    bundler.transform(envify(gulp.environmentVariables || {NODE_ENV_TARGET: !!yargs.argv.production ? 'production' : 'development'}), {global:true});
+   
+    return bundler.bundle()
+        .pipe(source('bundle.js'))
+        .pipe(buffer())
+        .pipe(gulpif(!!yargs.argv.production, streamify(uglify({
+            mangle:false,
+            sourceMap:null,
+        }))))
+        .pipe(gulp.dest(gulp.paths.dist))
+        .pipe(connect.reload())
 });
 
  
-gulp.task('browserify:watch',['typescript','copy:index','copy:html'], function() {
-    x = watchify(browserify(opts));
-    initTransforms();
-    x.on('update', bundle);
-    x.on('log', gutil.log);
-    return bundle();
-});
-
 gulp.task('typescript', function () {
-    return gulp.src('src/app/**/*.ts')
-        .pipe(typescript(tsProject))
-        .js
-        .pipe(gulp.dest('dist/app'));
-    });
+    var typescript  = require('gulp-typescript');
+    let tsProject = typescript.createProject("tsconfig.json");
+    return  gulp.src('src/app/**/*.ts')
+    .pipe(typescript(tsProject))
+    .js
+    .pipe(gulp.dest('dist/app'));
+});
 
 gulp.task('clean:js', function (done) {
     return del([gulp.paths.dist + '/*.js'], done);
@@ -320,7 +295,7 @@ gulp.task('watch', function () {
         gulp.start('style');
     });
     watch([gulp.paths.src + '/app/**/*.ts'], function() {
-        gulp.start('typescript');
+        gulp.start('typescript','browserify');
     });
     watch([gulp.paths.assets + '/images/*'], function() {
         gulp.start('copy:images');
@@ -329,7 +304,7 @@ gulp.task('watch', function () {
         gulp.start('copy:fonts');
     });
     watch([gulp.files.index], function() {
-        gulp.start('copy:index');
+        gulp.start('copy:index','browserify');
     });
 });
 
@@ -344,11 +319,19 @@ gulp.task('connect', function() {
     root: [gulp.paths.dist],
     livereload: true,
     port: gulp.applicationServerPort || 8080,
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    middleware: function () {
+        return [
+            compression({
+                level:1,
+                memLevel:1,
+            })
+        ];
+    }
   });
 });
 
 
-gulp.task('serve', ['connect','typescript', 'browserify:watch', 'style', 'copy', 'watch']);
+gulp.task('serve', ['connect','typescript', 'browserify', 'style', 'copy', 'watch']);
 
 gulp.task('build_and_serve', ['build','connect']);
