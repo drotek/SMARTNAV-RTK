@@ -252,6 +252,14 @@
                 <div class="parameter-restriction">
                      <select ng-model="str2str_config.input_command_file" ng-options="item.filename as item.name for item in str2str_command_files" ></select>
                 </div>
+
+
+                <div class="label-size parameter-label" title="rtcm message types and output intervals">
+                    MSG
+                </div>
+                <div class="parameter-restriction">
+                    <input ng-model="str2str_config.rtcm_msg" >
+                </div>
             </accordion-group>
         </accordion>
     </div>

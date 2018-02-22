@@ -41,6 +41,7 @@ export interface IPushConfScope extends angular.IScope {
 	inputStreams: IStreamInfo[];
 	outputStreams: IStreamInfo[];
 	input_command_file: string;
+	rtcm_msg: string;
 
 	wasRoverStarted: boolean;
 	wasBaseStated: boolean;
@@ -52,7 +53,7 @@ export default /*@ngInject*/ function(
 	$modalInstance: angular_ui_bootstrap.IModalInstanceService, toastr: angular.toastr.IToastrService, mode: string,
 	requiredParams: IParameter[], advancedParams: IParameter[], otherParams: IParameter[], cmdParams: IParameter[],
 	outputType: string, outputValue: string, inputStreams: IStreamInfo[], outputStreams: IStreamInfo[],
-	input_command_file: string
+	input_command_file: string, rtcm_msg: string
 ) {
 
 	/* Controller parameters */
@@ -66,6 +67,7 @@ export default /*@ngInject*/ function(
 	$scope.inputStreams = inputStreams;
 	$scope.outputStreams = outputStreams;
 	$scope.input_command_file = input_command_file;
+	$scope.rtcm_msg = rtcm_msg;
 
 	$scope.wasBaseStated = false;
 	$scope.wasRoverStarted = false;
@@ -153,6 +155,7 @@ export default /*@ngInject*/ function(
 			config.in_streams = $scope.inputStreams;
 			config.out_streams = $scope.outputStreams;
 			config.input_command_file = $scope.input_command_file;
+			config.rtcm_msg =  $scope.rtcm_msg ;
 			const saved_config = await configuration.saveSTR2STRConfig(config);
 
 			console.log("saving BASE configuration file");

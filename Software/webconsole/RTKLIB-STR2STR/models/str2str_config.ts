@@ -73,7 +73,7 @@ const STREAM_FORMATS = [
 //  -h                print help
 
 export interface IStreamInfo {
-	streamType: "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http";
+	streamType: "serial" | "file" | "tcpsvr" | "tcpcli" | "udp" | "ntrips" | "ntripc" | "ftp" | "http" | "off";
 	streamFormat: null | "" | "rtcm2" | "rtcm3" | "nov" | "oem3" | "ubx" | "ss2" | "hemis" | "stq" | "gw10" | "javad" | "nvs" | "binex" | "rt17" | "sbf" | "cmr";
 	streamPath: string;
 }
@@ -120,6 +120,8 @@ export interface ISTR2STRConfig {
 
 	trace_level: number; // 0-5
 	log_file: string;
+
+	rtcm_msg: string;
 
 	enabled: boolean;
 }

@@ -95,6 +95,8 @@ export interface ISTR2STRConfig {
 	trace_level: number; // 0-5
 	log_file: string;
 
+	rtcm_msg: string;
+
 	enabled: boolean;
 }
 

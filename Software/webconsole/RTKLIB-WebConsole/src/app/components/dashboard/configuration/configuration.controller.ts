@@ -476,6 +476,9 @@ export default/*@ngInject*/ async function(
 				},
 				input_command_file: () => {
 					return $scope.str2str_config.input_command_file;
+				},
+				rtcm_msg: () => {
+					return $scope.str2str_config.rtcm_msg;
 				}
 			}
 		});

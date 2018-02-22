@@ -49,7 +49,7 @@ export class str2str extends execution_manager {
 
 				if (in_stream.streamPath) {
 					ret.push("-in");
-					ret.push(((in_stream.streamType) ? in_stream.streamType + "://" : "") + in_stream.streamPath + ((in_stream.streamFormat) ? "#" + in_stream.streamFormat : ""));
+					ret.push(((in_stream.streamType && in_stream.streamType !== "off") ? in_stream.streamType + "://" : "") + in_stream.streamPath + ((in_stream.streamFormat) ? "#" + in_stream.streamFormat : ""));
 				}
 			}
 		}
@@ -62,7 +62,7 @@ export class str2str extends execution_manager {
 
 				if (out_stream.streamPath) {
 					ret.push("-out");
-					ret.push(((out_stream.streamType) ? out_stream.streamType + "://" : "") + out_stream.streamPath + ((out_stream.streamFormat) ? "#" + out_stream.streamFormat : ""));
+					ret.push(((out_stream.streamType  && out_stream.streamType !== "off") ? out_stream.streamType + "://" : "") + out_stream.streamPath + ((out_stream.streamFormat) ? "#" + out_stream.streamFormat : ""));
 				}
 			}
 		}
@@ -157,6 +157,11 @@ export class str2str extends execution_manager {
 		if (str2str_config.log_file) {
 			ret.push("-fl");
 			ret.push(str2str_config.log_file);
+		}
+
+		if (str2str_config.rtcm_msg) {
+			ret.push("-msg");
+			ret.push(`${str2str_config.rtcm_msg}`);
 		}
 
 		return ret;
