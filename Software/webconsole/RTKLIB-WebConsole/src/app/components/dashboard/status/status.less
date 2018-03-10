@@ -37,7 +37,7 @@
     
     canvas{
         width: 95% !important;
-        height: auto !important;
+        // height: auto !important;
     }
 }
 
@@ -60,6 +60,7 @@
 }
 
 .lastInformations,
+.status,
 .barChart{
     margin-bottom: 1px;
     width: 85%;
@@ -79,22 +80,16 @@
 
 @media (min-width: @screen-md-min) {
     
+    .barChart
+    .status
     .lastInformations{
         width: 98%;
-        height: 59px;   
-    }
-    
-    .barChart{
-        width: 48%;
-        margin-left: 1%;
-        margin-right: 1%;
-        float: left;
     }
     
     .status-data{
         canvas{
             width: auto !important;
-            height: auto !important;
+            // height: auto !important;
         }
     }
     
@@ -114,4 +109,17 @@
     margin-left: 1%;
     margin-right: 1%;
     float: left;
+}
+
+.status{
+    table{
+        tr{
+            td:first-child{
+                text-align: right;
+            }
+            td:last-child{
+                text-align:left;
+            }
+        }
+    }
 }

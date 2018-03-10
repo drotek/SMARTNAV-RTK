@@ -26,31 +26,81 @@
 <div class="admin-panel">
 
     <div class="admin-list">
-        
+
         <accordion close-others="oneAtATime">
             <accordion-group heading="Service" is-open="status.isServiceOpen">
-                <div>
-                    <div class="label-50 parameter-label" title="{{item.comment}}" ng-if="isRover">
-                        Rover Status:
+                <div ng-repeat="(key, value) in services" class="service-container">
+
+                    <div>
+                        <div class="same-line" title="{{item.comment}}">
+                            {{key}} Status:
+                        </div>
+                        <div class="same-line" ng-if="value.isActive">
+                            <div class="led-green"></div>
+                            <div class="rtklib-status">ACTIVE</div>
+                        </div>
+                        <div class="same-line" ng-if="!value.isActive">
+                            <div class="led-red"></div>
+                            <div class="rtklib-status">INACTIVE</div>
+                        </div>
+
+                        <div class="same-line" ng-if="value.isEnabled">
+                            <div class="led-green"></div>
+                            <div class="rtklib-status">ENABLED</div>
+                        </div>
+                        <div class="same-line" ng-if="!value.isEnabled">
+                            <div class="led-red"></div>
+                            <div class="rtklib-status">DISABLED</div>
+                        </div>
                     </div>
-                    <div class="label-50 parameter-label" title="{{item.comment}}" ng-if="!isRover">
-                        Base Status:
+
+                     <div ng-if="key == 'ROVER' && streams">
+                        <div class="same-line">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <td>stream</td>
+                                        <td>type</td>
+                                        <td>fmt</td>
+                                        <td>S</td>
+                                        <td>in byte</td>
+                                        <td>in bps</td>
+                                        <td>out byte</td>
+                                        <td>out bps</td>
+                                        <td>path</td>
+                                        <td>message</td>
+                                    </tr>
+                                </thead>
+                                <tr ng-repeat="item in streams">
+                                    <td>{{item.stream}}</td>
+                                    <td>{{item.type}}</td>
+                                    <td>{{item.fmt}}</td>
+                                    <td>{{item.S}}</td>
+                                    <td>{{item.in_byte | number}}</td>
+                                    <td>{{item.in_bps | number}}</td>
+                                    <td>{{item.out_byte | number}}</td>
+                                    <td>{{item.out_bps | number}}</td>
+                                    <td>{{item.path}}</td>
+                                    <td>{{item.message}}</td>
+                                </tr>
+                            </table>
+                        </div>
                     </div>
-                    <div ng-if="isServiceActive">
-                        <div class="led-green"></div>
-                        <div class="rtklib-status">ACTIVE</div>
+
+                    <div ng-if="key == 'BASE'">
+                        <div class="same-line">
+                            {{services_status[key]}}
+                        </div>
                     </div>
-                    <div ng-if="!isServiceActive">
-                        <div class="led-red"></div>
-                        <div class="rtklib-status">INACTIVE</div>
+
+                    <div class="admin-service-actions-bar">
+                        <button type="button" class="btn btn-success btn-sm action-button" ng-click="start($event,key)">START</button>
+                        <button type="button" class="btn btn-danger btn-sm action-button" ng-click="stop($event,key)">STOP</button>
+                        <button type="button" class="btn btn-success btn-sm action-button" ng-click="enable($event,key)">ENABLE</button>
+                        <button type="button" class="btn btn-danger btn-sm action-button" ng-click="disable($event,key)">DISABLE</button>
                     </div>
+
                 </div>
-                
-                <div class="admin-service-actions-bar">
-                    <button type="button" class="btn btn-success btn-sm action-button" ng-click="start($event)">START</button>
-                    <button type="button" class="btn btn-danger btn-sm action-button" ng-click="stop($event)">STOP</button>
-                </div>
-                
             </accordion-group>
 
             <accordion-group heading="Logs" is-open="status.isLogsOpen">
@@ -60,7 +110,7 @@
                     <button type="button" class="btn btn-info btn-sm action-button" ng-click="share($event)">SHARE LOG</button>
                 </div>
             </accordion-group>
-            
+
             <accordion-group heading="System Time" is-open="status.isLogsOpen">
                 <div>
                     <button type="button" class="btn btn-success btn-sm action-button" ng-click="syncTime($event)">SYNC</button>
@@ -69,12 +119,12 @@
 
             <accordion-group heading="Platform" is-open="status.isUpdateOpen">
                 <div>
-                    
+
                     <button type="button" class="btn btn-warning btn-sm action-button" ng-click="updatePlatform($event)">UPDATE</button>
                 </div>
             </accordion-group>
 
-      </accordion>
+        </accordion>
     </div>
-    
+
 </div>

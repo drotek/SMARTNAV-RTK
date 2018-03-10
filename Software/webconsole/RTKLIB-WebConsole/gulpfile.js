@@ -35,35 +35,35 @@
 /**
  * Imports.
  */
-var appPackage = require('./package.json');
+var appPackage  = require( './package.json');
 
-var gulp = require('gulp');
-var yargs = require('yargs');
-var connect = require('gulp-connect');
+var gulp  = require('gulp');
+var yargs  = require('yargs');
+var connect  = require('gulp-connect');
 
-//gulp.connect = connect;
-
-var watchify = require('watchify');
-var del = require('del');
-var browserify = require('browserify');
-var assign = require('lodash').assign;
-var stringify = require('stringify');
-var envify = require('envify/custom');
-var ngannotate = require('browserify-ngannotate');
-var minifyify = require('minifyify');
-var gutil = require('gulp-util');
-var source = require('vinyl-source-stream');
-var buffer = require('vinyl-buffer');
-var plumber = require('gulp-plumber');
-var less = require('gulp-less');
-var lessglobplugin = require('less-plugin-glob');
-var concat = require('gulp-concat');
-var gulpif = require('gulp-if');
-var autoprefixer = require('gulp-autoprefixer');
-var gulpFilter = require('gulp-filter');
-var svgmin = require('gulp-svgmin');
-var watch = require('gulp-watch');
-var minifyCSS = require('gulp-cssnano');
+var watchify  = require('watchify');
+var del  = require('del');
+var browserify  = require('browserify');
+var util = require('util');
+//var assign  = require('lodash').assign;
+var stringify  = require('stringify');
+var envify  = require('envify/custom');
+var uglify = require('gulp-uglify');
+var gutil  = require('gulp-util');
+var source  = require('vinyl-source-stream');
+var buffer  = require('vinyl-buffer');
+var plumber  = require('gulp-plumber');
+var less  = require('gulp-less');
+var lessglobplugin  = require('less-plugin-glob');
+var concat  = require('gulp-concat');
+var gulpif  = require('gulp-if');
+var autoprefixer  = require('gulp-autoprefixer');
+var gulpFilter  = require('gulp-filter');
+var svgmin  = require('gulp-svgmin');
+var watch  = require('gulp-watch');
+//var typescript  = require('gulp-typescript');
+var streamify = require('gulp-streamify');
+var compression = require('compression');
 
 /**
  * Gulp Tasks config parameters.
@@ -80,7 +80,7 @@ gulp.paths = {
 
 //Files
 gulp.files = {
-  app: gulp.paths.src + '/index.js',
+  app: gulp.paths.dist + '/app/index.js',
   less: gulp.paths.src + '/assets/styles/themes/**/main.less',
   index: gulp.paths.src + '/index.html'
 };
@@ -102,65 +102,57 @@ var customOpts = {
     debug: true
 };
 
-var opts = assign({}, watchify.args, customOpts);
-
-/*
- * Functions.
- */
-
-function initTransforms() {
-    x.transform(stringify(gulp.stringifyFileTypes || ['.html']));
-    x.transform(envify(gulp.environmentVariables || {NODE_ENV_TARGET: !!yargs.argv.production ? 'production' : 'development'}), {global:true});
-    x.transform(ngannotate);
-
-    x.plugin(minifyify, {
-        map: false,
-        output: gulp.paths.dist + '/bundle.map.js',
-        uglify: !!yargs.argv.production,
-        minify: !!yargs.argv.production,
-        global: true
-    });
-}
-
-function bundle() {
-    return x.bundle()
-        .on('error', gutil.log.bind(gutil, 'Browserify Error'))
-        .pipe(source('bundle.js'))
-        .pipe(buffer())
-        .pipe(gulp.dest(gulp.paths.dist))
-        .pipe(connect.reload());
-}
+var opts = Object.assign({}, watchify.args);opts = Object.assign(opts, customOpts);
 
 /**
  * Tasks
  */
 
-gulp.task('browserify:watch', function() {
-    x = watchify(browserify(opts));
-    initTransforms();
-    x.on('update', bundle);
-    x.on('log', gutil.log);
-    return bundle();
+ gulp.task('browserify',['typescript','copy:index','copy:html','copy:chartjs','copy:toastr'], function() {
+    var bundler = browserify(opts);
+   
+    bundler.transform(stringify(gulp.stringifyFileTypes || ['.html']));
+    bundler.transform(envify(gulp.environmentVariables || {NODE_ENV_TARGET: !!yargs.argv.production ? 'production' : 'development'}), {global:true});
+   
+    return bundler.bundle()
+        .pipe(source('bundle.js'))
+        .pipe(buffer())
+        .pipe(gulpif(!!yargs.argv.production, streamify(uglify({
+            mangle:false,
+            sourceMap:null,
+        }))))
+        .pipe(gulp.dest(gulp.paths.dist))
+        .pipe(connect.reload())
+});
+
+ 
+gulp.task('typescript', function () {
+    var typescript  = require('gulp-typescript');
+    let tsProject = typescript.createProject("tsconfig.json");
+    return  gulp.src('src/app/**/*.ts')
+    .pipe(typescript(tsProject))
+    .js
+    .pipe(gulp.dest('dist/app'));
 });
 
 gulp.task('clean:js', function (done) {
-    del([gulp.paths.dist + '/*.js'], done);
+    return del([gulp.paths.dist + '/*.js'], done);
 });
 
 gulp.task('clean:css', function (done) {
-    del([gulp.paths.dist + '/*.css'], done);
+    return del([gulp.paths.dist + '/*.css'], done);
 });
 
 gulp.task('clean:images', function (done) {
-    del([gulp.paths.dist + '/assets/images'], done);
+    return del([gulp.paths.dist + '/assets/images'], done);
 });
 
 gulp.task('clean:fonts', function (done) {
-    del([gulp.paths.dist + '/assets/fonts'], done);
+    return del([gulp.paths.dist + '/assets/fonts'], done);
 });
 
 gulp.task('clean', function (done) {
-    del([gulp.paths.dist + '/**/*'], { force: true }, function (err, paths) {
+    return del([gulp.paths.dist + '/**/*'], { force: true }, function (err, paths) {
         console.log('Erreur lors du clean', err, paths);
         done();
     });
@@ -186,7 +178,7 @@ gulp.task('copy:images', function () {
 
     var svgFilter = gulpFilter('**/*.svg', {restore: true});
 
-    gulp.src([gulp.paths.assets + '/images/**/*'], {base: gulp.paths.src + '/'})
+    return gulp.src([gulp.paths.assets + '/images/**/*'], {base: gulp.paths.src + '/'})
         .pipe(svgFilter)
         .pipe(svgmin({
             js2svg: {
@@ -267,26 +259,43 @@ gulp.task('copy:images', function () {
 });
 
 gulp.task('copy:fonts', function () {
-    gulp.src([gulp.paths.assets + '/fonts/**/*'], {base: gulp.paths.src + '/'})
+    return gulp.src([gulp.paths.assets + '/fonts/**/*'], {base: gulp.paths.src + '/'})
         .pipe(gulp.dest(gulp.paths.dist));
 });
 
+gulp.task("copy:html", function(){
+      return gulp.src([gulp.paths.src + '/**/*.html'],{base: gulp.paths.src + '/'})
+         .pipe(gulp.dest(gulp.paths.dist));
+});
+
 gulp.task('copy:index', function () {
-    gulp.src([gulp.paths.src + '/index.html'])
+    return gulp.src([gulp.paths.src + '/index.html'])
         .pipe(gulp.dest(gulp.paths.dist));
 });
 
 gulp.task('copy:chartjs', function () {
-    gulp.src([gulp.paths.externalLib + '/Chart.min.js'])
+    return gulp.src([gulp.paths.externalLib + '/Chart.min.js'])
+        .pipe(gulp.dest(gulp.paths.dist));
+});
+
+gulp.task('copy:toastr', function () {
+    return gulp.src([
+        gulp.paths.node_modules + '/angular-toastr/dist/angular-toastr.min.js',
+        gulp.paths.node_modules + '/angular-toastr/dist/angular-toastr.tpls.min.js',
+        gulp.paths.node_modules + '/angular-toastr/dist/angular-toastr.min.css',
+        ])
         .pipe(gulp.dest(gulp.paths.dist));
 });
 
 
-gulp.task('copy', ['copy:images', 'copy:fonts', 'copy:index', 'copy:chartjs']);
+gulp.task('copy', ['copy:images', 'copy:fonts','copy:html', 'copy:index', 'copy:chartjs','copy:toastr']);
 
 gulp.task('watch', function () {
     watch([gulp.paths.assets + '/**/*.less', gulp.paths.src + '/app/**/*.less'], function() {
         gulp.start('style');
+    });
+    watch([gulp.paths.src + '/app/**/*.ts'], function() {
+        gulp.start('typescript','browserify');
     });
     watch([gulp.paths.assets + '/images/*'], function() {
         gulp.start('copy:images');
@@ -295,22 +304,34 @@ gulp.task('watch', function () {
         gulp.start('copy:fonts');
     });
     watch([gulp.files.index], function() {
-        gulp.start('copy:index');
+        gulp.start('copy:index','browserify');
     });
 });
 
 gulp.task('default', ['build']);
 
-gulp.task('build', ['clean','browserify:watch', 'style', 'copy']);
+gulp.task('build', ['clean'],function(){
+	return gulp.start('typescript','browserify', 'style', 'copy');
+});
 
 gulp.task('connect', function() {
   connect.server({
     root: [gulp.paths.dist],
     livereload: true,
     port: gulp.applicationServerPort || 8080,
-    host: '0.0.0.0'
+    host: '0.0.0.0',
+    middleware: function () {
+        return [
+            compression({
+                level:1,
+                memLevel:1,
+            })
+        ];
+    }
   });
 });
 
 
-gulp.task('serve', ['connect', 'browserify:watch', 'style', 'copy', 'watch']);
+gulp.task('serve', ['connect','typescript', 'browserify', 'style', 'copy', 'watch']);
+
+gulp.task('build_and_serve', ['build','connect']);

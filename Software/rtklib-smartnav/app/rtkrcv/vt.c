@@ -1,10 +1,11 @@
 /*------------------------------------------------------------------------------
 * vt.c : virtual console
 *
-*          Copyright (C) 2014 by T.TAKASU, All rights reserved.
+*          Copyright (C) 2014-2016 by T.TAKASU, All rights reserved.
 *
 * version : $Revision:$ $Date:$
 * history : 2015/01/11 1.0  separated from rtkrcv.c
+*           2016/09/19 1.1  change api vt_open()
 *-----------------------------------------------------------------------------*/
 #ifndef WIN32
 #define _POSIX_C_SOURCE 2
@@ -15,6 +16,7 @@
 #include <ctype.h>
 #ifdef WIN32
 #include <winsock2.h>
+#include <ws2tcpip.h>
 #else
 #include <unistd.h>
 #include <fcntl.h>
@@ -33,11 +35,12 @@
 
 static const char rcsid[]="$Id:$";
 
-#define DEF_DEV     "/dev/tty"          /* default device */
+#define DEF_DEV     "/dev/tty"          /* default console device */
 
 #define C_DEL       (char)0x7F          /* delete */
 #define C_ESC       (char)0x1B          /* escape */
 #define C_CTRC      (char)0x03          /* interrupt (ctrl-c) */
+#define C_CTRD      (char)0x04          /* logout (ctrl-d) */
 #define C_ECHO      (char)1             /* telnet echo */
 #define C_SUPPGA    (char)3             /* telnet suppress go ahead */
 #define C_BRK       (char)243           /* telnet break */
@@ -50,84 +53,94 @@ static const char rcsid[]="$Id:$";
 #define C_DONT      (char)254           /* telnet option negotiation */
 #define C_IAC       (char)255           /* telnet interpret as command */
 
-/* accept client socket ------------------------------------------------------*/
-static int acc_sock(int port)
-{
-    struct sockaddr_in saddr,addr;
-    socklen_t len=sizeof(addr);
-    int ssock,sock,on=1;
-    
-    if ((ssock=socket(AF_INET,SOCK_STREAM,0))<0) {
-        fprintf(stderr,"socket error (%d)\n",errno);
-        return -1;
-    }
-    setsockopt(ssock,SOL_SOCKET,SO_REUSEADDR,(const char *)&on,sizeof(on));
-    
-    memset(&saddr,0,sizeof(saddr));
-    saddr.sin_family=AF_INET;
-    saddr.sin_port=htons(port);
-    
-    if (bind(ssock,(struct sockaddr *)&saddr,sizeof(saddr))<0) {
-        fprintf(stderr,"bind error (%d)\n",errno);
-        close(ssock);
-        return -1;
-    }       
-    listen(ssock,5);
-    while ((sock=accept(ssock,(struct sockaddr *)&addr,&len))<0) {
-        if (errno!=EINTR) fprintf(stderr,"accept error (%d)\n",errno);
-        close(ssock);
-        return -1;
-    }
-    close(ssock);
-    return sock;
+
+static size_t write_socket(int fd, const void *buf, size_t count) {
+#ifdef WIN32
+	return send(fd, buf, count, 0);
+#else
+	return write(fd, buf, count);
+#endif
 }
-/* open console ----------------------------------------------------------------
+
+static size_t read_socket(int fd, void *buf, size_t count) {
+#ifdef WIN32
+	return recv(fd, buf, count, 0);
+#else
+	return read(fd, buf, count);
+#endif
+}
+
+int close_socket(int sock)
+{
+
+	int status = 0;
+
+#ifdef _WIN32
+	status = shutdown(sock, SD_BOTH);
+	if (status == 0) { status = closesocket(sock); }
+#else
+	status = shutdown(sock, SHUT_RDWR);
+	if (status == 0) { status = close(sock); }
+#endif
+
+	return status;
+
+}
+
+
+/* open virtual console --------------------------------------------------------
 * open virtual console
 * args   : vt_t   *vt       I   virtual console
-*          int    port      I   port for telnet console
-*          char   *dev      I   device for console
-* return : status (1:ok,0:error)
-* notes  : if port==0 and dev=="", use stdin and stdout for console
-*          if telnet console, it is blocked since client connected
+*          int    sock      I   socket (0:use device)
+*          char   *dev      I   device ("": standard tty)
+* return : virtual console (NULL: error)
 *-----------------------------------------------------------------------------*/
-extern int vt_open(vt_t *vt, int port, const char *dev)
+extern vt_t *vt_open(int sock, const char *dev)
 {
     const char mode[]={C_IAC,C_WILL,C_SUPPGA,C_IAC,C_WILL,C_ECHO};
+#ifndef WIN32
     struct termios tio={0};
-    int i,sock,fd;
+#endif
+    vt_t *vt;
+    int i;
     
-    if (vt->state) return 0;
-    vt->state=vt->type=vt->n=vt->nesc=vt->cur=vt->cur_h=vt->brk=0;
-    vt->logfp=NULL;
-    for (i=0;i<MAXHIST;i++) vt->hist[i]=NULL;
+    trace(3,"vt_open: sock=%d dev=%s\n",sock,dev);
     
-    if (port) { /* telnet */
-        if ((sock=acc_sock(port))<0) return 0;
-        if (write(sock,mode,6)!=6) {
-            fprintf(stderr,"telnet write error: port=%d\n",port);
-            close(sock);
-            return 0;
-        }
-        vt->type=1;
-        vt->in=vt->out=sock;
+    if (!(vt=(vt_t *)malloc(sizeof(vt_t)))) {
+        return NULL;
     }
-    else {
-        if (!*dev) dev=DEF_DEV;
-        if ((fd=open(dev,O_RDWR))<0||tcgetattr(fd,&tio)<0) {
-            fprintf(stderr,"console device open error: %s\n",dev);
+    vt->type=vt->n=vt->nesc=vt->cur=vt->cur_h=vt->brk=vt->blind=0;
+    vt->logfp=NULL;
+    for (i=0;i<MAXHIST;i++) {
+        vt->hist[i]=NULL;
+    }
+
+#ifndef WIN32
+    if (!sock) {
+        if ((vt->in=vt->out=open(*dev?dev:DEF_DEV,O_RDWR))<0) {
+            free(vt);
             return 0;
         }
-        vt->in=vt->out=fd;
-        
-        /* set terminal mode to raw + no-echo */
-        vt->tio=tio;
-        tio.c_iflag=tio.c_lflag=0;
+        /* set terminal mode echo-off */
+        tcgetattr(vt->in,&vt->tio);
         tcsetattr(vt->in,TCSANOW,&tio);
     }
+    else 
+#endif
+	{
+        vt->type=1;
+        vt->in=vt->out=sock;
+        
+        /* send telnet character mode */
+        if (write_socket(sock,mode,6)!=6) {
+            free(vt);
+            return NULL;
+        }
+    }
     vt->state=1;
-    return 1;
+    return vt;
 }
-/* close console ---------------------------------------------------------------
+/* close virtual console -------------------------------------------------------
 * close virtual console
 * args   : vt_t   *vt       I   virtual console
 * return : none
@@ -136,14 +149,21 @@ extern void vt_close(vt_t *vt)
 {
     int i;
     
+    trace(3,"vt_close:\n");
+    
     /* restore terminal mode */
+
+#ifndef WIN32
     if (!vt->type) {
         tcsetattr(vt->in,TCSANOW,&vt->tio);
     }
-    close(vt->in);
+#endif
+	close_socket(vt->in);
     if (vt->logfp) fclose(vt->logfp);
-    for (i=0;i<MAXHIST;i++) free(vt->hist[i]);
-    vt->state=0;
+    for (i=0;i<MAXHIST;i++) {
+        free(vt->hist[i]);
+    }
+    free(vt);
 }
 /* clear line buffer ---------------------------------------------------------*/
 static int clear_buff(vt_t *vt)
@@ -154,7 +174,7 @@ static int clear_buff(vt_t *vt)
     for (i=0;i<len;i++) *p++=' ';
     for (i=0;i<len;i++) *p++='\b';
     vt->n=vt->nesc=vt->cur=0;
-    return write(vt->out,buff,p-buff)==p-buff;
+    return write_socket(vt->out,buff,p-buff)==p-buff;
 }
 /* refresh line buffer -------------------------------------------------------*/
 static int ref_buff(vt_t *vt)
@@ -164,13 +184,13 @@ static int ref_buff(vt_t *vt)
     for (i=vt->cur;i<vt->n;i++) *p++=vt->buff[i];
     *p++=' ';
     for (;i>=vt->cur;i--) *p++='\b';
-    return write(vt->out,buff,p-buff)==p-buff;
+    return write_socket(vt->out,buff,p-buff)==p-buff;
 }
 /* move cursor right ---------------------------------------------------------*/
 static int right_cur(vt_t *vt)
 {
     if (vt->cur>=vt->n) return 1;
-    if (write(vt->out,vt->buff+vt->cur,1)<1) return 0;
+    if (write_socket(vt->out,vt->buff+vt->cur,1)<1) return 0;
     vt->cur++;
     return 1;
 }
@@ -179,7 +199,7 @@ static int left_cur(vt_t *vt)
 {
     if (vt->cur<=0) return 1;
     vt->cur--;
-    return write(vt->out,"\b",1)==1;
+    return write_socket(vt->out,"\b",1)==1;
 }
 /* delete character before cursor --------------------------------------------*/
 static int del_cur(vt_t *vt)
@@ -197,7 +217,7 @@ static int ins_cur(vt_t *vt, char c)
     if (vt->n>=MAXBUFF) return 1;
     for (i=vt->n++;i>vt->cur;i--) vt->buff[i]=vt->buff[i-1];
     vt->buff[vt->cur++]=c;
-    if (write(vt->out,&c,1)<1) return 0;
+    if (write_socket(vt->out,vt->blind?"*":&c,1)<1) return 0;
     return ref_buff(vt);
 }
 /* add history ---------------------------------------------------------------*/
@@ -238,19 +258,19 @@ static int seq_telnet(vt_t *vt)
         if (vt->nesc<3) return 1;
         msg[1]=vt->esc[2]==C_ECHO||vt->esc[2]==C_SUPPGA?C_DO:C_DONT;
         msg[2]=vt->esc[2];
-        if (write(vt->out,msg,3)<3) return 0;
+        if (write_socket(vt->out,msg,3)<3) return 0;
     }
     else if (vt->esc[1]==C_DO) { /* option negotiation */
         if (vt->nesc<3) return 1;
         msg[1]=vt->esc[2]==C_ECHO||vt->esc[2]==C_SUPPGA?C_WILL:C_WONT;
         msg[2]=vt->esc[2];
-        if (write(vt->out,msg,3)<3) return 0;
+        if (write_socket(vt->out,msg,3)<3) return 0;
     }
     else if (vt->esc[1]==C_WONT||vt->esc[1]==C_DONT) { /* option negotiation */
         if (vt->nesc<3) return 1;
         msg[1]=vt->esc[1]==C_WONT?C_DONT:C_WONT;
         msg[2]=vt->esc[2];
-        if (write(vt->out,msg,3)<3) return 0;
+        if (write_socket(vt->out,msg,3)<3) return 0;
     }
     else if (vt->esc[1]==C_BRK||vt->esc[1]==C_IP) { /* break or interrupt */
         vt->brk=1;
@@ -269,10 +289,12 @@ static int seq_esc(vt_t *vt)
 {
     if (vt->nesc<3) return 1;
     vt->nesc=0;
-    if (!strncmp(vt->esc+1,"[A",2)) return hist_prev(vt); /* cursor up */
-    if (!strncmp(vt->esc+1,"[B",2)) return hist_next(vt); /* cursor down */
-    if (!strncmp(vt->esc+1,"[C",2)) return right_cur(vt); /* cursor right */
-    if (!strncmp(vt->esc+1,"[D",2)) return left_cur (vt); /* cursor left */
+    if (vt->esc[1]=='['||vt->esc[1]=='O') {
+        if (vt->esc[2]=='A') return hist_prev(vt); /* cursor up    */
+        if (vt->esc[2]=='B') return hist_next(vt); /* cursor down  */
+        if (vt->esc[2]=='C') return right_cur(vt); /* cursor right */
+        if (vt->esc[2]=='D') return left_cur (vt); /* cursor left  */
+    }
     return 1;
 }
 /* get character from console --------------------------------------------------
@@ -290,11 +312,13 @@ extern int vt_getc(vt_t *vt, char *c)
     
     *c='\0';
     
+    if (!vt||!vt->state) return 0;
+    
     /* read character with timeout */
     FD_ZERO(&rs);
     FD_SET(vt->in,&rs);
     if (!(stat=select(vt->in+1,&rs,NULL,NULL,&tv))) return 1; /* no data */
-    if (stat<0||read(vt->in,c,1)!=1) return 0; /* error */
+    if (stat<0|| read_socket(vt->in,c,1)!=1) return 0; /* error */
     
     if ((vt->type&&*c==C_IAC)||*c==C_ESC) { /* escape or telnet */
         vt->esc[0]=*c; *c='\0';
@@ -313,7 +337,7 @@ extern int vt_getc(vt_t *vt, char *c)
     }
     else if (*c==C_CTRC) { /* interrupt (ctrl-c) */
         vt->brk=1;
-        if (!vt_puts(vt,"^C")) return 0;
+        if (!vt_puts(vt,"^C\n")) return 0;
     }
     else if (isprint(*c)) { /* printable character */
         if (!ins_cur(vt,*c)) return 0;
@@ -331,31 +355,37 @@ extern int vt_gets(vt_t *vt, char *buff, int n)
 {
     char c;
     
-    vt->n=vt->cur=vt->nesc=vt->brk=0;
     buff[0]='\0';
+    
+    if (!vt||!vt->state) return 0;
+    
+    vt->n=vt->cur=vt->nesc=vt->brk=0;
     
     while (vt->state) {
         if (!vt_getc(vt,&c)) return 0;
         
-        if (vt->brk) { /* break */
-            return vt_putc(vt,'\n');
+        if (c==C_CTRD&&vt->n==0) { /* logout */
+            vt->state=0;
         }
-        if (c=='\r') { /* end of line */
+        else if (vt->brk) { /* break */
+            return vt_puts(vt,"\n");
+        }
+        else if (c=='\r') { /* end of line */
             vt->buff[vt->n]='\0';
             strncpy(buff,vt->buff,n-1);
             buff[n-1]='\0';
-            hist_add(vt,buff);
+            if (!vt->blind) hist_add(vt,buff);
             return vt_putc(vt,'\n');
         }
     }
     return 0;
 }
-/* put characters to console -------------------------------------------------*/
-static int vt_putchar(vt_t *vt, const char *buff, int n)
+/* put character to console --------------------------------------------------*/
+static int vt_putchar(vt_t *vt, char c)
 {
-    if (!vt->state) return 0;
-    if (vt->logfp) fwrite(buff,1,n,vt->logfp);
-    return write(vt->out,buff,n)==n;
+    if (!vt||!vt->state) return 0;
+    if (vt->logfp) fwrite(&c,1,1,vt->logfp);
+    return write_socket(vt->out,&c,1)==1;
 }
 /* put character to console ----------------------------------------------------
 * put a character to virtual console
@@ -365,8 +395,8 @@ static int vt_putchar(vt_t *vt, const char *buff, int n)
 *-----------------------------------------------------------------------------*/
 extern int vt_putc(vt_t *vt, char c)
 {
-    if (c=='\n'&&!vt_putchar(vt,"\r",1)) return 0;
-    return vt_putchar(vt,&c,1);
+    if (c=='\n'&&!vt_putchar(vt,'\r')) return 0;
+    return vt_putchar(vt,c);
 }
 /* put strings to console ------------------------------------------------------
 * put strings to virtual console
@@ -376,12 +406,9 @@ extern int vt_putc(vt_t *vt, char c)
 *-----------------------------------------------------------------------------*/
 extern int vt_puts(vt_t *vt, const char *buff)
 {
-    const char *p,*q;
-    
-    for (p=buff;(q=strchr(p,'\n'));p=q+1) {
-        if (!vt_putchar(vt,p,q-p)||!vt_putchar(vt,"\r\n",2)) return 0;
-    }
-    return vt_putchar(vt,p,strlen(p));
+    const char *p;
+    for (p=buff;*p;p++) if (!vt_putc(vt,*p)) return 0;
+    return 1;
 }
 /* print to console with formatting --------------------------------------------
 * print to virtual console with formatting
@@ -418,7 +445,7 @@ extern int vt_chkbrk(vt_t *vt)
 *-----------------------------------------------------------------------------*/
 extern int vt_openlog(vt_t *vt, const char *file)
 {
-    if (!vt->state||!(vt->logfp=fopen(file,"w"))) return 0;
+    if (!vt||!vt->state||!(vt->logfp=fopen(file,"w"))) return 0;
     return 1;
 }
 /* close console log -----------------------------------------------------------
@@ -428,7 +455,7 @@ extern int vt_openlog(vt_t *vt, const char *file)
 *-----------------------------------------------------------------------------*/
 extern void vt_closelog(vt_t *vt)
 {
-    if (!vt->state||!vt->logfp) return;
+    if (!vt||!vt->state||!vt->logfp) return;
     fclose(vt->logfp);
     vt->logfp=NULL;
 }

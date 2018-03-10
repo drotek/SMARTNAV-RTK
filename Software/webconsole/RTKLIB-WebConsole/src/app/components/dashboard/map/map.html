@@ -24,6 +24,24 @@
 -->
 
 <div class="map-panel">
+    <div class="position-status" ng-if="lastPosition">
+        <table>
+            <tr><td></td><td>{{lastPosition.timestamp | date:'yyyy-mm-dd'}}<br>{{lastPosition.timestamp | date:'HH:mm:ss'}}</td></tr>
+            <tr><td>Lat</td><td>{{lastPosition.latitude}}</td></tr>
+            <tr><td>Lon</td><td>{{lastPosition.longitude}}</td></tr>
+            <tr><td>Height</td><td>{{lastPosition.height}}(m)</td></tr>
+            <tr><td>Q</td><td>{{qualityMap[lastPosition.quality_flag]}}</td></tr>
+            <tr><td>SAT</td><td>{{lastPosition.valid_satellites}}</td></tr>
+            <tr><td>sdn</td><td>{{lastPosition.sdn}}(m)</td></tr>
+            <tr><td>sde</td><td>{{lastPosition.sde}}(m)</td></tr>
+            <tr><td>sdu</td><td>{{lastPosition.sdu}}(m)</td></tr>
+            <tr><td>sdne</td><td>{{lastPosition.sdne}}(m)</td></tr>
+            <tr><td>sdeu</td><td>{{lastPosition.sdeu}}(m)</td></tr>
+            <tr><td>sdun</td><td>{{lastPosition.sdun}}(m)</td></tr>
+            <tr><td>Age</td><td>{{lastPosition.age}}(s)</td></tr>
+            <tr><td>Ratio</td><td>{{lastPosition.ratio}}</td></tr>
+        </table>
+    </div>
 
     <div class="map-scale-bar">
         {{'Circle Scale: '}}
@@ -34,11 +52,6 @@
     <div id="radar" class="map-data">
         <canvas id="chart" class="map-canvas">
         </canvas>
-    </div>
-    
-    
-    <div class="map-actions-bar">
-        <button type="button" class="btn btn-success btn-sm action-button" ng-click="refresh($event)" >REFRESH</button>
     </div>
     
 </div>

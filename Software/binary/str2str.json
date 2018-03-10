@@ -1,0 +1,8 @@
+{
+	"in_streams": [{"streamType" : "serial", "streamPath" : "ttyACM0"}],
+	"out_streams":[{"streamType":"file","streamPath":"../data/bas_%Y%m%d%h%M.ubx"}],
+	"command": "base.cmd",
+	"station_id": "base",
+	"relay_messages_back" : false,
+	"enabled": false
+}

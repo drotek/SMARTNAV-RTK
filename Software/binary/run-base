@@ -1,0 +1,11 @@
+#!/bin/bash
+# Drotek SMARTNAV-RTK
+
+DIR=/usr/drotek
+RTKLIBDIR=$DIR/rtklib
+RTKLIBLOGDIR=$DIR/logs
+RTKLIBCONFDIR=$DIR/config
+
+#$RTKLIBDIR/str2str -c $RTKLIBCONFDIR/base.cmd -in serial://ttyACM0 -out tcpsvr://:2424 
+$RTKLIBDIR/str2str -c $RTKLIBCONFDIR/base.cmd -in serial://ttyACM0 -out file:///$RTKLIBLOGDIR/bas_%Y%m%d%h%M.ubx   
+

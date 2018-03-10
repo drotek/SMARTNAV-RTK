@@ -1,0 +1,9 @@
+{
+	"options_file": "active_config",
+	"trace_level" : 5,
+	"output_solution_status_file_level": 5,
+	"console_port": 12000,
+	"monitor_port": 12001,
+	"login_password": "admin",
+	"station_name": "rover"
+}
